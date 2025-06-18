@@ -31,7 +31,7 @@ class AcademicYear(models.Model):
 
 class Section(models.Model):
     name = models.CharField(max_length=255)
-    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='sections')
 
     def __str__(self):
         return f"{self.name} - {self.academic_year.name}"
@@ -44,8 +44,8 @@ class Subject(models.Model):
         return self.name
 
 class SubjectAssignment(models.Model):
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='assigned_to_academic_years')
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='subject_assignments')
     hourly_load = models.IntegerField()
 
     class Meta:
@@ -69,7 +69,7 @@ class StudentEnrollment(models.Model):
         related_name='enrollments',
         limit_choices_to={'role': 'STUDENT'}
     )
-    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='section_enrollments')
     academic_period = models.ForeignKey(AcademicPeriod, on_delete=models.CASCADE)
     enrollment_date = models.DateField(auto_now_add=True)
 
