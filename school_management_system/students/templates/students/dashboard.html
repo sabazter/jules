@@ -34,8 +34,8 @@
                                 {% for subject_data in enrolled_subjects %}
                                     <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
                                         <div class="d-flex w-100 justify-content-between">
-                                            <h5 class="mb-1">{{ subject_data.name }}</h5> {# Assuming subject_data.name is already in Spanish or from DB #}
-                                            <small class="text-muted">{% trans "Period:" %} {{ subject_data.academic_period }}</small> {# Assuming academic_period is name/identifier #}
+                                            <h5 class="mb-1">{{ subject_data.name }}</h5>
+                                            <small class="text-muted">{{ subject_data.academic_year }}</small>
                                         </div>
                                         <p class="mb-1">
                                             {% if subject_data.description %}
@@ -45,7 +45,9 @@
                                             {% endif %}
                                         </p>
                                         <small class="text-muted">
-                                            {% blocktrans with year=subject_data.academic_year level=subject_data.level load=subject_data.hourly_load %}Year: {{ year }} ({{ level }}) - Load: {{ load }} hrs{% endblocktrans %}
+                                            {% blocktrans with grade_level=subject_data.grade_level_name level=subject_data.level_name load=subject_data.hourly_load trimmed %}
+                                                Grado: {{ grade_level }} ({{ level }}) - Carga Horaria: {{ load }} hrs
+                                            {% endblocktrans %}
                                         </small>
                                     </div>
                                 {% endfor %}

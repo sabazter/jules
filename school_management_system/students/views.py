@@ -1,52 +1,55 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required # Keep if already there
+from django.contrib.auth.decorators import login_required
 from .forms import StudentRegistrationForm
-# from .models import ... (if any other models were used in this file)
+from core.models import User, StudentEnrollment, SubjectAssignment # Explicitly import necessary core models
 
 @login_required
 def student_dashboard(request):
-    student = request.user
+    student = request.user # request.user is already a User instance
 
-    # Get all enrollments for the student
-    # StudentEnrollment.student has related_name='enrollments'
-    # StudentEnrollment.section has related_name='section_enrollments' (from Section to StudentEnrollment)
-    # StudentEnrollment.academic_period is a direct FK
     student_enrollments = student.enrollments.select_related(
-        'section__academic_year__level', # section, then its academic_year, then its level
-        'academic_period' # also select the academic_period for each enrollment
+        'section__grade_level__level',  # For Nivel Educativo name
+        'section__academic_year'        # For Año Académico (YYYY-YYYY) name
     ).prefetch_related(
-        'section__academic_year__subject_assignments__subject' # from academic_year, get all its subject_assignments, and for each, its subject
-    ).all()
+        'section__grade_level__subject_assignments__subject',       # Subjects for the GradeLevel
+        'section__grade_level__subject_assignments__grading_scale'  # Grading scale for subjects
+    ).distinct()
 
-    subjects_data = []
-    # Using a set to ensure we only add unique subject presentations (name, academic_year, academic_period)
-    # This handles cases where a student might be enrolled in multiple sections within the same academic year/period
-    # or other complex scenarios.
-    seen_subject_presentations = set()
+    subjects_context_list = []
+    # Use a set to track processed grade_level IDs to avoid duplicate subject listings
+    # if a student is enrolled in multiple sections of the same GradeLevel (unlikely but possible).
+    processed_grade_levels = set()
 
     for enrollment in student_enrollments:
-        academic_year = enrollment.section.academic_year
+        section = enrollment.section
+        grade_level = section.grade_level
+        academic_year_instance = section.academic_year
 
-        # Access prefetched subject_assignments for this academic_year
-        subject_assignments = academic_year.subject_assignments.all()
+        if grade_level.id in processed_grade_levels:
+            continue
+        processed_grade_levels.add(grade_level.id)
 
-        for sa in subject_assignments:
-            subject_key = (sa.subject.id, academic_year.id, enrollment.academic_period.id)
-            if subject_key not in seen_subject_presentations:
-                subjects_data.append({
-                    'name': sa.subject.name,
-                    'description': sa.subject.description,
-                    'hourly_load': sa.hourly_load,
-                    'academic_year': academic_year.name,
-                    'level': academic_year.level.name,
-                    'academic_period': enrollment.academic_period.name
-                })
-                seen_subject_presentations.add(subject_key)
+        # These are SubjectAssignment instances for the student's GradeLevel
+        # Access through the prefetched path for efficiency
+        subject_assignments_for_grade_level = grade_level.subject_assignments.all()
+
+        for sa in subject_assignments_for_grade_level:
+            subjects_context_list.append({
+                'name': sa.subject.name,
+                'description': sa.subject.description,
+                'hourly_load': sa.hourly_load,
+                'grade_level_name': grade_level.name,
+                'level_name': grade_level.level.name,
+                'academic_year': academic_year_instance.name,
+                # 'grading_scale_name': sa.grading_scale.name if sa.grading_scale else None, # Optional: if needed by template
+            })
+
+    subjects_context_list.sort(key=lambda x: (x['academic_year'], x['level_name'], x['grade_level_name'], x['name']))
 
     context = {
         'student': student,
-        'enrolled_subjects': subjects_data
+        'enrolled_subjects': subjects_context_list,
     }
     return render(request, 'students/dashboard.html', context)
 

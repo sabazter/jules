@@ -56,8 +56,8 @@ class AcademicYear(models.Model):
         verbose_name=_("Año Académico (ej: 2023-2024)"),
         help_text=_("Formato: YYYY-YYYY, ej: 2023-2024")
     )
-    start_date = models.DateField(verbose_name=_("Fecha de Inicio del Año Académico"), null=True) # Temporarily allow null
-    end_date = models.DateField(verbose_name=_("Fecha de Fin del Año Académico"), null=True) # Temporarily allow null
+    start_date = models.DateField(verbose_name=_("Fecha de Inicio del Año Académico"))
+    end_date = models.DateField(verbose_name=_("Fecha de Fin del Año Académico"))
 
     class Meta:
         verbose_name = _("Año Académico")
@@ -76,8 +76,7 @@ class Section(models.Model):
         GradeLevel,
         on_delete=models.CASCADE,
         related_name='sections',
-        verbose_name=_("Grado/Año de Estudio"),
-        null=True # Temporarily allow null
+        verbose_name=_("Grado/Año de Estudio")
     )
     academic_year = models.ForeignKey(
         AcademicYear,
@@ -140,8 +139,7 @@ class SubjectAssignment(models.Model):
         GradeLevel,
         on_delete=models.CASCADE,
         related_name='subject_assignments',
-        verbose_name=_("Grado/Año de Estudio"),
-        null=True # Temporarily allow null
+        verbose_name=_("Grado/Año de Estudio")
     )
     hourly_load = models.PositiveIntegerField(
         verbose_name=_("Carga Horaria Semanal (horas)"),
@@ -170,8 +168,7 @@ class AcademicPeriod(models.Model):
         AcademicYear,
         on_delete=models.CASCADE,
         related_name='periods',
-        verbose_name=_("Año Académico (YYYY-YYYY)"),
-        null=True # Temporarily allow null to avoid prompt during makemigrations
+        verbose_name=_("Año Académico (YYYY-YYYY)")
     )
     name = models.CharField(
         max_length=100,
