@@ -78,8 +78,8 @@ def input_grades_view(request, activity_id):
     # For now, this gets all students ever enrolled in the section.
     student_enrollments = StudentEnrollment.objects.filter(
         section=section
-    ).select_related('student', 'academic_period').order_by(
-        'student__last_name', 'student__first_name', 'academic_period__start_date'
+    ).select_related('student').order_by( # Removed 'academic_period' from select_related
+        'student__last_name', 'student__first_name' # Removed 'academic_period__start_date' from order_by
     )
 
     # To avoid listing a student multiple times if they enrolled in the same section across different periods
