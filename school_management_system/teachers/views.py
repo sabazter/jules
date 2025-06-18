@@ -141,6 +141,14 @@ def input_grades_view(request, activity_id):
             if current_score_is_none and not feedback and not existing_grade:
                 continue
 
+            # Logging message
+            messages.info(
+                request,
+                f"Procesando para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
+                f"Actividad ID {activity.id} ('{activity.title}'): "
+                f"Intentando guardar Puntaje={grade_defaults.get('score')}, Feedback='{grade_defaults.get('feedback')}'"
+            )
+
             Grade.objects.update_or_create(
                 student=student_obj,
                 activity=activity,
