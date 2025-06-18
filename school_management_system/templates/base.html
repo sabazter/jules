@@ -2,30 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}School Management System{% endblock %}</title>
-    {# Basic styling or link to CSS can go here later #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <style>
+        body { padding-top: 56px; /* Adjusted for fixed-top navbar */ }
+        .footer { padding: 1rem 0; background-color: #f8f9fa; text-align: center; }
+    </style>
 </head>
 <body>
-    <nav>
-        <a href="{% url 'home' %}">Home</a> |  {# Changed this line #}
-        {% if user.is_authenticated %}
-            <span>Hello, {{ user.username }}! ({{ user.role }})</span> |
-            <a href="{% url 'students:dashboard' %}">Student Dashboard</a> | {# Or make this conditional on role #}
-            <a href="{% url 'logout' %}">Logout</a>
-        {% else %}
-            <a href="{% url 'login' %}">Login</a> |
-            <a href="{% url 'students:register' %}">Register as Student</a> {# New link #}
-        {% endif %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}">School MS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'STUDENT' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'students:dashboard' %}">Student Dashboard</a>
+                            </li>
+                        {% endif %}
+                        {# Add other role-specific dashboard links here as needed #}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Hello, {{ user.username }} ({{ user.role }})
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'students:register' %}">Register as Student</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
     </nav>
-    <hr>
-    <main>
+
+    <main class="container mt-4 mb-4">
         {% block content %}
         <p>This is default content. If you see this, the block was not overridden.</p>
         {% endblock %}
     </main>
-    <footer>
-        <hr>
-        <p>&copy; 2023 School Management System</p>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">&copy; {% now "Y" %} School Management System</span>
+        </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
 </body>
 </html>
