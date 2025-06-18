@@ -176,7 +176,7 @@ def input_grades_view(request, activity_id):
         # This core.SubjectAssignment is where the grading_scale is defined.
         core_subject_assignment = SubjectAssignment.objects.get(
             subject=teacher_assign.subject,
-            academic_year=teacher_assign.section.academic_year
+            grade_level=teacher_assign.section.grade_level # Changed from academic_year
         )
         if core_subject_assignment.grading_scale:
             grading_scale_instance = core_subject_assignment.grading_scale
