@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Register as Student - {{ super }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: auto; padding: 20px;">
+    <h2>Create Your Student Account</h2>
+    <form method="post" action="{% url 'students:register' %}"> {# Assuming 'students:register' will be the URL name #}
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div style="color: red; margin-bottom: 10px;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            <div style="margin-bottom: 15px;">
+                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 5px;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="display: block; color: #6c757d;">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                    <div style="color: red; font-size: 0.9em; margin-top: 5px;">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Register</button>
+    </form>
+</div>
+{% endblock %}
