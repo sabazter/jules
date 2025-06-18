@@ -35,7 +35,9 @@
                             <div class="card-header bg-light">
                                 <h5 class="mb-0">
                                     {{ assignment.subject.name }} - {{ assignment.section.name }}
-                                    <small class="text-muted">({{ assignment.section.academic_year.name }} / {{ assignment.section.academic_year.level.name }})</small>
+                                    <small class="text-muted">
+                                        ({{ assignment.section.academic_year.name }} / {{ assignment.section.grade_level.name }} / {{ assignment.section.grade_level.level.name }})
+                                    </small>
                                 </h5>
                             </div>
                             <div class="card-body">

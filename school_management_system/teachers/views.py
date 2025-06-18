@@ -10,11 +10,18 @@ def teacher_dashboard(request):
     assignments = TeacherAssignment.objects.filter(teacher=teacher).select_related(
         'subject',
         'section',
-        'section__academic_year',
-        'section__academic_year__level'
+        'section__academic_year',      # YYYY-YYYY Academic Year
+        'section__grade_level',        # GradeLevel (e.g., "1er Año")
+        'section__grade_level__level'  # Level (Nivel Educativo, e.g., "Educación Media")
     ).prefetch_related(
-        'activities' # Use the related_name from Activity.teacher_assignment
-    ).order_by('section__academic_year__name', 'section__name', 'subject__name')
+        'activities' # Assuming Activity.teacher_assignment has related_name='activities'
+    ).order_by(
+        'section__academic_year__name',
+        'section__grade_level__level__name',
+        'section__grade_level__order_in_level', # Use order_in_level for sorting GradeLevels
+        'section__name',
+        'subject__name'
+    )
 
     context = {
         'teacher': teacher,
