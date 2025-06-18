@@ -53,7 +53,8 @@ def create_activity_view(request):
 
 from django.shortcuts import get_object_or_404
 from .models import Activity, Grade # TeacherAssignment already imported
-from core.models import StudentEnrollment, User # User needed for student role check
+from core.models import StudentEnrollment, User, SubjectAssignment # Import SubjectAssignment
+from decimal import Decimal, InvalidOperation # Import Decimal for score conversion
 
 @login_required
 def input_grades_view(request, activity_id):
@@ -102,11 +103,87 @@ def input_grades_view(request, activity_id):
         #   Handle potential errors (e.g., invalid score format).
         messages.info(request, _("La funcionalidad de guardar notas está planificada para una futura actualización."))
         # No redirect, just fall through to re-render the page with current data (or potentially updated data if saved)
-        # This part will be fully implemented in the next subtask.
+        errors_found = False
+        for item_data in student_grades_data: # student_grades_data was prepared for GET, reuse for student list
+            student_obj = item_data['student']
+            score_field_name = f'score_{student_obj.id}'
+            feedback_field_name = f'feedback_{student_obj.id}'
+
+            score_str = request.POST.get(score_field_name)
+            feedback = request.POST.get(feedback_field_name, "").strip()
+
+            grade_defaults = {'feedback': feedback}
+            current_score_is_none = True
+
+            if score_str and score_str.strip():
+                try:
+                    score_val = Decimal(score_str.strip())
+                    current_score_is_none = False
+
+                    if grade_values_queryset and grade_values_queryset.exists(): # grade_values_queryset from GET context
+                        valid_numeric_equivalents = [gv.numeric_equivalent for gv in grade_values_queryset]
+                        if score_val not in valid_numeric_equivalents:
+                            messages.error(request, _("Puntaje inválido '%(score)s' para %(student)s. No está en la escala definida.") % {'score': score_val, 'student': student_obj.get_full_name()})
+                            errors_found = True
+                            continue
+                    elif activity.max_score is not None:
+                        if not (Decimal(0) <= score_val <= Decimal(activity.max_score)):
+                            messages.error(request, _("Puntaje '%(score)s' para %(student)s fuera del rango permitido (0-%(max_score)s).") % {'score': score_val, 'student': student_obj.get_full_name(), 'max_score': activity.max_score})
+                            errors_found = True
+                            continue
+
+                    grade_defaults['score'] = score_val
+                except (ValueError, TypeError, InvalidOperation):
+                    messages.error(request, _("Valor de puntaje inválido '%(score)s' para %(student)s.") % {'score': score_str, 'student': student_obj.get_full_name()})
+                    errors_found = True
+                    continue
+            else:
+                grade_defaults['score'] = None
+                current_score_is_none = True
+
+            existing_grade = Grade.objects.filter(activity=activity, student=student_obj).first()
+
+            if current_score_is_none and not feedback and not existing_grade:
+                continue
+
+            Grade.objects.update_or_create(
+                student=student_obj,
+                activity=activity,
+                defaults=grade_defaults
+            )
+
+        if not errors_found:
+            messages.success(request, _("Notas guardadas exitosamente."))
+        else:
+            messages.warning(request, _("Algunas notas no se pudieron guardar. Por favor revise los errores."))
+
+        return redirect(request.path)
+
+    # Get grading scale logic
+    teacher_assign = activity.teacher_assignment
+    grading_scale_instance = None
+    grade_values_queryset = None
+
+    try:
+        # Find the SubjectAssignment (core.models) that links the subject and academic year
+        # This core.SubjectAssignment is where the grading_scale is defined.
+        core_subject_assignment = SubjectAssignment.objects.get(
+            subject=teacher_assign.subject,
+            academic_year=teacher_assign.section.academic_year
+        )
+        if core_subject_assignment.grading_scale:
+            grading_scale_instance = core_subject_assignment.grading_scale
+            grade_values_queryset = grading_scale_instance.values.all().order_by('order')
+    except SubjectAssignment.DoesNotExist:
+        grading_scale_instance = None # No specific SubjectAssignment found for this combo
+        grade_values_queryset = None
+
 
     context = {
         'activity': activity,
         'student_grades_data': student_grades_data,
-        'page_title': _("Ingresar/Ver Notas para '%(activity_title)s'") % {'activity_title': activity.title}
+        'page_title': _("Ingresar/Ver Notas para '%(activity_title)s'") % {'activity_title': activity.title},
+        'grading_scale': grading_scale_instance,
+        'grade_values': grade_values_queryset,
     }
     return render(request, 'teachers/input_grades.html', context)

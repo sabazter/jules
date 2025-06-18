@@ -46,10 +46,21 @@
                                         <small class="d-block text-muted">{{ item.student.username }}</small>
                                     </td>
                                     <td>
-                                        <input type="number" step="0.01" name="score_{{ item.student.id }}"
-                                               class="form-control form-control-sm"
-                                               value="{{ item.score|default_if_none:'' }}"
-                                               {% if activity.max_score %}max="{{ activity.max_score }}"{% endif %} min="0">
+                                        {% if grade_values %}
+                                            <select name="score_{{ item.student.id }}" class="form-select form-select-sm">
+                                                <option value="">{% trans "--- Seleccionar ---" %}</option>
+                                                {% for val in grade_values %}
+                                                    <option value="{{ val.numeric_equivalent }}" {% if item.score is not None and item.score == val.numeric_equivalent %}selected{% endif %}>
+                                                        {{ val.display_value }} ({{ val.numeric_equivalent }})
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <input type="number" step="0.01" name="score_{{ item.student.id }}"
+                                                   class="form-control form-control-sm"
+                                                   value="{{ item.score|default_if_none:'' }}"
+                                                   {% if activity.max_score %}max="{{ activity.max_score }}"{% endif %} min="0">
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <textarea name="feedback_{{ item.student.id }}" class="form-control form-control-sm" rows="1">{{ item.feedback|default_if_none:'' }}</textarea>

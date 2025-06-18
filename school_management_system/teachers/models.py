@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from core.models import Subject, Section, User
+from core.models import Subject, Section, User, AcademicPeriod # Added AcademicPeriod
 from django.utils.translation import gettext_lazy as _
 
 class TeacherAssignment(models.Model):
@@ -58,6 +58,14 @@ class Activity(models.Model):
         blank=True,
         null=True,
         verbose_name=_("Max Score (e.g., 20, 100)")
+    )
+    academic_period = models.ForeignKey(
+        AcademicPeriod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='period_activities',
+        verbose_name=_("Academic Period (for grading window)")
     )
 
     class Meta:

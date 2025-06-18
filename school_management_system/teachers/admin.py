@@ -29,10 +29,10 @@ from .models import Activity # Add Activity
 
 @admin.register(Activity)
 class ActivityAdmin(admin.ModelAdmin):
-    list_display = ('title', 'get_subject', 'get_section', 'get_teacher_name', 'due_date', 'max_score') # Changed get_teacher to get_teacher_name
-    list_filter = ('teacher_assignment__section__academic_year__name', 'teacher_assignment__subject__name', 'teacher_assignment__teacher__username', 'due_date')
-    search_fields = ('title', 'description', 'teacher_assignment__subject__name', 'teacher_assignment__section__name', 'teacher_assignment__teacher__username')
-    autocomplete_fields = ['teacher_assignment']
+    list_display = ('title', 'get_subject', 'get_section', 'get_teacher_name', 'academic_period', 'due_date', 'max_score') # Added academic_period
+    list_filter = ('teacher_assignment__section__academic_year__name', 'teacher_assignment__subject__name', 'teacher_assignment__teacher__username', 'academic_period', 'due_date') # Added academic_period
+    search_fields = ('title', 'description', 'teacher_assignment__subject__name', 'teacher_assignment__section__name', 'teacher_assignment__teacher__username', 'academic_period__name') # Added academic_period__name
+    autocomplete_fields = ['teacher_assignment', 'academic_period'] # Added academic_period
 
     @admin.display(description=_('Subject'), ordering='teacher_assignment__subject__name')
     def get_subject(self, obj):
