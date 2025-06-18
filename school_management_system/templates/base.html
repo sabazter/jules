@@ -7,7 +7,7 @@
 </head>
 <body>
     <nav>
-        <a href="/">Home</a> |
+        <a href="{% url 'home' %}">Home</a> |  {# Changed this line #}
         {% if user.is_authenticated %}
             <span>Hello, {{ user.username }}! ({{ user.role }})</span> |
             <a href="{% url 'students:dashboard' %}">Student Dashboard</a> | {# Or make this conditional on role #}

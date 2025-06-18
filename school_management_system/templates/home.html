@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - {{ super }}{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px;">
+    <h1>Welcome to the School Management System!</h1>
+    <p>Your one-stop solution for managing academic activities.</p>
+    <hr style="margin: 20px auto; width: 50%;">
+
+    {% if user.is_authenticated %}
+        <p>You are logged in as {{ user.username }}.</p>
+        <p>
+            {% if user.role == 'STUDENT' %}
+                <a href="{% url 'students:dashboard' %}" style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Your Dashboard</a>
+            {% elif user.role == 'TEACHER' %}
+                {# Placeholder for teacher dashboard link #}
+                <p>Teacher dashboard link will be here.</p>
+            {% elif user.role == 'ADMIN' or user.role == 'DIRECTOR' %}
+                 <a href="{% url 'admin:index' %}" style="padding: 10px 15px; background-color: #5a6268; color: white; text-decoration: none; border-radius: 5px;">Go to Admin Panel</a>
+            {% else %}
+                <p>Your dashboard link will appear here based on your role.</p>
+            {% endif %}
+        </p>
+    {% else %}
+        <p>Please <a href="{% url 'login' %}" style="padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Login</a> to access your portal.</p>
+    {% endif %}
+</div>
+{% endblock %}
