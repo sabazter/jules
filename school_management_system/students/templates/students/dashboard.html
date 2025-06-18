@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - {{ super }}{% endblock %}
+
+{% block content %}
+<h1>Welcome to your Dashboard, {{ student.first_name|default:student.username }}!</h1>
+<p>This is your student portal.</p>
+<p>Your role is: {{ student.role }}</p>
+{# Logout link will be handled more dynamically in base.html later #}
+{% endblock %}
