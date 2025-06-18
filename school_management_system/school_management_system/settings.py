@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os # Added for LOCALE_PATHS
 from pathlib import Path
+from django.utils.translation import gettext_lazy as _ # Added for LANGUAGES
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,11 +41,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "core",
     "students",
+    "teachers",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    'django.middleware.locale.LocaleMiddleware', # Added here
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -104,11 +108,22 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = 'es' # Changed to Spanish
+
+LANGUAGES = [
+    ('es', _('Spanish')),
+    ('en', _('English')),
+]
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
 
 TIME_ZONE = "UTC"
 
 USE_I18N = True
+# USE_L10N = True # This is the default and often not explicitly set, but ensuring it's effectively True
+# Django 4.0+ uses USE_L10N = True by default. If it's not here, it's fine.
 
 USE_TZ = True
 

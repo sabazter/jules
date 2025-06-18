@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Teacher Dashboard" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title h3">
+                {% if teacher.first_name and teacher.last_name %}
+                    {% blocktrans with first_name=teacher.first_name last_name=teacher.last_name %}Portal de {{ first_name }} {{ last_name }}{% endblocktrans %}
+                {% elif teacher.first_name %}
+                    {% blocktrans with first_name=teacher.first_name %}Portal de {{ first_name }}{% endblocktrans %}
+                {% else %}
+                    {% blocktrans with username=teacher.username %}Portal de {{ username }}{% endblocktrans %}
+                {% endif %}
+            </h1>
+        </div>
+        <div class="card-body">
+            <h5 class="card-subtitle mb-2 text-muted">
+                {{ welcome_message }} <!-- This comes from the view context -->
+            </h5>
+            <p class="card-text">
+                <strong>{% trans "Email:" %}</strong> {{ teacher.email }} <br>
+                <strong>{% trans "Rol:" %}</strong> {{ teacher.get_role_display }}
+            </p>
+            <p class="mt-3">{% trans "Aquí podrá gestionar sus cursos, ingresar notas y más." %}</p>
+
+            {# Placeholder for assigned courses #}
+            <div id="assigned-courses" class="mt-4">
+                <h4>{% trans "Mis Cursos/Secciones Asignadas" %}</h4>
+                <p><em>{% trans "La lista de cursos aparecerá aquí." %}</em></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
