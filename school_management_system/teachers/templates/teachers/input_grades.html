@@ -76,7 +76,7 @@
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary">{% trans "Guardar Notas" %}</button>
-                    <a href="{{ request.META.HTTP_REFERER|default:request.resolver_match.namespace|urlcat:':dashboard' }}" class="btn btn-secondary">{% trans "Volver" %}</a>
+                    <a href="{% url 'teachers:dashboard' %}" class="btn btn-secondary">{% trans "Volver" %}</a>
                 </div>
             </form>
         </div>
