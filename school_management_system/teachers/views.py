@@ -155,6 +155,23 @@ def input_grades_view(request, activity_id):
                 defaults=grade_defaults
             )
 
+            # Add this database check and debug message:
+            retrieved_grade = Grade.objects.filter(student=student_obj, activity=activity).first()
+            if retrieved_grade:
+                messages.info( # Changed from debug to info for visibility
+                    request,
+                    f"VERIFICACIÓN DB para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
+                    f"Actividad ID {activity.id} ('{activity.title}'): "
+                    f"Puntaje en DB={retrieved_grade.score}, Feedback en DB='{retrieved_grade.feedback}'"
+                )
+            else:
+                messages.info( # Changed from debug to info for visibility
+                    request,
+                    f"VERIFICACIÓN DB para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
+                    f"Actividad ID {activity.id} ('{activity.title}'): "
+                    f"NO SE ENCONTRÓ REGISTRO DE NOTA EN DB."
+                )
+
         if not errors_found:
             messages.success(request, _("Notas guardadas exitosamente."))
         else:
