@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} - {% trans "Portal del Profesor" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{ page_title }}</h2>
+            <h6 class="card-subtitle mb-2 text-muted">
+                {% trans "Asignatura:" %} {{ activity.teacher_assignment.subject.name }} |
+                {% trans "Sección:" %} {{ activity.teacher_assignment.section.name }}
+                {% if activity.due_date %}| {% trans "Fecha de Entrega:" %} {{ activity.due_date|date:"d/m/Y" }}{% endif %}
+                {% if activity.max_score %}| {% trans "Puntaje Máx:" %} {{ activity.max_score }}{% endif %}
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                <div class="mb-3">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post"> {# Form submission will be handled in the next step #}
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>{% trans "Estudiante" %}</th>
+                                <th>{% trans "Puntaje" %}{% if activity.max_score %} ({% blocktrans with max_score=activity.max_score %}{{ max_score }} pts{% endblocktrans %}){% endif %}</th>
+                                <th>{% trans "Retroalimentación" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in student_grades_data %}
+                                <tr>
+                                    <td>
+                                        {{ item.student.get_full_name|default:item.student.username }}
+                                        <small class="d-block text-muted">{{ item.student.username }}</small>
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" name="score_{{ item.student.id }}"
+                                               class="form-control form-control-sm"
+                                               value="{{ item.score|default_if_none:'' }}"
+                                               {% if activity.max_score %}max="{{ activity.max_score }}"{% endif %} min="0">
+                                    </td>
+                                    <td>
+                                        <textarea name="feedback_{{ item.student.id }}" class="form-control form-control-sm" rows="1">{{ item.feedback|default_if_none:'' }}</textarea>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center"><em>{% trans "No hay estudiantes matriculados en esta sección o no se pudieron cargar." %}</em></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">{% trans "Guardar Notas" %}</button>
+                    <a href="{{ request.META.HTTP_REFERER|default:request.resolver_match.namespace|urlcat:':dashboard' }}" class="btn btn-secondary">{% trans "Volver" %}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
