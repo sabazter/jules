@@ -89,8 +89,10 @@ def input_grades_view(request, activity_id):
     if request.user.role != User.ROLE_CHOICES[1][0]: # 'TEACHER'
         messages.error(request, _("No tiene permiso para acceder a esta página."))
         return redirect('home')
+    messages.info(request, "DEBUG: Entrando a input_grades_view (después de chequeo de rol).") # New Message 1
 
     activity = get_object_or_404(Activity, pk=activity_id, teacher_assignment__teacher=request.user)
+    messages.info(request, f"DEBUG: Actividad ID {activity.id} ('{activity.title}') encontrada para calificar.") # New Message 2
 
     teacher_assign_model = activity.teacher_assignment
 
