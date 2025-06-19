@@ -1,5 +1,7 @@
+import os
+from django.core.exceptions import ValidationError
 from django import forms
-from .models import Activity, TeacherAssignment
+from .models import Activity, TeacherAssignment, EvaluationPlanDocument, EvaluationActivity
 from django.utils.translation import gettext_lazy as _
 
 class ActivityForm(forms.ModelForm):
@@ -61,6 +63,60 @@ class ActivityForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             # For DateInput, type='date' is handled by widget, class might need specific handling
             # For other fields, directly add/append 'form-control'
+            current_class = field.widget.attrs.get('class', '')
+            if 'form-control' not in current_class:
+                field.widget.attrs['class'] = f'{current_class} form-control'.strip()
+
+class EvaluationPlanDocumentForm(forms.ModelForm):
+    class Meta:
+        model = EvaluationPlanDocument
+        fields = ['file', 'description']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+        labels = {
+            'file': _("Documento del Plan de Evaluación (PDF, Word, Excel)"),
+            'description': _("Descripción (opcional)"),
+        }
+
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        if file:
+            # File type validation
+            ext = os.path.splitext(file.name)[1].lower()  # Get the file extension
+            valid_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx']
+            if ext not in valid_extensions:
+                raise ValidationError(_("Tipo de archivo no válido. Solo se permiten archivos PDF, Word (.doc, .docx) y Excel (.xls, .xlsx)."))
+
+            # Optional: File size validation (e.g., 5MB limit)
+            # if file.size > 5 * 1024 * 1024:  # 5MB
+            #     raise ValidationError(_("El archivo es demasiado grande. El tamaño máximo permitido es de 5MB."))
+        return file
+
+class EvaluationActivityForm(forms.ModelForm):
+    class Meta:
+        model = EvaluationActivity
+        fields = ['name', 'date', 'percentage']
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': _("Ej: Examen Parcial 1, Tarea Individual")}),
+            'date': forms.DateInput(attrs={'type': 'date', 'placeholder': 'YYYY-MM-DD'}),
+            'percentage': forms.NumberInput(attrs={'min': '0', 'max': '100', 'step': '0.01'}),
+        }
+        labels = {
+            'name': _("Nombre de la Actividad"),
+            'date': _("Fecha de la Actividad"),
+            'percentage': _("Porcentaje (%)"),
+        }
+        help_texts = {
+            'percentage': _("Valor entre 0 y 100."),
+        }
+
+    def __init__(self, *args, **kwargs):
+        # The teacher_assignment will be set in the view, not by the user via the form.
+        # We might receive it to limit choices or for validation if needed, but it's not a field here.
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap form-control class to all fields
+        for field_name, field in self.fields.items():
             current_class = field.widget.attrs.get('class', '')
             if 'form-control' not in current_class:
                 field.widget.attrs['class'] = f'{current_class} form-control'.strip()

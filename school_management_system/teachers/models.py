@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from core.models import Subject, Section, User, AcademicPeriod # Added AcademicPeriod
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class TeacherAssignment(models.Model):
     teacher = models.ForeignKey(
@@ -142,3 +143,37 @@ class Grade(models.Model):
             activity_title=self.activity.title,
             score=score_display
         )
+
+class EvaluationPlanDocument(models.Model):
+    teacher_assignment = models.ForeignKey('TeacherAssignment', on_delete=models.CASCADE, related_name='evaluation_plan_documents', verbose_name=_("Teacher Assignment"))
+    file = models.FileField(upload_to='evaluation_plans/', verbose_name=_("File")) # Consider a more dynamic upload_to path if needed
+    description = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Description"))
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Uploaded At"))
+
+    class Meta:
+        verbose_name = _("Evaluation Plan Document")
+        verbose_name_plural = _("Evaluation Plan Documents")
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"{self.teacher_assignment} - {self.file.name} ({self.uploaded_at.strftime('%Y-%m-%d')})"
+
+class EvaluationActivity(models.Model):
+    teacher_assignment = models.ForeignKey('TeacherAssignment', on_delete=models.CASCADE, related_name='evaluation_activities', verbose_name=_("Teacher Assignment"))
+    name = models.CharField(max_length=200, verbose_name=_("Activity Name"))
+    date = models.DateField(verbose_name=_("Activity Date"))
+    percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name=_("Percentage"),
+        help_text=_("Percentage of the total grade (0-100).")
+    )
+
+    class Meta:
+        verbose_name = _("Evaluation Activity")
+        verbose_name_plural = _("Evaluation Activities")
+        ordering = ['teacher_assignment', 'date', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.percentage}%) - {self.teacher_assignment.subject} ({self.teacher_assignment.section})"

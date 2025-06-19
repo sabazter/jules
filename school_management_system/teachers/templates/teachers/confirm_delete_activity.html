@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+    {{ page_title }} - {% trans "Portal del Profesor" %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'teachers:dashboard' %}">{% trans "Teacher Dashboard" %}</a></li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'teachers:section_assignment_detail' assignment_id=teacher_assignment.id %}">
+                    {% blocktrans with subject_name=teacher_assignment.subject.name section_name=teacher_assignment.section.name %}{{ subject_name }} - {{ section_name }}{% endblocktrans %}
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'teachers:evaluation_plan' assignment_id=teacher_assignment.id %}">{% trans "Plan de Evaluación" %}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title h3">{{ page_title }}</h1>
+        </div>
+        <div class="card-body">
+            <p>
+                {% blocktrans with activity_name=activity_to_delete.name percentage=activity_to_delete.percentage date=activity_to_delete.date|date:"d/m/Y" %}
+                Está seguro que desea eliminar la actividad de evaluación: <strong>"{{ activity_name }}"</strong> ({{ percentage }}%, Fecha: {{ date }})?
+                {% endblocktrans %}
+            </p>
+            <p class="text-danger">{% trans "Esta acción no se puede deshacer." %}</p>
+
+            <form method="post" action="{% url 'teachers:delete_evaluation_activity' assignment_id=teacher_assignment.id activity_id=activity_to_delete.id %}">
+                {% csrf_token %}
+                <button type="submit" name="confirm_delete" class="btn btn-danger">{% trans "Sí, eliminar permanentemente" %}</button>
+                <a href="{% url 'teachers:evaluation_plan' assignment_id=teacher_assignment.id %}" class="btn btn-secondary">{% trans "Cancelar y Volver al Plan" %}</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

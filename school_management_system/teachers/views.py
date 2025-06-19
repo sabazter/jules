@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from decimal import Decimal, InvalidOperation
 from collections import defaultdict # Add this import
 
-from .models import TeacherAssignment, Activity, Grade
-from .forms import ActivityForm
+from .models import TeacherAssignment, Activity, Grade, EvaluationPlanDocument, EvaluationActivity
+from .forms import ActivityForm, EvaluationPlanDocumentForm, EvaluationActivityForm
 from core.models import User, StudentEnrollment, SubjectAssignment
 
 
@@ -252,3 +252,99 @@ def input_grades_view(request, activity_id):
         'grade_values': grade_values,
     }
     return render(request, 'teachers/input_grades.html', context)
+
+@login_required
+def evaluation_plan_view(request, assignment_id):
+    teacher_assignment = get_object_or_404(TeacherAssignment, pk=assignment_id, teacher=request.user)
+
+    # Initialize forms
+    doc_form = EvaluationPlanDocumentForm(prefix="doc")
+    activity_form = EvaluationActivityForm(prefix="activity")
+
+    if request.method == 'POST':
+        # Check which form was submitted, perhaps using a hidden input or button name
+        if 'submit_document' in request.POST:
+            doc_form = EvaluationPlanDocumentForm(request.POST, request.FILES, prefix="doc")
+            if doc_form.is_valid():
+                document = doc_form.save(commit=False)
+                document.teacher_assignment = teacher_assignment
+                document.save()
+                messages.success(request, _("Documento del plan de evaluación cargado exitosamente."))
+                return redirect('teachers:evaluation_plan', assignment_id=assignment_id)
+            else:
+                messages.error(request, _("Error al cargar el documento. Por favor, corrija los errores."))
+
+        elif 'submit_activity' in request.POST:
+            activity_form = EvaluationActivityForm(request.POST, prefix="activity")
+            if activity_form.is_valid():
+                activity = activity_form.save(commit=False)
+                activity.teacher_assignment = teacher_assignment
+                activity.save()
+                messages.success(request, _("Actividad de evaluación agregada exitosamente."))
+                return redirect('teachers:evaluation_plan', assignment_id=assignment_id)
+            else:
+                messages.error(request, _("Error al agregar la actividad. Por favor, corrija los errores."))
+
+    # GET request or if POST forms had errors
+    uploaded_documents = EvaluationPlanDocument.objects.filter(teacher_assignment=teacher_assignment)
+    evaluation_activities = EvaluationActivity.objects.filter(teacher_assignment=teacher_assignment)
+
+    context = {
+        'teacher_assignment': teacher_assignment,
+        'doc_form': doc_form,
+        'activity_form': activity_form,
+        'uploaded_documents': uploaded_documents,
+        'evaluation_activities': evaluation_activities,
+        'page_title': _("Plan de Evaluación para {subject} - {section}").format(
+            subject=teacher_assignment.subject.name,
+            section=teacher_assignment.section.name
+        )
+    }
+    return render(request, 'teachers/evaluation_plan.html', context)
+
+@login_required
+def edit_evaluation_activity(request, assignment_id, activity_id):
+    teacher_assignment = get_object_or_404(TeacherAssignment, pk=assignment_id, teacher=request.user)
+    activity_to_edit = get_object_or_404(EvaluationActivity, pk=activity_id, teacher_assignment=teacher_assignment)
+
+    if request.method == 'POST':
+        form = EvaluationActivityForm(request.POST, instance=activity_to_edit)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Actividad de evaluación actualizada exitosamente."))
+            return redirect('teachers:evaluation_plan', assignment_id=assignment_id)
+        else:
+            messages.error(request, _("Error al actualizar la actividad. Por favor, corrija los errores."))
+    else: # GET
+        form = EvaluationActivityForm(instance=activity_to_edit)
+
+    context = {
+        'form': form,
+        'teacher_assignment': teacher_assignment,
+        'activity_to_edit': activity_to_edit, # Pass the activity instance for context in the template
+        'page_title': _("Editar Actividad de Evaluación"),
+    }
+    return render(request, 'teachers/edit_evaluation_activity.html', context)
+
+@login_required
+def delete_evaluation_activity(request, assignment_id, activity_id):
+    teacher_assignment = get_object_or_404(TeacherAssignment, pk=assignment_id, teacher=request.user)
+    activity_to_delete = get_object_or_404(EvaluationActivity, pk=activity_id, teacher_assignment=teacher_assignment)
+
+    if request.method == 'POST':
+        # Ensure a specific confirmation, e.g., a button name="confirm_delete"
+        if 'confirm_delete' in request.POST: # This name should match the button in confirm_delete_activity.html
+            activity_to_delete.delete()
+            messages.success(request, _("Actividad de evaluación eliminada exitosamente."))
+            return redirect('teachers:evaluation_plan', assignment_id=assignment_id)
+        else:
+            # This case should ideally not be reached if the confirmation form is designed well
+            messages.warning(request, _("Eliminación no confirmada."))
+            return redirect('teachers:evaluation_plan', assignment_id=assignment_id)
+    else: # GET request
+        context = {
+            'teacher_assignment': teacher_assignment,
+            'activity_to_delete': activity_to_delete,
+            'page_title': _("Confirmar Eliminación de Actividad"),
+        }
+        return render(request, 'teachers/confirm_delete_activity.html', context)
