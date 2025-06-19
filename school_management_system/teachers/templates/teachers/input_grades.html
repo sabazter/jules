@@ -53,14 +53,23 @@
                             {% for item_data in student_grades_data %}
                             <tr>
                                 <td>{{ item_data.student.get_full_name|default:item_data.student.username }}</td>
-                                <td>
-                                    {# As per subtask: "Provide an input field for the score" #}
-                                    {# If a grading_scale exists, view logic should still validate against grade_values #}
-                                    <input type="number" step="any" class="form-control form-control-sm"
-                                           name="score_{{ item_data.student.id }}"
-                                           value="{{ item_data.score|default_if_none:'' }}"
-                                           {% if activity.max_score and not grading_scale %}max="{{ activity.max_score }}" min="0"{% endif %}
-                                           placeholder="{% if grading_scale %}{% trans "Enter numeric equivalent" %}{% else %}{% trans "Score" %}{% endif %}">
+                                <td style="min-width: 250px;"> {# Increased min-width to accommodate input and text #}
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="score_{{ item_data.student.id }}"
+                                               value="{{ item_data.score|default_if_none:'' }}"
+                                               placeholder="{% if not item_data.score and activity.max_score and not grading_scale %}{{ activity.max_score }}{% elif not item_data.score and grade_values %}{{ grade_values.0.numeric_equivalent }}{% else %}{% trans "Score" %}{% endif %}"
+                                               aria-label="{% trans "Score input" %}">
+                                    </div>
+                                    <div class="mt-1">
+                                        {% if item_data.display_score %}
+                                            <small class="form-text text-muted">{% trans "Current" %}: <strong>{{ item_data.display_score }}</strong></small>
+                                        {% elif item_data.score is not None %}
+                                            <small class="form-text text-muted">{% trans "Current" %}: <strong>{{ item_data.score }}</strong></small>
+                                        {% else %}
+                                            <small class="form-text text-muted">{% trans "Not graded yet" %}</small>
+                                        {% endif %}
+                                    </div>
                                 </td>
                                 <td>
                                     <textarea class="form-control form-control-sm"
