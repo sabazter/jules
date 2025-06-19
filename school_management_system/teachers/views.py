@@ -92,11 +92,28 @@ def input_grades_view(request, activity_id):
     student_grades_data = []
     for student_obj in unique_students_dict.values(): # Iterate over unique student objects
         grade = Grade.objects.filter(activity=activity, student=student_obj).first()
+        current_score_numeric = grade.score if grade else None
+        current_feedback = grade.feedback if grade else ""
+        display_score_str = None
+
+        if current_score_numeric is not None and grade_values and grade_values.exists():
+            found_matching_gv = False
+            for gv in grade_values:
+                if gv.numeric_equivalent == current_score_numeric:
+                    display_score_str = gv.display_value
+                    found_matching_gv = True
+                    break
+            if not found_matching_gv:
+                display_score_str = str(current_score_numeric)
+        elif current_score_numeric is not None:
+            display_score_str = str(current_score_numeric)
+
         student_grades_data.append({
             'student': student_obj,
-            'grade_object': grade, # Store the grade object for efficient update
-            'score': grade.score if grade else None,
-            'feedback': grade.feedback if grade else ""
+            'grade_object': grade,
+            'score': current_score_numeric,
+            'feedback': current_feedback,
+            'display_score': display_score_str
         })
 
     if request.method == 'POST':
