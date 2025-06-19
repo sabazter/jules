@@ -89,10 +89,8 @@ def input_grades_view(request, activity_id):
     if request.user.role != User.ROLE_CHOICES[1][0]: # 'TEACHER'
         messages.error(request, _("No tiene permiso para acceder a esta página."))
         return redirect('home')
-    messages.info(request, "DEBUG: Entrando a input_grades_view (después de chequeo de rol).") # New Message 1
 
     activity = get_object_or_404(Activity, pk=activity_id, teacher_assignment__teacher=request.user)
-    messages.info(request, f"DEBUG: Actividad ID {activity.id} ('{activity.title}') encontrada para calificar.") # New Message 2
 
     teacher_assign_model = activity.teacher_assignment
 
@@ -109,14 +107,6 @@ def input_grades_view(request, activity_id):
     except SubjectAssignment.DoesNotExist:
         pass
 
-    # Debug message before fetching student enrollments
-    section_for_debug = teacher_assign_model.section
-    messages.info(
-        request,
-        f"DEBUG: Buscando estudiantes para Sección ID {section_for_debug.id} - '{section_for_debug.name}' "
-        f"(Grado: {section_for_debug.grade_level.name}, Año Académico: {section_for_debug.academic_year.name})"
-    )
-
     student_enrollments = StudentEnrollment.objects.filter(
         section=teacher_assign_model.section
     ).select_related('student').order_by('student__last_name', 'student__first_name')
@@ -128,20 +118,6 @@ def input_grades_view(request, activity_id):
             'academic_year': teacher_assign_model.section.academic_year.name,
             'activity_title': activity.title
         })
-
-    # Debug message after fetching student enrollments
-    messages.info(
-        request,
-        f"DEBUG: Se encontraron {student_enrollments.count()} inscripciones para esta sección."
-    )
-
-    if student_enrollments.exists():
-        messages.info(request, "DEBUG: Primeros estudiantes encontrados en esta sección:")
-        for i, se in enumerate(student_enrollments[:5]): # Log details of up to first 5 students
-            messages.info(
-                request,
-                f"  - Estudiante ID {se.student.id}: {se.student.get_full_name() or se.student.username}"
-            )
 
     unique_students_dict = {se.student.id: se.student for se in student_enrollments}
 
@@ -214,34 +190,11 @@ def input_grades_view(request, activity_id):
             if current_score_is_none and not feedback and not existing_grade:
                 continue
 
-            messages.info(
-                request,
-                f"Procesando para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
-                f"Actividad ID {activity.id} ('{activity.title}'): "
-                f"Intentando guardar Puntaje={grade_defaults.get('score')}, Feedback='{grade_defaults.get('feedback')}'"
-            )
-
             Grade.objects.update_or_create(
                 student=student_obj,
                 activity=activity,
                 defaults=grade_defaults
             )
-
-            retrieved_grade = Grade.objects.filter(student=student_obj, activity=activity).first()
-            if retrieved_grade:
-                messages.info(
-                    request,
-                    f"VERIFICACIÓN DB para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
-                    f"Actividad ID {activity.id} ('{activity.title}'): "
-                    f"Puntaje en DB={retrieved_grade.score}, Feedback en DB='{retrieved_grade.feedback}'"
-                )
-            else:
-                messages.info(
-                    request,
-                    f"VERIFICACIÓN DB para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
-                    f"Actividad ID {activity.id} ('{activity.title}'): "
-                    f"NO SE ENCONTRÓ REGISTRO DE NOTA EN DB."
-                )
 
         if not errors_found:
             messages.success(request, _("Notas guardadas exitosamente."))
