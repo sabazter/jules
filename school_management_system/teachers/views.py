@@ -44,6 +44,18 @@ def teacher_dashboard(request):
     return render(request, 'teachers/dashboard.html', context)
 
 @login_required
+def section_assignment_view(request, assignment_id):
+    teacher_assignment = get_object_or_404(TeacherAssignment, pk=assignment_id, teacher=request.user)
+    activities = Activity.objects.filter(teacher_assignment=teacher_assignment).order_by('-due_date', 'title')
+
+    context = {
+        'teacher_assignment': teacher_assignment,
+        'activities': activities,
+        'page_title': f"{teacher_assignment.subject.name} - {teacher_assignment.section.name}"
+    }
+    return render(request, 'teachers/section_assignment_detail.html', context)
+
+@login_required
 def create_activity_view(request):
     # Use User.ROLE_CHOICES for role comparison
     if request.user.role != User.ROLE_CHOICES[1][0]: # 'TEACHER'

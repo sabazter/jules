@@ -36,8 +36,7 @@
                             <ul class="list-group">
                                 {% for assignment_item in assignment_list %}
                                     <li class="list-group-item">
-                                        {# Placeholder link - will be updated in a future task to point to section-specific view #}
-                                        <a href="#">
+                                        <a href="{% url 'teachers:section_assignment_detail' assignment_id=assignment_item.id %}">
                                             {{ assignment_item.section.name }}
                                             <small class="text-muted">
                                                 ({{ assignment_item.section.grade_level.name }} - {{ assignment_item.section.academic_year.name }})

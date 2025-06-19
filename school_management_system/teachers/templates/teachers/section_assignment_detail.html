@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+    {% if page_title %}
+        {{ page_title }}
+    {% else %}
+        {% trans "Section Assignment Details" %}
+    {% endif %}
+    - {% trans "Teacher Portal" %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'teachers:dashboard' %}">{% trans "Teacher Dashboard" %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if page_title %}{{ page_title }}{% else %}{% trans "Assignment Details" %}{% endif %}
+            </li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="card-title h3">
+                    {{ teacher_assignment.subject.name }} - {{ teacher_assignment.section.name }}
+                </h1>
+                <h5 class="card-subtitle mb-2 text-muted">
+                    {{ teacher_assignment.section.grade_level.name }} ({{ teacher_assignment.section.academic_year.name }})
+                </h5>
+            </div>
+            <a href="{% url 'teachers:create_activity' %}?assignment_id={{ teacher_assignment.id }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> {% trans "Create New Activity" %}
+            </a>
+        </div>
+        <div class="card-body">
+            <h4>{% trans "Existing Activities" %}</h4>
+            {% if activities %}
+                <ul class="list-group list-group-flush">
+                    {% for activity in activities %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ activity.title }}</strong><br>
+                                <small class="text-muted">
+                                    {% if activity.due_date %}{% trans "Due Date:" %} {{ activity.due_date|date:"d/m/Y" }} {% endif %}
+                                    {% if activity.due_date and activity.max_score %}| {% endif %}
+                                    {% if activity.max_score %}{% trans "Max Score:" %} {{ activity.max_score }}{% endif %}
+                                    {% if activity.activity_type %}| {% trans "Type:" %} {{ activity.get_activity_type_display }}{% endif %}
+                                </small>
+                            </div>
+                            <a href="{% url 'teachers:input_grades' activity_id=activity.id %}" class="btn btn-sm btn-outline-secondary">
+                                {% trans "Input/View Grades" %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted"><em>{% trans "No activities have been created for this assignment yet." %}</em></p>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'teachers:dashboard' %}" class="btn btn-outline-secondary">{% trans "Back to Dashboard" %}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
