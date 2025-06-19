@@ -61,6 +61,9 @@
                                 {% else %}
                                     <p class="text-muted"><em>{% trans "No hay actividades creadas para esta asignación todavía." %}</em></p>
                                 {% endif %}
+                                <a href="{% url 'teachers:create_activity' %}?assignment_id={{ assignment.id }}" class="btn btn-sm btn-success mt-3">
+                                    {% trans "Crear Actividad para esta Asignación" %}
+                                </a>
                             </div>
                         </div>
                     {% endfor %}
@@ -69,10 +72,10 @@
                         {% trans "No tiene cursos o secciones asignadas actualmente." %}
                     </div>
                 {% endif %}
-                <hr>
-                <a href="{% url 'teachers:create_activity' %}" class="btn btn-primary mb-3">
-                     {% trans "Crear Nueva Actividad General" %}
-                </a>
+                {# General "Create Activity" button is removed from here.
+                   If a general one is still needed, it could be placed outside the assignments loop,
+                   perhaps above the "Mis Cursos y Secciones Asignadas" heading.
+                   For this subtask, the instruction was to remove the general button. #}
             </div>
         </div>
     </div>

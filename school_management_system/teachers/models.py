@@ -68,6 +68,19 @@ class Activity(models.Model):
         verbose_name=_("Academic Period (for grading window)")
     )
 
+    class ActivityType(models.TextChoices):
+        PRESENCIAL = 'PRESENCIAL', _('Presencial (In-person)')
+        ONLINE = 'ONLINE', _('En Línea (Online)')
+        # Add more types if needed later, e.g., HYBRID
+
+    activity_type = models.CharField(
+        max_length=20,
+        choices=ActivityType.choices,
+        default=ActivityType.PRESENCIAL,
+        verbose_name=_("Tipo de Actividad"),
+        help_text=_("Seleccione si la actividad es presencial o en línea.")
+    )
+
     class Meta:
         verbose_name = _("Activity")
         verbose_name_plural = _("Activities")

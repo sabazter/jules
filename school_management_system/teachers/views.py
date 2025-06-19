@@ -37,23 +37,50 @@ def teacher_dashboard(request):
 
 @login_required
 def create_activity_view(request):
-    if request.user.role != 'TEACHER':
+    # Use User.ROLE_CHOICES for role comparison
+    if request.user.role != User.ROLE_CHOICES[1][0]: # 'TEACHER'
         messages.error(request, _("No tiene permiso para acceder a esta página."))
         return redirect('home')
 
+    assignment_id_from_get = request.GET.get('assignment_id')
+    initial_assignment = None
+    if assignment_id_from_get:
+        try:
+            initial_assignment = TeacherAssignment.objects.get(pk=assignment_id_from_get, teacher=request.user)
+        except TeacherAssignment.DoesNotExist:
+            messages.error(request, _("La asignación especificada para la actividad no es válida o no le pertenece."))
+            return redirect('teachers:dashboard')
+
     if request.method == 'POST':
-        form = ActivityForm(request.POST, teacher=request.user)
+        # Pass assignment_id to form so it can disable the field if initial_assignment is set
+        form = ActivityForm(request.POST, teacher=request.user, assignment_id=initial_assignment.id if initial_assignment else None)
         if form.is_valid():
             activity = form.save(commit=False)
-            activity.save()
-            messages.success(request, _("Actividad '%(title)s' creada exitosamente.") % {'title': activity.title})
-            return redirect('teachers:dashboard')
-    else:
-        form = ActivityForm(teacher=request.user)
+
+            # If teacher_assignment field was disabled (due to initial_assignment),
+            # it won't be in form.cleaned_data. The form's __init__ should have set it on the instance.
+            # Or, we explicitly set it here if initial_assignment was present.
+            if initial_assignment:
+                activity.teacher_assignment = initial_assignment
+            # If not initial_assignment, form.cleaned_data['teacher_assignment'] should be used (already handled by form.save())
+
+            # Final check if teacher_assignment is set on the activity instance
+            # This could happen if the field was not disabled AND the user didn't select one.
+            if not activity.teacher_assignment_id: # Check _id to avoid loading the object if not needed
+                # This error should ideally be caught by form validation if field is required and not disabled.
+                form.add_error('teacher_assignment', _("Debe seleccionar una asignación válida para la actividad."))
+
+            if not form.errors:
+                activity.save()
+                messages.success(request, _("Actividad '%(title)s' creada exitosamente.") % {'title': activity.title})
+                return redirect('teachers:dashboard')
+    else: # GET
+        form = ActivityForm(teacher=request.user, assignment_id=initial_assignment.id if initial_assignment else None)
 
     context = {
         'form': form,
-        'page_title': _("Crear Nueva Actividad")
+        'page_title': _("Crear Nueva Actividad"),
+        'selected_assignment': initial_assignment
     }
     return render(request, 'teachers/create_activity.html', context)
 
@@ -65,13 +92,11 @@ def input_grades_view(request, activity_id):
 
     activity = get_object_or_404(Activity, pk=activity_id, teacher_assignment__teacher=request.user)
 
-    # Common data fetching logic
-    teacher_assign_model = activity.teacher_assignment # This is teachers.models.TeacherAssignment
+    teacher_assign_model = activity.teacher_assignment
 
     grading_scale = None
-    grade_values = None # Ensure this is used consistently (was grade_values_queryset before in POST)
+    grade_values = None
     try:
-        # This is core.models.SubjectAssignment
         subject_assign_instance = SubjectAssignment.objects.get(
             subject=teacher_assign_model.subject,
             grade_level=teacher_assign_model.section.grade_level
@@ -80,17 +105,16 @@ def input_grades_view(request, activity_id):
             grading_scale = subject_assign_instance.grading_scale
             grade_values = grading_scale.values.all().order_by('order')
     except SubjectAssignment.DoesNotExist:
-        pass # grading_scale and grade_values remain None
+        pass
 
     student_enrollments = StudentEnrollment.objects.filter(
         section=teacher_assign_model.section
     ).select_related('student').order_by('student__last_name', 'student__first_name')
 
-    # Deduplicate students if they have multiple enrollments in the same section (unlikely with current model)
     unique_students_dict = {se.student.id: se.student for se in student_enrollments}
 
     student_grades_data = []
-    for student_obj in unique_students_dict.values(): # Iterate over unique student objects
+    for student_obj in unique_students_dict.values():
         grade = Grade.objects.filter(activity=activity, student=student_obj).first()
         current_score_numeric = grade.score if grade else None
         current_feedback = grade.feedback if grade else ""
@@ -158,7 +182,6 @@ def input_grades_view(request, activity_id):
             if current_score_is_none and not feedback and not existing_grade:
                 continue
 
-            # Logging message
             messages.info(
                 request,
                 f"Procesando para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
@@ -172,17 +195,16 @@ def input_grades_view(request, activity_id):
                 defaults=grade_defaults
             )
 
-            # Add this database check and debug message:
             retrieved_grade = Grade.objects.filter(student=student_obj, activity=activity).first()
             if retrieved_grade:
-                messages.info( # Changed from debug to info for visibility
+                messages.info(
                     request,
                     f"VERIFICACIÓN DB para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
                     f"Actividad ID {activity.id} ('{activity.title}'): "
                     f"Puntaje en DB={retrieved_grade.score}, Feedback en DB='{retrieved_grade.feedback}'"
                 )
             else:
-                messages.info( # Changed from debug to info for visibility
+                messages.info(
                     request,
                     f"VERIFICACIÓN DB para Estudiante ID {student_obj.id} ({student_obj.get_full_name() or student_obj.username}), "
                     f"Actividad ID {activity.id} ('{activity.title}'): "
@@ -203,4 +225,4 @@ def input_grades_view(request, activity_id):
         'grading_scale': grading_scale,
         'grade_values': grade_values,
     }
-    return render(request, 'teachers/input_grades.html', context)
+    return render(request, 'teachers/create_activity.html', context)
