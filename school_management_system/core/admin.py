@@ -65,7 +65,10 @@ class SubjectAssignmentAdmin(admin.ModelAdmin):
 
     @admin.display(description=_('Grado/Año (Nivel)'), ordering='grade_level__name') # Corrected ordering to grade_level name
     def get_grade_level_name_and_level(self, obj):
-        return f"{obj.grade_level.name} ({obj.grade_level.level.name})"
+        return _("{grade_level_name} ({level_name})").format(
+            grade_level_name=obj.grade_level.name,
+            level_name=obj.grade_level.level.name
+        )
 
     @admin.display(description=_('Escala de Calificación'), ordering='grading_scale__name')
     def get_grading_scale_name(self, obj):
@@ -97,7 +100,11 @@ class StudentEnrollmentAdmin(admin.ModelAdmin):
 
     @admin.display(description=_('Sección (Grado - Ciclo)'), ordering='section__name') # Consider section__grade_level__order_in_level then section__name
     def get_section_details(self, obj):
-        return f"Sección {obj.section.name} ({obj.section.grade_level.name} - {obj.section.academic_year.name})"
+        return _("Section {section_name} ({grade_level_name} - {academic_year_name})").format(
+            section_name=obj.section.name,
+            grade_level_name=obj.section.grade_level.name,
+            academic_year_name=obj.section.academic_year.name
+        )
 
     @admin.display(description=_('Año Académico de Inscripción'), ordering='section__academic_year__name')
     def get_academic_year_of_section(self, obj):

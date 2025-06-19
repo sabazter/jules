@@ -51,7 +51,10 @@ def section_assignment_view(request, assignment_id):
     context = {
         'teacher_assignment': teacher_assignment,
         'activities': activities,
-        'page_title': f"{teacher_assignment.subject.name} - {teacher_assignment.section.name}"
+        'page_title': _("{subject_name} - {section_name}").format(
+            subject_name=teacher_assignment.subject.name,
+            section_name=teacher_assignment.section.name
+        )
     }
     return render(request, 'teachers/section_assignment_detail.html', context)
 
@@ -66,7 +69,10 @@ def student_roster_view(request, assignment_id):
     context = {
         'teacher_assignment': teacher_assignment,
         'student_enrollments': student_enrollments,
-        'page_title': f"{_('Student Roster for')} {teacher_assignment.subject.name} - {teacher_assignment.section.name}"
+        'page_title': _("Student Roster for {subject_name} - {section_name}").format(
+            subject_name=teacher_assignment.subject.name,
+            section_name=teacher_assignment.section.name
+        )
     }
     return render(request, 'teachers/student_roster.html', context)
 

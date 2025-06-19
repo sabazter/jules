@@ -17,7 +17,7 @@
             <li class="breadcrumb-item"><a href="{% url 'teachers:dashboard' %}">{% trans "Teacher Dashboard" %}</a></li>
             <li class="breadcrumb-item">
                 <a href="{% url 'teachers:section_assignment_detail' assignment_id=teacher_assignment.id %}">
-                    {{ teacher_assignment.subject.name }} - {{ teacher_assignment.section.name }}
+                    {% blocktrans with subject_name=teacher_assignment.subject.name section_name=teacher_assignment.section.name %}{{ subject_name }} - {{ section_name }}{% endblocktrans %}
                 </a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{% trans "Student Roster" %}</li>
@@ -28,8 +28,9 @@
         <div class="card-header">
             <h1 class="card-title h3">{% trans "Student Roster" %}</h1>
             <h5 class="card-subtitle mb-2 text-muted">
-                {{ teacher_assignment.subject.name }} - {{ teacher_assignment.section.name }}
-                ({{ teacher_assignment.section.grade_level.name }}, {{ teacher_assignment.section.academic_year.name }})
+                {% blocktrans with subject_name=teacher_assignment.subject.name section_name=teacher_assignment.section.name grade_level_name=teacher_assignment.section.grade_level.name academic_year_name=teacher_assignment.section.academic_year.name %}
+                {{ subject_name }} - {{ section_name }} ({{ grade_level_name }}, {{ academic_year_name }})
+                {% endblocktrans %}
             </h5>
         </div>
         <div class="card-body">
@@ -49,10 +50,10 @@
                         {% for enrollment in student_enrollments %}
                             <tr>
                                 <th scope="row">{{ forloop.counter }}</th>
-                                <td>{{ enrollment.student.last_name|default:"N/A" }}</td>
-                                <td>{{ enrollment.student.first_name|default:"N/A" }}</td>
+                                <td>{{ enrollment.student.last_name|default:_("N/A") }}</td>
+                                <td>{{ enrollment.student.first_name|default:_("N/A") }}</td>
                                 <td>{{ enrollment.student.username }}</td>
-                                <td>{{ enrollment.student.email|default:"N/A" }}</td>
+                                <td>{{ enrollment.student.email|default:_("N/A") }}</td>
                                 {# Display other student fields here #}
                             </tr>
                         {% endfor %}

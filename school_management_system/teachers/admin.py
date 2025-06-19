@@ -19,7 +19,10 @@ class TeacherAssignmentAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("Section (Level)"), ordering='section__name')
     def get_section_details(self, obj):
-        return f"{obj.section.name} ({obj.section.academic_year.level.name})"
+        return _("{section_name} ({level_name})").format(
+            section_name=obj.section.name,
+            level_name=obj.section.academic_year.level.name
+        )
 
     @admin.display(description=_('Academic Year'), ordering='section__academic_year__name')
     def get_academic_year_name(self, obj): # Renamed from get_academic_year to be more specific

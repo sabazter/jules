@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.urls import reverse_lazy
 from django.conf import settings # To access User model if needed, though request.user is better
+from django.utils.translation import gettext_lazy as _
 
 
 # Create your views here.

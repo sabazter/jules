@@ -39,7 +39,7 @@
                                         <a href="{% url 'teachers:section_assignment_detail' assignment_id=assignment_item.id %}">
                                             {{ assignment_item.section.name }}
                                             <small class="text-muted">
-                                                ({{ assignment_item.section.grade_level.name }} - {{ assignment_item.section.academic_year.name }})
+                                                {% blocktrans with grade_level_name=assignment_item.section.grade_level.name academic_year_name=assignment_item.section.academic_year.name %}({{ grade_level_name }} - {{ academic_year_name }}){% endblocktrans %}
                                             </small>
                                         </a>
                                         {# Display other assignment_item details if necessary, but avoid activity listing here #}

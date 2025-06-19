@@ -25,10 +25,10 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <div>
                 <h1 class="card-title h3">
-                    {{ teacher_assignment.subject.name }} - {{ teacher_assignment.section.name }}
+                        {% blocktrans with subject_name=teacher_assignment.subject.name section_name=teacher_assignment.section.name %}{{ subject_name }} - {{ section_name }}{% endblocktrans %}
                 </h1>
                 <h5 class="card-subtitle mb-2 text-muted">
-                    {{ teacher_assignment.section.grade_level.name }} ({{ teacher_assignment.section.academic_year.name }})
+                        {% blocktrans with grade_level_name=teacher_assignment.section.grade_level.name academic_year_name=teacher_assignment.section.academic_year.name %}{{ grade_level_name }} ({{ academic_year_name }}){% endblocktrans %}
                 </h5>
             </div>
             <div> {# Wrap buttons in a div for better grouping if they are multiple #}
@@ -52,10 +52,17 @@
                             <div>
                                 <strong>{{ activity.title }}</strong><br>
                                 <small class="text-muted">
-                                    {% if activity.due_date %}{% trans "Due Date:" %} {{ activity.due_date|date:"d/m/Y" }} {% endif %}
-                                    {% if activity.due_date and activity.max_score %}| {% endif %}
-                                    {% if activity.max_score %}{% trans "Max Score:" %} {{ activity.max_score }}{% endif %}
-                                    {% if activity.activity_type %}| {% trans "Type:" %} {{ activity.get_activity_type_display }}{% endif %}
+                                    {% if activity.due_date %}
+                                        {% blocktrans with due_date=activity.due_date|date:"d/m/Y" %}Fecha de Entrega: {{ due_date }}{% endblocktrans %}
+                                    {% endif %}
+                                    {% if activity.due_date and activity.max_score %} | {% endif %}
+                                    {% if activity.max_score %}
+                                        {% blocktrans with max_score=activity.max_score %}Puntaje Máximo: {{ max_score }}{% endblocktrans %}
+                                    {% endif %}
+                                    {% if activity.activity_type %}
+                                        {% if activity.due_date or activity.max_score %} | {% endif %}
+                                        {% blocktrans with activity_type=activity.get_activity_type_display %}Tipo: {{ activity_type }}{% endblocktrans %}
+                                    {% endif %}
                                 </small>
                             </div>
                             <a href="{% url 'teachers:input_grades' activity_id=activity.id %}" class="btn btn-sm btn-outline-secondary">

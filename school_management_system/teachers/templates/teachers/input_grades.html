@@ -25,8 +25,13 @@
                     <ul class="list-group list-group-horizontal-md mb-3">
                         {% for gv in grade_values %}
                             <li class="list-group-item">
-                                <strong>{{ gv.display_value }}</strong>: {% trans "Num." %} {{ gv.numeric_equivalent }}
-                                {% if gv.description %}({{ gv.description }}){% endif %}
+                                {% blocktrans with display_value=gv.display_value numeric_equivalent=gv.numeric_equivalent trimmed %}
+                                <strong>{{ display_value }}</strong>: Num. {{ numeric_equivalent }}
+                                {% endblocktrans %}{% if gv.description %}
+                                    {% blocktrans with description=gv.description trimmed %}
+                                    ({{ description }})
+                                    {% endblocktrans %}
+                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>

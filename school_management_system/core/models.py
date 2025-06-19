@@ -5,11 +5,11 @@ from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
     ROLE_CHOICES = (
-        ('ADMIN', 'Admin'),
-        ('TEACHER', 'Teacher'),
-        ('STUDENT', 'Student'),
-        ('PARENT', 'Parent'),
-        ('DIRECTOR', 'Director'),
+        ('ADMIN', _('Admin')),
+        ('TEACHER', _('Teacher')),
+        ('STUDENT', _('Student')),
+        ('PARENT', _('Parent')),
+        ('DIRECTOR', _('Director')),
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
 
@@ -47,7 +47,7 @@ class GradeLevel(models.Model):
         ordering = ['level__name', 'order_in_level', 'name']
 
     def __str__(self):
-        return f"{self.name} ({self.level.name})"
+        return _("{name} ({level_name})").format(name=self.name, level_name=self.level.name)
 
 class AcademicYear(models.Model):
     name = models.CharField(
@@ -92,7 +92,11 @@ class Section(models.Model):
         ordering = ['academic_year__name', 'grade_level__level__name', 'grade_level__order_in_level', 'name']
 
     def __str__(self):
-        return f"{self.grade_level.name} - Sección {self.name} ({self.academic_year.name})"
+        return _("{grade_level_name} - Section {section_name} ({academic_year_name})").format(
+            grade_level_name=self.grade_level.name,
+            section_name=self.name,
+            academic_year_name=self.academic_year.name
+        )
 
 class Subject(models.Model):
     name = models.CharField(max_length=255, verbose_name=_("Name"))
@@ -126,7 +130,11 @@ class GradeValue(models.Model):
         ordering = ['scale', 'order', 'numeric_equivalent']
 
     def __str__(self):
-        return f"{self.scale.name}: {self.display_value} ({self.numeric_equivalent})"
+        return _("{scale_name}: {display_value} ({numeric_equivalent})").format(
+            scale_name=self.scale.name,
+            display_value=self.display_value,
+            numeric_equivalent=self.numeric_equivalent
+        )
 
 class SubjectAssignment(models.Model):
     subject = models.ForeignKey(
@@ -161,7 +169,11 @@ class SubjectAssignment(models.Model):
         ordering = ['grade_level__level__name', 'grade_level__order_in_level', 'subject__name']
 
     def __str__(self):
-        return f"{self.subject.name} - {self.grade_level.name} ({self.grade_level.level.name})"
+        return _("{subject_name} - {grade_level_name} ({level_name})").format(
+            subject_name=self.subject.name,
+            grade_level_name=self.grade_level.name,
+            level_name=self.grade_level.level.name
+        )
 
 class AcademicPeriod(models.Model):
     academic_year = models.ForeignKey(
@@ -194,7 +206,10 @@ class AcademicPeriod(models.Model):
         ordering = ['academic_year__start_date', 'start_date', 'name']
 
     def __str__(self):
-        return f"{self.academic_year.name} - {self.name}"
+        return _("{academic_year_name} - {period_name}").format(
+            academic_year_name=self.academic_year.name,
+            period_name=self.name
+        )
 
 class StudentEnrollment(models.Model):
     student = models.ForeignKey(
@@ -222,4 +237,10 @@ class StudentEnrollment(models.Model):
         ordering = ['section__academic_year__name', 'section__grade_level__order_in_level', 'section__name', 'student__last_name', 'student__first_name']
 
     def __str__(self):
-        return f"{self.student.get_full_name() or self.student.username} - {self.section.grade_level.name} {self.section.name} ({self.section.academic_year.name})"
+        student_display = self.student.get_full_name() or self.student.username
+        return _("{student_display} - {grade_level_name} {section_name} ({academic_year_name})").format(
+            student_display=student_display,
+            grade_level_name=self.section.grade_level.name,
+            section_name=self.section.name,
+            academic_year_name=self.section.academic_year.name
+        )

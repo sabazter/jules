@@ -31,7 +31,12 @@ class TeacherAssignment(models.Model):
 
     def __str__(self):
         teacher_name = self.teacher.get_full_name() or self.teacher.username
-        return f"{teacher_name} - {self.subject.name} ({self.section.name} - {self.section.academic_year.name})"
+        return _("{teacher_name} - {subject_name} ({section_name} - {academic_year_name})").format(
+            teacher_name=teacher_name,
+            subject_name=self.subject.name,
+            section_name=self.section.name,
+            academic_year_name=self.section.academic_year.name
+        )
 
 class Activity(models.Model):
     teacher_assignment = models.ForeignKey(
@@ -87,7 +92,11 @@ class Activity(models.Model):
         ordering = ['teacher_assignment', 'due_date', 'title']
 
     def __str__(self):
-        return f"{self.title} ({self.teacher_assignment.subject.name} - {self.teacher_assignment.section.name})"
+        return _("{title} ({subject_name} - {section_name})").format(
+            title=self.title,
+            subject_name=self.teacher_assignment.subject.name,
+            section_name=self.teacher_assignment.section.name
+        )
 
 class Grade(models.Model):
     student = models.ForeignKey(
@@ -127,4 +136,9 @@ class Grade(models.Model):
 
     def __str__(self):
         student_name = self.student.get_full_name() or self.student.username
-        return f"{student_name} - {self.activity.title}: {self.score if self.score is not None else _('N/A')}"
+        score_display = self.score if self.score is not None else _('N/A')
+        return _("{student_name} - {activity_title}: {score}").format(
+            student_name=student_name,
+            activity_title=self.activity.title,
+            score=score_display
+        )

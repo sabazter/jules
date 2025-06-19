@@ -3,190 +3,948 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-18 15:30+0000\n"
+"POT-Creation-Date: 2025-06-19 13:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? "
-"1 : 2;\n"
-#: school_management_system/settings.py:113
-msgid "Spanish"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: core/admin.py:37 core/models.py:63
+msgid "Año Académico"
+msgstr "Año Académico"
+
+#: core/admin.py:41 core/models.py:44 core/models.py:79 core/models.py:150
+msgid "Grado/Año de Estudio"
+msgstr "Grado/Año de Estudio"
+
+#: core/admin.py:45 core/models.py:35
+msgid "Nivel Educativo"
+msgstr "Nivel Educativo"
+
+#: core/admin.py:62 core/models.py:144
+msgid "Asignatura"
+msgstr "Asignatura"
+
+#: core/admin.py:66
+msgid "Grado/Año (Nivel)"
+msgstr "Grado/Año (Nivel)"
+
+#: core/admin.py:68
+#, python-brace-format
+msgid "{grade_level_name} ({level_name})"
+msgstr "{grade_level_name} ({level_name})"
+
+#: core/admin.py:73
+msgid "Escala de Calificación"
+msgstr "Escala de Calificación"
+
+#: core/admin.py:75
+msgid "No especificada"
+msgstr "No especificada"
+
+#: core/admin.py:97 core/models.py:220
+msgid "Estudiante"
+msgstr "Estudiante"
+
+#: core/admin.py:101
+msgid "Sección (Grado - Ciclo)"
+msgstr "Sección (Grado - Ciclo)"
+
+#: core/admin.py:103
+#, python-brace-format
+msgid "Section {section_name} ({grade_level_name} - {academic_year_name})"
+msgstr "Sección {section_name} ({grade_level_name} - {academic_year_name})"
+
+#: core/admin.py:109
+msgid "Año Académico de Inscripción"
+msgstr "Año Académico de Inscripción"
+
+#: core/admin.py:125
+msgid "Number of Values"
+msgstr "Número de Valores"
+
+#: core/models.py:8
+msgid "Admin"
+msgstr "Administrador"
+
+#: core/models.py:9 teachers/admin.py:12 teachers/admin.py:48
+#: teachers/models.py:12
+msgid "Teacher"
+msgstr "Profesor"
+
+#: core/models.py:10 teachers/admin.py:67 teachers/models.py:107
+#: teachers/templates/teachers/input_grades.html:52
+msgid "Student"
+msgstr "Estudiante"
+
+#: core/models.py:11
+msgid "Parent"
+msgstr "Padre/Madre/Tutor"
+
+#: core/models.py:12
+msgid "Director"
+msgstr "Director"
+
+#: core/models.py:20 core/models.py:102
+msgid "Name"
+msgstr "Nombre"
+
+#: core/models.py:21
+msgid "Duration (Years)"
+msgstr "Duración (Años)"
+
+#: core/models.py:29
+msgid "Nombre del Grado/Año de Estudio"
+msgstr "Nombre del Grado/Año de Estudio"
+
+#: core/models.py:39
+msgid "Orden dentro del Nivel"
+msgstr "Orden dentro del Nivel"
+
+#: core/models.py:40
+msgid ""
+"Para ordenar los grados/años dentro de un nivel educativo (ej: 1 para 1er "
+"año, 2 para 2do año)."
 msgstr ""
+"Para ordenar los grados/años dentro de un nivel educativo (ej: 1 para 1er "
+"año, 2 para 2do año)."
+
+#: core/models.py:45
+msgid "Grados/Años de Estudio"
+msgstr "Grados/Años de Estudio"
+
+#: core/models.py:50
+#, python-brace-format
+msgid "{name} ({level_name})"
+msgstr "{name} ({level_name})"
+
+#: core/models.py:56
+msgid "Año Académico (ej: 2023-2024)"
+msgstr "Año Académico (ej: 2023-2024)"
+
+#: core/models.py:57
+msgid "Formato: YYYY-YYYY, ej: 2023-2024"
+msgstr "Formato: YYYY-YYYY, ej: 2023-2024"
+
+#: core/models.py:59
+msgid "Fecha de Inicio del Año Académico"
+msgstr "Fecha de Inicio del Año Académico"
+
+#: core/models.py:60
+msgid "Fecha de Fin del Año Académico"
+msgstr "Fecha de Fin del Año Académico"
+
+#: core/models.py:64
+msgid "Años Académicos"
+msgstr "Años Académicos"
+
+#: core/models.py:73
+msgid "Nombre de la Sección (ej: A, B, Única)"
+msgstr "Nombre de la Sección (ej: A, B, Única)"
+
+#: core/models.py:85
+msgid "Año Académico (Ciclo Escolar)"
+msgstr "Año Académico (Ciclo Escolar)"
+
+#: core/models.py:89
+msgid "Sección"
+msgstr "Sección"
+
+#: core/models.py:90
+msgid "Secciones"
+msgstr "Secciones"
+
+#: core/models.py:95
+#, python-brace-format
+msgid "{grade_level_name} - Section {section_name} ({academic_year_name})"
+msgstr "{grade_level_name} - Sección {section_name} ({academic_year_name})"
+
+#: core/models.py:103 core/models.py:110 teachers/models.py:55
+msgid "Description"
+msgstr "Descripción"
+
+#: core/models.py:109
+msgid "Scale Name"
+msgstr "Nombre de la Escala"
+
+#: core/models.py:113
+msgid "Grading Scale"
+msgstr "Escala de Calificación"
+
+#: core/models.py:114
+msgid "Grading Scales"
+msgstr "Escalas de Calificación"
+
+#: core/models.py:121
+msgid "Scale"
+msgstr "Escala"
+
+#: core/models.py:122
+msgid "Display Value (e.g., A, B, 20, Pass)"
+msgstr "Valor a Mostrar (ej: A, B, 20, Aprobado)"
+
+#: core/models.py:123
+msgid "Numeric Equivalent"
+msgstr "Equivalente Numérico"
+
+#: core/models.py:124
+msgid "Order for display in dropdowns/lists"
+msgstr "Orden para mostrar en listas/desplegables"
+
+#: core/models.py:124
+msgid "Order"
+msgstr "Orden"
+
+#: core/models.py:127
+msgid "Grade Value"
+msgstr "Valor de Calificación"
+
+#: core/models.py:128
+msgid "Grade Values"
+msgstr "Valores de Calificación"
+
+#: core/models.py:133
+#, python-brace-format
+msgid "{scale_name}: {display_value} ({numeric_equivalent})"
+msgstr "{scale_name}: {display_value} ({numeric_equivalent})"
+
+#: core/models.py:153
+msgid "Carga Horaria Semanal (horas)"
+msgstr "Carga Horaria Semanal (horas)"
+
+#: core/models.py:154
+msgid "Número de horas de esta asignatura a la semana para este grado."
+msgstr "Número de horas de esta asignatura a la semana para este grado."
+
+#: core/models.py:162
+msgid "Escala de Calificación (Opcional)"
+msgstr "Escala de Calificación (Opcional)"
+
+#: core/models.py:166
+msgid "Asignación de Materia a Grado"
+msgstr "Asignación de Materia a Grado"
+
+#: core/models.py:167
+msgid "Asignaciones de Materias a Grados"
+msgstr "Asignaciones de Materias a Grados"
+
+#: core/models.py:172
+#, python-brace-format
+msgid "{subject_name} - {grade_level_name} ({level_name})"
+msgstr "{subject_name} - {grade_level_name} ({level_name})"
+
+#: core/models.py:183
+msgid "Año Académico (YYYY-YYYY)"
+msgstr "Año Académico (YYYY-YYYY)"
+
+#: core/models.py:187
+msgid "Nombre del Lapso (ej: 1er Lapso, ASP)"
+msgstr "Nombre del Lapso (ej: 1er Lapso, ASP)"
+
+#: core/models.py:189
+msgid "Fecha de Inicio del Lapso"
+msgstr "Fecha de Inicio del Lapso"
+
+#: core/models.py:190
+msgid "Fecha de Fin del Lapso"
+msgstr "Fecha de Fin del Lapso"
+
+#: core/models.py:193
+msgid "Inicio de Carga de Notas del Lapso"
+msgstr "Inicio de Carga de Notas del Lapso"
+
+#: core/models.py:194
+msgid "Fecha desde la cual se pueden cargar notas para este lapso."
+msgstr "Fecha desde la cual se pueden cargar notas para este lapso."
+
+#: core/models.py:198
+msgid "Cierre de Carga de Notas del Lapso"
+msgstr "Cierre de Carga de Notas del Lapso"
+
+#: core/models.py:199
+msgid "Fecha hasta la cual se pueden cargar notas para este lapso."
+msgstr "Fecha hasta la cual se pueden cargar notas para este lapso."
+
+#: core/models.py:203
+msgid "Lapso Académico"
+msgstr "Lapso Académico"
+
+#: core/models.py:204
+msgid "Lapsos Académicos"
+msgstr "Lapsos Académicos"
+
+#: core/models.py:209
+#, python-brace-format
+msgid "{academic_year_name} - {period_name}"
+msgstr "{academic_year_name} - {period_name}"
+
+#: core/models.py:226
+msgid "Sección Inscrita"
+msgstr "Sección Inscrita"
+
+#: core/models.py:230
+msgid "Fecha de Inscripción"
+msgstr "Fecha de Inscripción"
+
+#: core/models.py:234
+msgid "Inscripción de Estudiante"
+msgstr "Inscripción de Estudiante"
+
+#: core/models.py:235
+msgid "Inscripciones de Estudiantes"
+msgstr "Inscripciones de Estudiantes"
+
+#: core/models.py:241
+#, python-brace-format
+msgid ""
+"{student_display} - {grade_level_name} {section_name} ({academic_year_name})"
+msgstr ""
+"{student_display} - {grade_level_name} {section_name} ({academic_year_name})"
 
 #: school_management_system/settings.py:114
+msgid "Spanish"
+msgstr "Español"
+
+#: school_management_system/settings.py:115
 msgid "English"
-msgstr ""
+msgstr "Inglés"
+
+#: students/forms.py:7 teachers/templates/teachers/student_roster.html:45
+msgid "Email"
+msgstr "Correo Electrónico"
+
+#: students/forms.py:8
+msgid "First name"
+msgstr "Nombre"
+
+#: students/forms.py:9
+msgid "Last name"
+msgstr "Apellido"
 
 #: students/templates/students/dashboard.html:4 templates/base.html:29
 msgid "Student Dashboard"
-msgstr ""
+msgstr "Panel de Estudiante"
 
 #: students/templates/students/dashboard.html:14
 #, python-format
 msgid "%(first_name)s %(last_name)s's Dashboard"
-msgstr ""
+msgstr "Panel de %(first_name)s %(last_name)s"
 
 #: students/templates/students/dashboard.html:16
 #, python-format
 msgid "%(first_name)s's Dashboard"
-msgstr ""
+msgstr "Panel de %(first_name)s"
 
 #: students/templates/students/dashboard.html:18
 #, python-format
 msgid "%(username)s's Dashboard"
-msgstr ""
+msgstr "Panel de %(username)s"
 
 #: students/templates/students/dashboard.html:23
 #, python-format
 msgid "Welcome, %(username)s!"
-msgstr ""
+msgstr "¡Bienvenido, %(username)s!"
 
 #: students/templates/students/dashboard.html:25
+#: teachers/templates/teachers/dashboard.html:25
 msgid "Email:"
-msgstr ""
+msgstr "Correo Electrónico:"
 
 #: students/templates/students/dashboard.html:26
 msgid "Role:"
-msgstr ""
+msgstr "Rol:"
 
 #: students/templates/students/dashboard.html:28
 msgid "This is your student portal. More features will be added here soon!"
-msgstr ""
+msgstr "Este es tu portal de estudiante. ¡Pronto se añadirán más funcionalidades!"
 
 #: students/templates/students/dashboard.html:31
 msgid "My Enrolled Subjects"
-msgstr ""
-
-#: students/templates/students/dashboard.html:38
-msgid "Period:"
-msgstr ""
+msgstr "Mis Asignaturas Inscritas"
 
 #: students/templates/students/dashboard.html:44
 msgid "No description available."
-msgstr ""
+msgstr "No hay descripción disponible."
 
 #: students/templates/students/dashboard.html:48
 #, python-format
-msgid "Year: %(year)s (%(level)s) - Load: %(load)s hrs"
-msgstr ""
+msgid "Grado: %(grade_level)s (%(level)s) - Carga Horaria: %(load)s hrs"
+msgstr "Grado: %(grade_level)s (%(level)s) - Carga Horaria: %(load)s hrs"
 
-#: students/templates/students/dashboard.html:55
+#: students/templates/students/dashboard.html:57
 msgid ""
 "You are not currently enrolled in any subjects or your subject list could "
 "not be determined at this time."
 msgstr ""
+"Actualmente no estás inscrito en ninguna asignatura o tu lista de asignaturas "
+"no pudo ser determinada en este momento."
 
-#: students/templates/students/register.html:4 templates/base.html:50
+#: students/templates/students/register.html:4 templates/base.html:55
 #: templates/home.html:23
 msgid "Register as Student"
-msgstr ""
+msgstr "Registrarse como Estudiante"
 
 #: students/templates/students/register.html:11
 msgid "Create Your Student Account"
-msgstr ""
+msgstr "Crea Tu Cuenta de Estudiante"
 
 #: students/templates/students/register.html:37
 msgid "Register"
+msgstr "Registrarse"
+
+#: teachers/admin.py:16 teachers/admin.py:40 teachers/models.py:18
+msgid "Subject"
+msgstr "Asignatura"
+
+#: teachers/admin.py:20
+msgid "Section (Level)"
+msgstr "Sección (Nivel)"
+
+#: teachers/admin.py:22
+#, python-brace-format
+msgid "{section_name} ({level_name})"
+msgstr "{section_name} ({level_name})"
+
+#: teachers/admin.py:27
+msgid "Academic Year"
+msgstr "Año Académico"
+
+#: teachers/admin.py:44 teachers/models.py:24
+msgid "Section"
+msgstr "Sección"
+
+#: teachers/admin.py:71 teachers/models.py:90 teachers/models.py:113
+msgid "Activity"
+msgstr "Actividad"
+
+#: teachers/forms.py:15
+msgid "Asignación (Asignatura/Sección)"
+msgstr "Asignación (Asignatura/Sección)"
+
+#: teachers/forms.py:16
+msgid "Título de la Actividad"
+msgstr "Título de la Actividad"
+
+#: teachers/forms.py:17
+msgid "Descripción"
+msgstr "Descripción"
+
+#: teachers/forms.py:18
+msgid "Fecha de Entrega"
+msgstr "Fecha de Entrega"
+
+#: teachers/forms.py:19
+msgid "Puntaje Máximo"
+msgstr "Puntaje Máximo"
+
+#: teachers/forms.py:20
+msgid "Lapso Académico (para ventana de calificación)"
+msgstr "Lapso Académico (para ventana de calificación)"
+
+#: teachers/models.py:29
+msgid "Teacher Assignment"
+msgstr "Asignación de Profesor"
+
+#: teachers/models.py:30
+msgid "Teacher Assignments"
+msgstr "Asignaciones de Profesor"
+
+#: teachers/models.py:34
+#, python-brace-format
+msgid "{teacher_name} - {subject_name} ({section_name} - {academic_year_name})"
+msgstr "{teacher_name} - {subject_name} ({section_name} - {academic_year_name})"
+
+#: teachers/models.py:46
+msgid "Teacher Assignment (Subject/Section)"
+msgstr "Asignación de Profesor (Asignatura/Sección)"
+
+#: teachers/models.py:50
+msgid "Title"
+msgstr "Título"
+
+#: teachers/models.py:60
+msgid "Due Date"
+msgstr "Fecha de Entrega"
+
+#: teachers/models.py:65
+msgid "Max Score (e.g., 20, 100)"
+msgstr "Puntaje Máximo (ej: 20, 100)"
+
+#: teachers/models.py:73
+msgid "Academic Period (for grading window)"
+msgstr "Lapso Académico (para ventana de calificación)"
+
+#: teachers/models.py:77
+msgid "Presencial (In-person)"
+msgstr "Presencial"
+
+#: teachers/models.py:78
+msgid "En Línea (Online)"
+msgstr "En Línea"
+
+#: teachers/models.py:85
+msgid "Tipo de Actividad"
+msgstr "Tipo de Actividad"
+
+#: teachers/models.py:86
+msgid "Seleccione si la actividad es presencial o en línea."
+msgstr "Seleccione si la actividad es presencial o en línea."
+
+#: teachers/models.py:91
+msgid "Activities"
+msgstr "Actividades"
+
+#: teachers/models.py:95
+#, python-brace-format
+msgid "{title} ({subject_name} - {section_name})"
+msgstr "{title} ({subject_name} - {section_name})"
+
+#: teachers/models.py:119 teachers/templates/teachers/input_grades.html:53
+#: teachers/templates/teachers/input_grades.html:66
+msgid "Score"
+msgstr "Puntaje"
+
+#: teachers/models.py:123
+msgid "Submission/Grading Date"
+msgstr "Fecha de Entrega/Calificación"
+
+#: teachers/models.py:128 teachers/templates/teachers/input_grades.html:54
+msgid "Feedback"
+msgstr "Comentarios"
+
+#: teachers/models.py:133
+msgid "Grade"
+msgstr "Calificación"
+
+#: teachers/models.py:134
+msgid "Grades"
+msgstr "Calificaciones"
+
+#: teachers/models.py:139 teachers/templates/teachers/student_roster.html:53
+#: teachers/templates/teachers/student_roster.html:54
+#: teachers/templates/teachers/student_roster.html:56
+msgid "N/A"
+msgstr "N/D"
+
+#: teachers/models.py:140
+#, python-brace-format
+msgid "{student_name} - {activity_title}: {score}"
+msgstr "{student_name} - {activity_title}: {score}"
+
+#: teachers/templates/teachers/create_activity.html:4
+msgid "Portal del Profesor"
+msgstr "Portal del Profesor"
+
+#: teachers/templates/teachers/create_activity.html:40
+msgid "Guardar Actividad"
+msgstr "Guardar Actividad"
+
+#: teachers/templates/teachers/create_activity.html:41
+msgid "Cancelar"
+msgstr "Cancelar"
+
+#: teachers/templates/teachers/dashboard.html:4
+#: teachers/templates/teachers/section_assignment_detail.html:17
+#: teachers/templates/teachers/student_roster.html:17
+msgid "Teacher Dashboard"
+msgstr "Panel de Profesor"
+
+#: teachers/templates/teachers/dashboard.html:12
+#, python-format
+msgid "Portal de %(first_name)s %(last_name)s"
+msgstr "Portal de %(first_name)s %(last_name)s"
+
+#: teachers/templates/teachers/dashboard.html:14
+#, python-format
+msgid "Portal de %(first_name)s"
+msgstr "Portal de %(first_name)s"
+
+#: teachers/templates/teachers/dashboard.html:16
+#, python-format
+msgid "Portal de %(username)s"
+msgstr "Portal de %(username)s"
+
+#: teachers/templates/teachers/dashboard.html:26
+msgid "Rol:"
+msgstr "Rol:"
+
+#: teachers/templates/teachers/dashboard.html:28
+msgid "Aquí podrá gestionar sus cursos, ingresar notas y más."
+msgstr "Aquí podrá gestionar sus cursos, ingresar notas y más."
+
+#: teachers/templates/teachers/dashboard.html:31
+msgid "Mis Asignaturas y Secciones"
+msgstr "Mis Asignaturas y Secciones"
+
+#: teachers/templates/teachers/dashboard.html:42
+#, python-format
+msgid "(%(grade_level_name)s - %(academic_year_name)s)"
+msgstr "(%(grade_level_name)s - %(academic_year_name)s)"
+
+#: teachers/templates/teachers/dashboard.html:53
+msgid "No tiene asignaturas o secciones asignadas actualmente."
+msgstr "No tiene asignaturas o secciones asignadas actualmente."
+
+#: teachers/templates/teachers/input_grades.html:4
+msgid "Input Grades for"
+msgstr "Ingresar Calificaciones para"
+
+#: teachers/templates/teachers/input_grades.html:4
+#: teachers/templates/teachers/section_assignment_detail.html:10
+#: teachers/templates/teachers/student_roster.html:10 templates/base.html:34
+msgid "Teacher Portal"
+msgstr "Portal del Profesor"
+
+#: teachers/templates/teachers/input_grades.html:9
+msgid "Input Grades for Activity:"
+msgstr "Ingresar Calificaciones para la Actividad:"
+
+#: teachers/templates/teachers/input_grades.html:11
+#, python-format
+msgid ""
+"\n"
+"            Subject: %(subject)s | Section: %(section)s (%(grade_level)s, "
+"%(year)s)\n"
+"            "
 msgstr ""
+"\n"
+"            Asignatura: %(subject)s | Sección: %(section)s (%(grade_level)s, "
+"%(year)s)\n"
+"            "
+
+#: teachers/templates/teachers/input_grades.html:16
+msgid "Max Score:"
+msgstr "Puntaje Máximo:"
+
+#: teachers/templates/teachers/input_grades.html:22
+msgid "Grading Scale:"
+msgstr "Escala de Calificación:"
+
+#: teachers/templates/teachers/input_grades.html:28
+#, python-format
+msgid "<strong>%(display_value)s</strong>: Num. %(numeric_equivalent)s"
+msgstr "<strong>%(display_value)s</strong>: Núm. %(numeric_equivalent)s"
+
+#: teachers/templates/teachers/input_grades.html:31
+#, python-format
+msgid "(%(description)s)"
+msgstr "(%(description)s)"
+
+#: teachers/templates/teachers/input_grades.html:39
+msgid "No specific grade values defined for this scale."
+msgstr "No hay valores de calificación específicos definidos para esta escala."
+
+#: teachers/templates/teachers/input_grades.html:67
+msgid "Score input"
+msgstr "Entrada de puntaje"
+
+#: teachers/templates/teachers/input_grades.html:71
+#: teachers/templates/teachers/input_grades.html:73
+msgid "Current"
+msgstr "Actual"
+
+#: teachers/templates/teachers/input_grades.html:75
+msgid "Not graded yet"
+msgstr "Aún no calificado"
+
+#: teachers/templates/teachers/input_grades.html:90
+msgid "Save Grades"
+msgstr "Guardar Calificaciones"
+
+#: teachers/templates/teachers/input_grades.html:91
+#: teachers/templates/teachers/input_grades.html:98
+#: teachers/templates/teachers/section_assignment_detail.html:79
+msgid "Back to Dashboard"
+msgstr "Volver al Panel"
+
+#: teachers/templates/teachers/input_grades.html:96
+msgid "No students are available for grading in this activity."
+msgstr "No hay estudiantes disponibles para calificar en esta actividad."
+
+#: teachers/templates/teachers/section_assignment_detail.html:8
+msgid "Section Assignment Details"
+msgstr "Detalles de Asignación de Sección"
+
+#: teachers/templates/teachers/section_assignment_detail.html:19
+msgid "Assignment Details"
+msgstr "Detalles de Asignación"
+
+#: teachers/templates/teachers/section_assignment_detail.html:28
+#: teachers/templates/teachers/student_roster.html:20
+#, python-format
+msgid "%(subject_name)s - %(section_name)s"
+msgstr "%(subject_name)s - %(section_name)s"
+
+#: teachers/templates/teachers/section_assignment_detail.html:31
+#, python-format
+msgid "%(grade_level_name)s (%(academic_year_name)s)"
+msgstr "%(grade_level_name)s (%(academic_year_name)s)"
+
+#: teachers/templates/teachers/section_assignment_detail.html:36
+msgid "Create New Activity"
+msgstr "Crear Nueva Actividad"
+
+#: teachers/templates/teachers/section_assignment_detail.html:39
+msgid "Plan de Evaluación"
+msgstr "Plan de Evaluación"
+
+#: teachers/templates/teachers/section_assignment_detail.html:42
+msgid "Ver Nómina"
+msgstr "Ver Nómina"
+
+#: teachers/templates/teachers/section_assignment_detail.html:47
+msgid "Existing Activities"
+msgstr "Actividades Existentes"
+
+#: teachers/templates/teachers/section_assignment_detail.html:56
+#, python-format
+msgid "Fecha de Entrega: %(due_date)s"
+msgstr "Fecha de Entrega: %(due_date)s"
+
+#: teachers/templates/teachers/section_assignment_detail.html:60
+#, python-format
+msgid "Puntaje Máximo: %(max_score)s"
+msgstr "Puntaje Máximo: %(max_score)s"
+
+#: teachers/templates/teachers/section_assignment_detail.html:64
+#, python-format
+msgid "Tipo: %(activity_type)s"
+msgstr "Tipo: %(activity_type)s"
+
+#: teachers/templates/teachers/section_assignment_detail.html:69
+msgid "Input/View Grades"
+msgstr "Ingresar/Ver Calificaciones"
+
+#: teachers/templates/teachers/section_assignment_detail.html:75
+msgid "No activities have been created for this assignment yet."
+msgstr "Aún no se han creado actividades para esta asignación."
+
+#: teachers/templates/teachers/student_roster.html:8
+#: teachers/templates/teachers/student_roster.html:23
+#: teachers/templates/teachers/student_roster.html:29
+msgid "Student Roster"
+msgstr "Nómina de Estudiantes"
+
+#: teachers/templates/teachers/student_roster.html:31
+#, python-format
+msgid ""
+"\n"
+"                %(subject_name)s - %(section_name)s (%(grade_level_name)s, "
+"%(academic_year_name)s)\n"
+"                "
+msgstr ""
+"\n"
+"                %(subject_name)s - %(section_name)s (%(grade_level_name)s, "
+"%(academic_year_name)s)\n"
+"                "
+
+#: teachers/templates/teachers/student_roster.html:42
+msgid "Last Name"
+msgstr "Apellido"
+
+#: teachers/templates/teachers/student_roster.html:43
+msgid "First Name"
+msgstr "Nombre"
+
+#: teachers/templates/teachers/student_roster.html:44
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: teachers/templates/teachers/student_roster.html:63
+msgid "No students are currently enrolled in this section."
+msgstr "No hay estudiantes actualmente inscritos en esta sección."
+
+#: teachers/templates/teachers/student_roster.html:68
+msgid "Back to Assignment Details"
+msgstr "Volver a Detalles de Asignación"
+
+#: teachers/views.py:42
+msgid "Bienvenido al Portal del Profesor"
+msgstr "Bienvenido al Portal del Profesor"
+
+#: teachers/views.py:54
+#, python-brace-format
+msgid "{subject_name} - {section_name}"
+msgstr "{subject_name} - {section_name}"
+
+#: teachers/views.py:72
+#, python-brace-format
+msgid "Student Roster for {subject_name} - {section_name}"
+msgstr "Nómina de Estudiantes para {subject_name} - {section_name}"
+
+#: teachers/views.py:83 teachers/views.py:131
+msgid "No tiene permiso para acceder a esta página."
+msgstr "No tiene permiso para acceder a esta página."
+
+#: teachers/views.py:92
+msgid ""
+"La asignación especificada para la actividad no es válida o no le pertenece."
+msgstr ""
+"La asignación especificada para la actividad no es válida o no le pertenece."
+
+#: teachers/views.py:112
+msgid "Debe seleccionar una asignación válida para la actividad."
+msgstr "Debe seleccionar una asignación válida para la actividad."
+
+#: teachers/views.py:116
+#, python-format
+msgid "Actividad '%(title)s' creada exitosamente."
+msgstr "Actividad '%(title)s' creada exitosamente."
+
+#: teachers/views.py:123
+msgid "Crear Nueva Actividad"
+msgstr "Crear Nueva Actividad"
+
+#: teachers/views.py:156
+#, python-format
+msgid ""
+"No students are currently enrolled in section "
+"'%(section_name)s' (%(grade_level)s, %(academic_year)s) for activity "
+"'%(activity_title)s'. Please check student enrollments."
+msgstr ""
+"No hay estudiantes actualmente inscritos en la sección "
+"'%(section_name)s' (%(grade_level)s, %(academic_year)s) para la actividad "
+"'%(activity_title)s'. Por favor revise las inscripciones."
+
+#: teachers/views.py:212
+#, python-format
+msgid ""
+"Puntaje inválido '%(score)s' para %(student)s. No está en la escala definida."
+msgstr ""
+"Puntaje inválido '%(score)s' para %(student)s. No está en la escala definida."
+
+#: teachers/views.py:217
+#, python-format
+msgid ""
+"Puntaje '%(score)s' para %(student)s fuera del rango permitido (0-"
+"%(max_score)s)."
+msgstr ""
+"Puntaje '%(score)s' para %(student)s fuera del rango permitido (0-"
+"%(max_score)s)."
+
+#: teachers/views.py:222
+#, python-format
+msgid "Valor de puntaje inválido '%(score)s' para %(student)s."
+msgstr "Valor de puntaje inválido '%(score)s' para %(student)s."
+
+#: teachers/views.py:241
+msgid "Notas guardadas exitosamente."
+msgstr "Notas guardadas exitosamente."
+
+#: teachers/views.py:243
+msgid "Algunas notas no se pudieron guardar. Por favor revise los errores."
+msgstr "Algunas notas no se pudieron guardar. Por favor revise los errores."
+
+#: teachers/views.py:250
+#, python-format
+msgid "Ingresar/Ver Notas para '%(activity_title)s'"
+msgstr "Ingresar/Ver Notas para '%(activity_title)s'"
 
 #: templates/base.html:7
 msgid "School Management System"
-msgstr ""
+msgstr "Sistema de Gestión Escolar"
 
 #: templates/base.html:17
 msgid "School MS"
-msgstr ""
+msgstr "SGE"
 
 #: templates/base.html:18
 msgid "Toggle navigation"
-msgstr ""
+msgstr "Alternar navegación"
 
 #: templates/base.html:24
 msgid "Home"
-msgstr ""
+msgstr "Inicio"
 
-#: templates/base.html:39
+#: templates/base.html:44
 #, python-format
 msgid "Hello, %(username)s (%(role_display)s)"
-msgstr ""
+msgstr "Hola, %(username)s (%(role_display)s)"
 
-#: templates/base.html:42
+#: templates/base.html:47
 msgid "Logout"
-msgstr ""
+msgstr "Cerrar Sesión"
 
-#: templates/base.html:47 templates/home.html:22
+#: templates/base.html:52 templates/home.html:22
 #: templates/registration/login.html:4 templates/registration/login.html:11
 #: templates/registration/login.html:44
 msgid "Login"
-msgstr ""
+msgstr "Iniciar Sesión"
 
-#: templates/base.html:60
-msgid "This is default content. If you see this, the block was not overridden."
-msgstr ""
+#: templates/base.html:69
+msgid "Close"
+msgstr "Cerrar"
 
-#: templates/base.html:67
+#: templates/base.html:75
+msgid "This is default content. If yousee this, the block was not overridden."
+msgstr "Este es contenido por defecto. Si ves esto, el bloque no fue sobreescrito."
+
+#: templates/base.html:82
 #, python-format
 msgid "&copy; %(current_year)s School Management System"
-msgstr ""
+msgstr "&copy; %(current_year)s Sistema de Gestión Escolar"
 
 #: templates/home.html:4
 msgid "Welcome"
-msgstr ""
+msgstr "Bienvenido"
 
 #: templates/home.html:9
 msgid "Welcome to the School Management System!"
-msgstr ""
+msgstr "¡Bienvenido al Sistema de Gestión Escolar!"
 
 #: templates/home.html:10
 msgid "Your one-stop solution for managing academic activities."
-msgstr ""
+msgstr "Tu solución integral para la gestión de actividades académicas."
 
 #: templates/home.html:13
 #, python-format
 msgid "You are logged in as <strong>%(username)s</strong>."
-msgstr ""
+msgstr "Has iniciado sesión como <strong>%(username)s</strong>."
 
 #: templates/home.html:15
 msgid "Go to Your Dashboard"
-msgstr ""
+msgstr "Ir a Tu Panel"
 
 #: templates/home.html:17
 msgid "Go to Admin Panel"
-msgstr ""
+msgstr "Ir al Panel de Administración"
 
 #: templates/home.html:31
 msgid "For Students"
-msgstr ""
+msgstr "Para Estudiantes"
 
 #: templates/home.html:32
 msgid ""
 "Access your grades, materials, and submit assignments. Stay on top of your "
 "academic progress."
 msgstr ""
+"Accede a tus calificaciones, materiales y envía tareas. Mantente al día con "
+"tu progreso académico."
 
 #: templates/home.html:37
 msgid "For Teachers"
-msgstr ""
+msgstr "Para Profesores"
 
 #: templates/home.html:38
 msgid ""
 "Manage your courses, input grades, create activities, and communicate with "
 "students and parents."
 msgstr ""
+"Gestiona tus cursos, ingresa calificaciones, crea actividades y comunícate "
+"con estudiantes y padres."
 
 #: templates/registration/login.html:22
 msgid "Username:"
-msgstr ""
+msgstr "Nombre de usuario:"
 
 #: templates/registration/login.html:32
 msgid "Password:"
-msgstr ""
+msgstr "Contraseña:"
