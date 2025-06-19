@@ -38,7 +38,7 @@ def teacher_dashboard(request):
     context = {
         'teacher': teacher,
         # Pass the new structured data. Convert defaultdict to dict for template if preferred, though not strictly necessary.
-        'structured_assignments': structured_assignments,
+        'structured_assignments': dict(structured_assignments),
         'welcome_message': _("Bienvenido al Portal del Profesor")
     }
     return render(request, 'teachers/dashboard.html', context)
