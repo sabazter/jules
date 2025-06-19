@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from decimal import Decimal, InvalidOperation
+from collections import defaultdict # Add this import
 
 from .models import TeacherAssignment, Activity, Grade
 from .forms import ActivityForm
@@ -12,25 +13,32 @@ from core.models import User, StudentEnrollment, SubjectAssignment
 @login_required
 def teacher_dashboard(request):
     teacher = request.user
-    assignments = TeacherAssignment.objects.filter(teacher=teacher).select_related(
+
+    # Fetch assignments, ensuring subject and section details are included
+    # Order by subject name first, then by section details for consistent display
+    assignments_query = TeacherAssignment.objects.filter(teacher=teacher).select_related(
         'subject',
         'section',
         'section__academic_year',
         'section__grade_level',
         'section__grade_level__level'
-    ).prefetch_related(
-        'activities'
+        # Removed prefetch_related('activities') for now, can be added if needed later
     ).order_by(
+        'subject__name', # Primary sort by subject name
         'section__academic_year__name',
         'section__grade_level__level__name',
         'section__grade_level__order_in_level',
-        'section__name',
-        'subject__name'
+        'section__name'
     )
+
+    structured_assignments = defaultdict(list)
+    for assignment in assignments_query:
+        structured_assignments[assignment.subject].append(assignment)
 
     context = {
         'teacher': teacher,
-        'assignments': assignments,
+        # Pass the new structured data. Convert defaultdict to dict for template if preferred, though not strictly necessary.
+        'structured_assignments': structured_assignments,
         'welcome_message': _("Bienvenido al Portal del Profesor")
     }
     return render(request, 'teachers/dashboard.html', context)
