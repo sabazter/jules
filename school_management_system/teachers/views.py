@@ -107,9 +107,31 @@ def input_grades_view(request, activity_id):
     except SubjectAssignment.DoesNotExist:
         pass
 
+    # Debug message before fetching student enrollments
+    section_for_debug = teacher_assign_model.section
+    messages.info(
+        request,
+        f"DEBUG: Buscando estudiantes para Sección ID {section_for_debug.id} - '{section_for_debug.name}' "
+        f"(Grado: {section_for_debug.grade_level.name}, Año Académico: {section_for_debug.academic_year.name})"
+    )
+
     student_enrollments = StudentEnrollment.objects.filter(
         section=teacher_assign_model.section
     ).select_related('student').order_by('student__last_name', 'student__first_name')
+
+    # Debug message after fetching student enrollments
+    messages.info(
+        request,
+        f"DEBUG: Se encontraron {student_enrollments.count()} inscripciones para esta sección."
+    )
+
+    if student_enrollments.exists():
+        messages.info(request, "DEBUG: Primeros estudiantes encontrados en esta sección:")
+        for i, se in enumerate(student_enrollments[:5]): # Log details of up to first 5 students
+            messages.info(
+                request,
+                f"  - Estudiante ID {se.student.id}: {se.student.get_full_name() or se.student.username}"
+            )
 
     unique_students_dict = {se.student.id: se.student for se in student_enrollments}
 
