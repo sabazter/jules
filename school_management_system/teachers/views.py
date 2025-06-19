@@ -56,6 +56,21 @@ def section_assignment_view(request, assignment_id):
     return render(request, 'teachers/section_assignment_detail.html', context)
 
 @login_required
+def student_roster_view(request, assignment_id):
+    teacher_assignment = get_object_or_404(TeacherAssignment, pk=assignment_id, teacher=request.user)
+
+    student_enrollments = StudentEnrollment.objects.filter(
+        section=teacher_assignment.section
+    ).select_related('student').order_by('student__last_name', 'student__first_name')
+
+    context = {
+        'teacher_assignment': teacher_assignment,
+        'student_enrollments': student_enrollments,
+        'page_title': f"{_('Student Roster for')} {teacher_assignment.subject.name} - {teacher_assignment.section.name}"
+    }
+    return render(request, 'teachers/student_roster.html', context)
+
+@login_required
 def create_activity_view(request):
     # Use User.ROLE_CHOICES for role comparison
     if request.user.role != User.ROLE_CHOICES[1][0]: # 'TEACHER'
