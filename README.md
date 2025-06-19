@@ -52,3 +52,12 @@ You will need to create a superuser first if you haven't:
 # Navigate to school_management_system/ directory first
 python manage.py createsuperuser
 ```
+
+## Important Notes for Teachers
+
+### Grading Activities
+When a teacher creates an activity, it is linked to a specific subject and section (e.g., 'Mathematics - Section A - 2023-2024').
+For students to appear on the grading page for that activity, they **must** be correctly enrolled in that *exact same section* for the corresponding academic year.
+If students are not appearing, please first verify:
+*   The activity is for the intended section.
+*   Students are properly enrolled in that section via the student enrollment management features.

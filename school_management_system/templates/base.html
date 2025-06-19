@@ -61,8 +61,18 @@
     </nav>
 
     <main class="container mt-4 mb-4">
+        {% if messages %}
+          <div class="messages">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
         {% block content %}
-        <p>{% trans "This is default content. If you see this, the block was not overridden." %}</p>
+        <p>{% trans "This is default content. If yousee this, the block was not overridden." %}</p>
         {% endblock %}
     </main>
 

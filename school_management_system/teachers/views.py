@@ -121,6 +121,14 @@ def input_grades_view(request, activity_id):
         section=teacher_assign_model.section
     ).select_related('student').order_by('student__last_name', 'student__first_name')
 
+    if student_enrollments.count() == 0:
+        messages.warning(request, _("No students are currently enrolled in section '%(section_name)s' (%(grade_level)s, %(academic_year)s) for activity '%(activity_title)s'. Please check student enrollments.") % {
+            'section_name': teacher_assign_model.section.name,
+            'grade_level': teacher_assign_model.section.grade_level.name,
+            'academic_year': teacher_assign_model.section.academic_year.name,
+            'activity_title': activity.title
+        })
+
     # Debug message after fetching student enrollments
     messages.info(
         request,
@@ -249,4 +257,4 @@ def input_grades_view(request, activity_id):
         'grading_scale': grading_scale,
         'grade_values': grade_values,
     }
-    return render(request, 'teachers/create_activity.html', context)
+    return render(request, 'teachers/input_grades.html', context)
