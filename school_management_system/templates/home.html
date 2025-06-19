@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Welcome" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5 text-center">
+        <h1 class="display-5 fw-bold">{% trans "Welcome to the School Management System!" %}</h1>
+        <p class="fs-4">{% trans "Your one-stop solution for managing academic activities." %}</p>
+
+        {% if user.is_authenticated %}
+            <p class="mt-4">{% blocktrans with username=user.username %}You are logged in as <strong>{{ username }}</strong>.{% endblocktrans %}</p>
+            {% if user.role == 'STUDENT' %}
+                <a href="{% url 'students:dashboard' %}" class="btn btn-primary btn-lg mt-3">{% trans "Go to Your Dashboard" %}</a>
+            {% elif user.role == 'ADMIN' or user.role == 'DIRECTOR' %}
+                <a href="{% url 'admin:index' %}" class="btn btn-secondary btn-lg mt-3">{% trans "Go to Admin Panel" %}</a>
+            {% else %}
+                {# Add links for other roles if dashboards exist #}
+            {% endif %}
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-success btn-lg mt-3 me-2">{% trans "Login" %}</a>
+            <a href="{% url 'students:register' %}" class="btn btn-info btn-lg mt-3">{% trans "Register as Student" %}</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row align-items-md-stretch">
+    <div class="col-md-6 mb-4">
+        <div class="h-100 p-5 text-bg-dark rounded-3">
+            <h2>{% trans "For Students" %}</h2>
+            <p>{% trans "Access your grades, materials, and submit assignments. Stay on top of your academic progress." %}</p>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+            <h2>{% trans "For Teachers" %}</h2>
+            <p>{% trans "Manage your courses, input grades, create activities, and communicate with students and parents." %}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
