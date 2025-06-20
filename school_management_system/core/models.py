@@ -17,11 +17,17 @@ class User(AbstractUser):
         return self.username
 
 class Level(models.Model):
-    name = models.CharField(max_length=255, verbose_name=_("Name"))
-    duration_years = models.IntegerField(verbose_name=_("Duration (Years)"))
+    LEVEL_CHOICES = [
+        ('inicial', _('Educación inicial')),
+        ('primaria', _('Educación primaria')),
+        ('media_general', _('Educación media general')),
+        ('asp', _('ASP')),
+        ('extracurricular', _('Extracurriculares')),
+    ]
+    name = models.CharField(max_length=50, choices=LEVEL_CHOICES, unique=True, verbose_name=_("Name"))
 
     def __str__(self):
-        return self.name
+        return self.get_name_display()
 
 class GradeLevel(models.Model):
     name = models.CharField(
@@ -383,3 +389,194 @@ class PreEnrollmentProfile(models.Model):
 
     # Se podría añadir un método para obtener el representante legal principal (padre, madre o el "otro")
     # y similar para el responsable del pago.
+
+# Models for "Profesores" (Teachers) Module
+
+class TeacherSubjectSectionAssignment(models.Model):
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'TEACHER'},
+        related_name='teacher_subject_assignments', # Changed related_name for clarity
+        verbose_name=_("Profesor(a)")
+    )
+    subject_assignment = models.ForeignKey(
+        SubjectAssignment,
+        on_delete=models.CASCADE,
+        related_name='teacher_allocations',
+        verbose_name=_("Asignatura y Grado Asignado")
+    )
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name='teacher_allocations',
+        verbose_name=_("Sección Específica")
+    )
+
+    class Meta:
+        verbose_name = _("Asignación de Materia a Profesor por Sección")
+        verbose_name_plural = _("Asignaciones de Materias a Profesores por Sección")
+        unique_together = ('teacher', 'subject_assignment', 'section')
+        ordering = ['teacher__last_name', 'teacher__first_name', 'subject_assignment__subject__name', 'section__name']
+
+    def __str__(self):
+        return _("{teacher} - {subject} ({grade}) - Sección {section} ({year})").format(
+            teacher=self.teacher.get_full_name() or self.teacher.username,
+            subject=self.subject_assignment.subject.name,
+            grade=self.subject_assignment.grade_level.name,
+            section=self.section.name,
+            year=self.section.academic_year.name
+        )
+
+class StudentGrade(models.Model):
+    student_enrollment = models.ForeignKey(
+        StudentEnrollment,
+        on_delete=models.CASCADE,
+        related_name='grades',
+        verbose_name=_("Inscripción del Estudiante")
+    )
+    subject_assignment = models.ForeignKey(
+        SubjectAssignment, # Link to Subject in specific GradeLevel
+        on_delete=models.CASCADE,
+        related_name='student_grades',
+        verbose_name=_("Materia Calificada")
+    )
+    academic_period = models.ForeignKey(
+        AcademicPeriod,
+        on_delete=models.CASCADE,
+        related_name='student_grades',
+        verbose_name=_("Lapso Académico")
+    )
+    grade_value = models.ForeignKey(
+        GradeValue,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='student_grades',
+        verbose_name=_("Calificación Obtenida")
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_("Observaciones Adicionales")
+    )
+    submission_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Fecha de Registro de Nota")
+    )
+    graded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='grades_given',
+        limit_choices_to={'role__in': ['TEACHER', 'ADMIN']},
+        verbose_name=_("Calificado Por")
+    )
+
+    class Meta:
+        verbose_name = _("Calificación de Estudiante")
+        verbose_name_plural = _("Calificaciones de Estudiantes")
+        unique_together = ('student_enrollment', 'subject_assignment', 'academic_period')
+        ordering = ['student_enrollment__student__last_name', 'subject_assignment__subject__name', 'academic_period__start_date']
+
+    def __str__(self):
+        return _("Calificación de {student} en {subject} ({period}): {grade}").format(
+            student=self.student_enrollment.student.get_full_name() or self.student_enrollment.student.username,
+            subject=self.subject_assignment.subject.name,
+            period=self.academic_period.name,
+            grade=self.grade_value.display_value if self.grade_value else _("N/A")
+        )
+
+class GuideTeacherAssignment(models.Model):
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'TEACHER'},
+        related_name='guide_assignments',
+        verbose_name=_("Profesor(a) Guía")
+    )
+    section = models.OneToOneField( # A section has one guide teacher
+        Section,
+        on_delete=models.CASCADE,
+        related_name='guide_teacher_assignment', # Allows easy lookup from Section
+        verbose_name=_("Sección Asignada como Guía")
+    )
+    # academic_year implicitly comes from section.academic_year
+
+    class Meta:
+        verbose_name = _("Asignación de Profesor Guía")
+        verbose_name_plural = _("Asignaciones de Profesores Guías")
+        # unique_together not needed due to OneToOneField on section
+        ordering = ['section__academic_year__name', 'section__grade_level__order_in_level', 'section__name']
+
+
+    def __str__(self):
+        return _("{teacher} - Guía de {section_details}").format(
+            teacher=self.teacher.get_full_name() or self.teacher.username,
+            section_details=str(self.section)
+        )
+
+class CoordinatorAssignment(models.Model):
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role__in': ['TEACHER', 'DIRECTOR', 'ADMIN']}, # Coordinators can be teachers or directors
+        related_name='coordinator_assignments',
+        verbose_name=_("Coordinador(a)")
+    )
+    level = models.ForeignKey( # Coordinator for a specific educational level
+        Level,
+        on_delete=models.CASCADE,
+        related_name='coordinators',
+        verbose_name=_("Nivel Educativo Coordinado")
+    )
+    academic_year = models.ForeignKey(
+        AcademicYear,
+        on_delete=models.CASCADE,
+        related_name='coordinators',
+        verbose_name=_("Año Académico de Coordinación")
+    )
+
+    class Meta:
+        verbose_name = _("Asignación de Coordinador de Nivel")
+        verbose_name_plural = _("Asignaciones de Coordinadores de Nivel")
+        unique_together = ('teacher', 'level', 'academic_year') # A teacher can coordinate one level per academic year
+        # Or, if a level can only have one coordinator per year:
+        # unique_together = ('level', 'academic_year')
+        # Let's stick to the first one: a teacher can be assigned to coordinate a level in an academic year.
+        # This also means a level can have multiple coordinators if needed, though less common.
+        # If strict one coordinator per level per year: unique_together = ('level', 'academic_year')
+        # The current unique_together assumes a teacher cannot be coordinator of the same level twice in the same year (which is logical)
+        # and also allows a level to have multiple distinct coordinators if assigned to different teachers.
+        ordering = ['academic_year__name', 'level__name', 'teacher__last_name']
+
+
+    def __str__(self):
+        return _("{teacher} - Coordinador(a) de {level} ({academic_year})").format(
+            teacher=self.teacher.get_full_name() or self.teacher.username,
+            level=self.level.get_name_display(),
+            academic_year=self.academic_year.name
+        )
+
+# Placeholder models for "Evaluación" module admin sections
+class PlaceholderEducacionMediaGeneral(models.Model):
+    pass
+
+    class Meta:
+        verbose_name = _("Evaluación: Educación Media General")
+        verbose_name_plural = _("Evaluación: Educación Media General")
+
+class PlaceholderEducacionPrimaria(models.Model):
+    pass
+
+    class Meta:
+        verbose_name = _("Evaluación: Educación Primaria")
+        verbose_name_plural = _("Evaluación: Educación Primaria")
+
+class PlaceholderEducacionBasica(models.Model): # Assuming "básica" refers to a specific stage like "Inicial" or a sub-set of Primaria.
+    pass
+
+    class Meta:
+        verbose_name = _("Evaluación: Educación Básica") # For example, could be "Educación Inicial" or a more specific "Basic Cycle"
+        verbose_name_plural = _("Evaluación: Educación Básica")
