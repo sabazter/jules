@@ -153,7 +153,7 @@ class PreEnrollmentForm(forms.Form):
         ('', _('Seleccione...')),
         ('madre', _('Madre (Datos ya proporcionados)')),
         ('padre', _('Padre (Datos ya proporcionados)')),
-        ('representante_legal_seleccionado', _('Mismo Representante Legal (si es 'Otro')')),
+        ('representante_legal_seleccionado', _("Mismo Representante Legal (si es 'Otro')")),
         ('otra_persona_pago', _('Otra Persona (Especificar abajo)')),
     ]
     quien_es_responsable_pago = forms.ChoiceField(
