@@ -146,7 +146,19 @@ class PreEnrollmentProfileAdmin(admin.ModelAdmin):
     list_display = ('apellidos_alumno', 'nombres_alumno', 'cedula_alumno', 'grado_aspirado_nombre_temporal', 'estado_preinscripcion', 'fecha_preinscripcion')
     list_filter = ('estado_preinscripcion', 'grado_aspirado_nombre_temporal', 'fecha_preinscripcion', 'grado_aspirado__level__name')
     search_fields = ('nombres_alumno', 'apellidos_alumno', 'cedula_alumno', 'correo_electronico_alumno', 'nombres_madre', 'apellidos_madre', 'cedula_madre', 'nombres_padre', 'apellidos_padre', 'cedula_padre')
-    readonly_fields = ('fecha_preinscripcion', 'fecha_actualizacion') # Make audit fields read-only
+    readonly_fields = ('fecha_preinscripcion', 'fecha_actualizacion')
+
+    actions = ['mark_approved_placeholder', 'mark_rejected_placeholder']
+
+    def mark_approved_placeholder(self, request, queryset):
+        updated_count = queryset.update(estado_preinscripcion='APROBADO')
+        self.message_user(request, _(f"{updated_count} planilla(s) marcada(s) como APROBADA (placeholder)."))
+    mark_approved_placeholder.short_description = _("Marcar seleccionadas como APROBADAS (Placeholder)")
+
+    def mark_rejected_placeholder(self, request, queryset):
+        updated_count = queryset.update(estado_preinscripcion='RECHAZADO')
+        self.message_user(request, _(f"{updated_count} planilla(s) marcada(s) como RECHAZADA (placeholder)."))
+    mark_rejected_placeholder.short_description = _("Marcar seleccionadas como RECHAZADAS (Placeholder)")
 
     fieldsets = (
         (None, {

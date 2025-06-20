@@ -21,6 +21,7 @@ from django.contrib.auth import views as auth_views
 from core.views import home_page_view, CustomLoginView # Import CustomLoginView
 
 urlpatterns = [
+    path('', include('core.urls')), # For pre-enrollment and other core app URLs
     path('', home_page_view, name='home'),  # New homepage URL
     path("admin/", admin.site.urls),
     path('student/', include('students.urls', namespace='students')),
