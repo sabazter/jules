@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %} {# Assuming you might use static files for CSS or JS later #}
+
+{% block title %}{% trans "Planilla de Preinscripción Escolar" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class.row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">{% trans "Planilla de Preinscripción Escolar" %}</h2>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{% trans "Por favor, complete todos los campos requeridos con la información solicitada. Los campos marcados con asterisco (*) son obligatorios." %}</p>
+                    <hr>
+
+                    {% if messages %}
+                        <div class="mb-3">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="preEnrollmentForm">
+                        {% csrf_token %}
+
+                        <!-- Sección Foto del Alumno -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <img id="fotoPreview" src="#" alt="{% trans 'Vista previa de la foto' %}" class="img-thumbnail mb-2" style="display:none; max-width: 150px; max-height: 150px;">
+                                {% if form.foto_alumno.value %}
+                                    <p class="text-muted">{% trans "Foto actual:" %} <a href="{{ form.foto_alumno.value.url }}" target="_blank">{{ form.foto_alumno.value.name|cut:"preenrollment_photos/" }}</a></p>
+                                {% endif %}
+                                <label for="{{ form.foto_alumno.id_for_label }}" class="form-label">{{ form.foto_alumno.label }}</label>
+                                {{ form.foto_alumno }}
+                                {% if form.foto_alumno.help_text %}
+                                    <small class="form-text text-muted">{{ form.foto_alumno.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.foto_alumno.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Sección Datos del Alumno -->
+                        <fieldset class="mb-4 p-3 border rounded">
+                            <legend class="w-auto px-2 h5">{% trans "1. Datos del Alumno" %}</legend>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">{{ form.nombres_alumno.label_tag }} {{ form.nombres_alumno }} {% for error in form.nombres_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.apellidos_alumno.label_tag }} {{ form.apellidos_alumno }} {% for error in form.apellidos_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.cedula_alumno.label_tag }} {{ form.cedula_alumno }} {% if form.cedula_alumno.help_text %}<small class="form-text text-muted">{{ form.cedula_alumno.help_text }}</small>{% endif %} {% for error in form.cedula_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.edad_alumno.label_tag }} {{ form.edad_alumno }} {% for error in form.edad_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.pais_nacimiento_alumno.label_tag }} {{ form.pais_nacimiento_alumno }} {% for error in form.pais_nacimiento_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.estado_nacimiento_alumno.label_tag }} {{ form.estado_nacimiento_alumno }} {% for error in form.estado_nacimiento_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.municipio_nacimiento_alumno.label_tag }} {{ form.municipio_nacimiento_alumno }} {% for error in form.municipio_nacimiento_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.correo_electronico_alumno.label_tag }} {{ form.correo_electronico_alumno }} {% for error in form.correo_electronico_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-12 mb-3">{{ form.lugar_residencia_actual_alumno.label_tag }} {{ form.lugar_residencia_actual_alumno }} {% for error in form.lugar_residencia_actual_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-6 mb-3">{{ form.grado_aspirado_temp.label_tag }} {{ form.grado_aspirado_temp }} {% if form.grado_aspirado_temp.help_text %}<small class="form-text text-muted">{{ form.grado_aspirado_temp.help_text }}</small>{% endif %} {% for error in form.grado_aspirado_temp.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Sección Datos de la Madre -->
+                        <fieldset class="mb-4 p-3 border rounded">
+                            <legend class="w-auto px-2 h5">{% trans "2. Datos de la Madre" %}</legend>
+                            <div class="form-check mb-3">
+                                {{ form.madre_fallecida }}
+                                <label class="form-check-label" for="{{ form.madre_fallecida.id_for_label }}">
+                                    {{ form.madre_fallecida.label }}
+                                </label>
+                                {% if form.madre_fallecida.help_text %}<small class="form-text text-muted d-block">{{ form.madre_fallecida.help_text }}</small>{% endif %}
+                            </div>
+                            <div id="datosMadreContainer">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">{{ form.nombres_madre.label_tag }} {{ form.nombres_madre }} {% for error in form.nombres_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.apellidos_madre.label_tag }} {{ form.apellidos_madre }} {% for error in form.apellidos_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.cedula_madre.label_tag }} {{ form.cedula_madre }} {% if form.cedula_madre.help_text %}<small class="form-text text-muted">{{ form.cedula_madre.help_text }}</small>{% endif %} {% for error in form.cedula_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.edad_madre.label_tag }} {{ form.edad_madre }} {% for error in form.edad_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.pais_nacimiento_madre.label_tag }} {{ form.pais_nacimiento_madre }} {% for error in form.pais_nacimiento_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.estado_nacimiento_madre.label_tag }} {{ form.estado_nacimiento_madre }} {% for error in form.estado_nacimiento_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.municipio_nacimiento_madre.label_tag }} {{ form.municipio_nacimiento_madre }} {% for error in form.municipio_nacimiento_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.correo_electronico_madre.label_tag }} {{ form.correo_electronico_madre }} {% for error in form.correo_electronico_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-12 mb-3">{{ form.lugar_residencia_actual_madre.label_tag }} {{ form.lugar_residencia_actual_madre }} {% for error in form.lugar_residencia_actual_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.rif_madre.label_tag }} {{ form.rif_madre }} {% if form.rif_madre.help_text %}<small class="form-text text-muted">{{ form.rif_madre.help_text }}</small>{% endif %} {% for error in form.rif_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.profesion_madre.label_tag }} {{ form.profesion_madre }} {% for error in form.profesion_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.lugar_trabajo_madre.label_tag }} {{ form.lugar_trabajo_madre }} {% for error in form.lugar_trabajo_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.telefono_habitacion_madre.label_tag }} {{ form.telefono_habitacion_madre }} {% for error in form.telefono_habitacion_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.telefono_movil_madre.label_tag }} {{ form.telefono_movil_madre }} {% for error in form.telefono_movil_madre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Sección Datos del Padre -->
+                        <fieldset class="mb-4 p-3 border rounded">
+                            <legend class="w-auto px-2 h5">{% trans "3. Datos del Padre" %}</legend>
+                             <div class="form-check mb-3">
+                                {{ form.padre_fallecido }}
+                                <label class="form-check-label" for="{{ form.padre_fallecido.id_for_label }}">
+                                    {{ form.padre_fallecido.label }}
+                                </label>
+                                {% if form.padre_fallecido.help_text %}<small class="form-text text-muted d-block">{{ form.padre_fallecido.help_text }}</small>{% endif %}
+                            </div>
+                            <div id="datosPadreContainer">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">{{ form.nombres_padre.label_tag }} {{ form.nombres_padre }} {% for error in form.nombres_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.apellidos_padre.label_tag }} {{ form.apellidos_padre }} {% for error in form.apellidos_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.cedula_padre.label_tag }} {{ form.cedula_padre }} {% if form.cedula_padre.help_text %}<small class="form-text text-muted">{{ form.cedula_padre.help_text }}</small>{% endif %} {% for error in form.cedula_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.edad_padre.label_tag }} {{ form.edad_padre }} {% for error in form.edad_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.pais_nacimiento_padre.label_tag }} {{ form.pais_nacimiento_padre }} {% for error in form.pais_nacimiento_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.estado_nacimiento_padre.label_tag }} {{ form.estado_nacimiento_padre }} {% for error in form.estado_nacimiento_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.municipio_nacimiento_padre.label_tag }} {{ form.municipio_nacimiento_padre }} {% for error in form.municipio_nacimiento_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.correo_electronico_padre.label_tag }} {{ form.correo_electronico_padre }} {% for error in form.correo_electronico_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-12 mb-3">{{ form.lugar_residencia_actual_padre.label_tag }} {{ form.lugar_residencia_actual_padre }} {% for error in form.lugar_residencia_actual_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.rif_padre.label_tag }} {{ form.rif_padre }} {% if form.rif_padre.help_text %}<small class="form-text text-muted">{{ form.rif_padre.help_text }}</small>{% endif %} {% for error in form.rif_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.profesion_padre.label_tag }} {{ form.profesion_padre }} {% for error in form.profesion_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.lugar_trabajo_padre.label_tag }} {{ form.lugar_trabajo_padre }} {% for error in form.lugar_trabajo_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.telefono_habitacion_padre.label_tag }} {{ form.telefono_habitacion_padre }} {% for error in form.telefono_habitacion_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                    <div class="col-md-6 mb-3">{{ form.telefono_movil_padre.label_tag }} {{ form.telefono_movil_padre }} {% for error in form.telefono_movil_padre.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Sección Datos Médicos del Alumno -->
+                        <fieldset class="mb-4 p-3 border rounded">
+                            <legend class="w-auto px-2 h5">{% trans "4. Datos Médicos del Alumno" %}</legend>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">{{ form.peso_alumno.label_tag }} {{ form.peso_alumno }} {% if form.peso_alumno.help_text %}<small class="form-text text-muted">{{ form.peso_alumno.help_text }}</small>{% endif %} {% for error in form.peso_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-3 mb-3">{{ form.altura_alumno.label_tag }} {{ form.altura_alumno }} {% if form.altura_alumno.help_text %}<small class="form-text text-muted">{{ form.altura_alumno.help_text }}</small>{% endif %} {% for error in form.altura_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-2 mb-3">{{ form.talla_pantalon_alumno.label_tag }} {{ form.talla_pantalon_alumno }} {% for error in form.talla_pantalon_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-2 mb-3">{{ form.talla_camisa_alumno.label_tag }} {{ form.talla_camisa_alumno }} {% for error in form.talla_camisa_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                                <div class="col-md-2 mb-3">{{ form.talla_zapatos_alumno.label_tag }} {{ form.talla_zapatos_alumno }} {% for error in form.talla_zapatos_alumno.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.vacunas_recibidas.label }}</label>
+                                <div class="card p-2" style="max-height: 200px; overflow-y: auto;">
+                                    {{ form.vacunas_recibidas }}
+                                </div>
+                                {% if form.vacunas_recibidas.help_text %}<small class="form-text text-muted">{{ form.vacunas_recibidas.help_text }}</small>{% endif %}
+                                {% for error in form.vacunas_recibidas.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}
+                            </div>
+                            <div class="mb-3">{{ form.otras_vacunas_especificar.label_tag }} {{ form.otras_vacunas_especificar }} {% for error in form.otras_vacunas_especificar.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                            <div class="mb-3">{{ form.condiciones_medicas_relevantes.label_tag }} {{ form.condiciones_medicas_relevantes }} {% for error in form.condiciones_medicas_relevantes.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                            <div class="mb-3">{{ form.alergias_conocidas.label_tag }} {{ form.alergias_conocidas }} {% for error in form.alergias_conocidas.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                            <div class="mb-3">{{ form.medicamentos_regulares.label_tag }} {{ form.medicamentos_regulares }} {% for error in form.medicamentos_regulares.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                            <div class="mb-3">{{ form.seguro_medico.label_tag }} {{ form.seguro_medico }} {% for error in form.seguro_medico.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}</div>
+                        </fieldset>
+
+                        <!-- Sección Datos de Vehículos -->
+                        <fieldset class="mb-4 p-3 border rounded">
+                            <legend class="w-auto px-2 h5">{% trans "5. Datos de Vehículos (Opcional)" %}</legend>
+                            <p>{% trans "Si aplica, por favor indique los datos de hasta dos vehículos utilizados regularmente por los representantes." %}</p>
+                            <h6>{% trans "Vehículo 1" %}</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">{{ form.tipo_vehiculo_1.label_tag }} {{ form.tipo_vehiculo_1 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.marca_vehiculo_1.label_tag }} {{ form.marca_vehiculo_1 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.modelo_vehiculo_1.label_tag }} {{ form.modelo_vehiculo_1 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.placa_vehiculo_1.label_tag }} {{ form.placa_vehiculo_1 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.color_vehiculo_1.label_tag }} {{ form.color_vehiculo_1 }}</div>
+                            </div>
+                            <hr>
+                            <h6>{% trans "Vehículo 2" %}</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">{{ form.tipo_vehiculo_2.label_tag }} {{ form.tipo_vehiculo_2 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.marca_vehiculo_2.label_tag }} {{ form.marca_vehiculo_2 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.modelo_vehiculo_2.label_tag }} {{ form.modelo_vehiculo_2 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.placa_vehiculo_2.label_tag }} {{ form.placa_vehiculo_2 }}</div>
+                                <div class="col-md-3 mb-3">{{ form.color_vehiculo_2.label_tag }} {{ form.color_vehiculo_2 }}</div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Sección Representante Legal -->
+                        <fieldset class="mb-4 p-3 border rounded">
+                            <legend class="w-auto px-2 h5">{% trans "6. Representante Legal del Alumno" %}</legend>
+                            <div class="mb-3">
+                                <label class="form-label d-block">{{ form.quien_es_representante_legal.label }}</label>
+                                {{ form.quien_es_representante_legal }}
+                                {% if form.quien_es_representante_legal.help_text %}<small class="form-text text-muted">{{ form.quien_es_representante_legal.help_text }}</small>{% endif %}
+                                {% for error in form.quien_es_representante_legal.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}
+                            </div>
+                            <div id="datosRepresentanteLegalOtroContainer" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">{{ form.nombres_representante_legal_otro.label_tag }} {{ form.nombres_representante_legal_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.apellidos_representante_legal_otro.label_tag }} {{ form.apellidos_representante_legal_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.cedula_representante_legal_otro.label_tag }} {{ form.cedula_representante_legal_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.parentesco_rl_otro.label_tag }} {{ form.parentesco_rl_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.pais_nacimiento_rl_otro.label_tag }} {{ form.pais_nacimiento_rl_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.estado_nacimiento_rl_otro.label_tag }} {{ form.estado_nacimiento_rl_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.municipio_nacimiento_rl_otro.label_tag }} {{ form.municipio_nacimiento_rl_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.edad_rl_otro.label_tag }} {{ form.edad_rl_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.correo_electronico_rl_otro.label_tag }} {{ form.correo_electronico_rl_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.telefono_rl_otro.label_tag }} {{ form.telefono_rl_otro }}</div>
+                                    <div class="col-md-12 mb-3">{{ form.lugar_residencia_actual_rl_otro.label_tag }} {{ form.lugar_residencia_actual_rl_otro }}</div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- Sección Responsable del Pago -->
+                        <fieldset class="mb-4 p-3 border rounded">
+                            <legend class="w-auto px-2 h5">{% trans "7. Persona Responsable del Pago de Mensualidades" %}</legend>
+                            <div class="mb-3">
+                                <label class="form-label d-block">{{ form.quien_es_responsable_pago.label }}</label>
+                                {{ form.quien_es_responsable_pago }}
+                                {% if form.quien_es_responsable_pago.help_text %}<small class="form-text text-muted">{{ form.quien_es_responsable_pago.help_text }}</small>{% endif %}
+                                {% for error in form.quien_es_responsable_pago.errors %}<div class="invalid-feedback d-block">{{error}}</div>{% endfor %}
+                            </div>
+                            <div id="datosResponsablePagoOtroContainer" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">{{ form.nombres_responsable_pago_otro.label_tag }} {{ form.nombres_responsable_pago_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.apellidos_responsable_pago_otro.label_tag }} {{ form.apellidos_responsable_pago_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.cedula_responsable_pago_otro.label_tag }} {{ form.cedula_responsable_pago_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.rif_responsable_pago_otro.label_tag }} {{ form.rif_responsable_pago_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.parentesco_rp_otro.label_tag }} {{ form.parentesco_rp_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.pais_nacimiento_rp_otro.label_tag }} {{ form.pais_nacimiento_rp_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.estado_nacimiento_rp_otro.label_tag }} {{ form.estado_nacimiento_rp_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.municipio_nacimiento_rp_otro.label_tag }} {{ form.municipio_nacimiento_rp_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.edad_rp_otro.label_tag }} {{ form.edad_rp_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.correo_electronico_rp_otro.label_tag }} {{ form.correo_electronico_rp_otro }}</div>
+                                    <div class="col-md-6 mb-3">{{ form.telefono_rp_otro.label_tag }} {{ form.telefono_rp_otro }}</div>
+                                    <div class="col-md-12 mb-3">{{ form.lugar_residencia_actual_rp_otro.label_tag }} {{ form.lugar_residencia_actual_rp_otro }}</div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="mt-4 mb-3 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">{% trans "Enviar Planilla de Preinscripción" %}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preview foto alumno
+    const fotoAlumnoInput = document.getElementById('{{ form.foto_alumno.id_for_label }}');
+    const fotoPreview = document.getElementById('fotoPreview');
+    if (fotoAlumnoInput) {
+        fotoAlumnoInput.addEventListener('change', function(event) {
+            if (event.target.files && event.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fotoPreview.src = e.target.result;
+                    fotoPreview.style.display = 'block';
+                }
+                reader.readAsDataURL(event.target.files[0]);
+            } else {
+                fotoPreview.src = '#';
+                fotoPreview.style.display = 'none';
+            }
+        });
+    }
+
+    // Toggle sections based on checkbox
+    function toggleFieldsVisibility(checkboxId, containerId) {
+        const checkbox = document.getElementById(checkboxId);
+        const container = document.getElementById(containerId);
+        if (!checkbox || !container) return;
+
+        function toggle() {
+            container.style.display = checkbox.checked ? 'none' : 'block';
+        }
+        checkbox.addEventListener('change', toggle);
+        toggle(); // Initial state
+    }
+
+    toggleFieldsVisibility('{{ form.madre_fallecida.id_for_label }}', 'datosMadreContainer');
+    toggleFieldsVisibility('{{ form.padre_fallecido.id_for_label }}', 'datosPadreContainer');
+
+    // Toggle 'Otro' fields for Representante Legal
+    const rlChoiceRadios = document.querySelectorAll('input[name="{{ form.quien_es_representante_legal.name }}"]');
+    const rlOtroContainer = document.getElementById('datosRepresentanteLegalOtroContainer');
+
+    function toggleRlOtroFields() {
+        const selectedRlChoice = document.querySelector('input[name="{{ form.quien_es_representante_legal.name }}"]:checked');
+        if (selectedRlChoice && selectedRlChoice.value === 'otro') {
+            rlOtroContainer.style.display = 'block';
+        } else {
+            rlOtroContainer.style.display = 'none';
+        }
+    }
+    rlChoiceRadios.forEach(radio => radio.addEventListener('change', toggleRlOtroFields));
+    toggleRlOtroFields(); // Initial state
+
+    // Toggle 'Otro' fields for Responsable de Pago
+    const rpChoiceRadios = document.querySelectorAll('input[name="{{ form.quien_es_responsable_pago.name }}"]');
+    const rpOtroContainer = document.getElementById('datosResponsablePagoOtroContainer');
+
+    function toggleRpOtroFields() {
+        const selectedRpChoice = document.querySelector('input[name="{{ form.quien_es_responsable_pago.name }}"]:checked');
+        if (selectedRpChoice && selectedRpChoice.value === 'otra_persona_pago') {
+            rpOtroContainer.style.display = 'block';
+        } else {
+            rpOtroContainer.style.display = 'none';
+        }
+    }
+    rpChoiceRadios.forEach(radio => radio.addEventListener('change', toggleRpOtroFields));
+    toggleRpOtroFields(); // Initial state
+
+    // Add Bootstrap classes to form elements for better styling
+    // This is a general approach; you might need to fine-tune it.
+    const formElements = document.querySelectorAll('#preEnrollmentForm input, #preEnrollmentForm select, #preEnrollmentForm textarea');
+    formElements.forEach(el => {
+        if (el.type !== 'checkbox' && el.type !== 'radio' && el.type !== 'file' && !el.classList.contains('btn')) {
+            el.classList.add('form-control');
+        }
+        if (el.type === 'checkbox' || el.type === 'radio') {
+           if(!el.classList.contains('form-check-input')) { // Avoid double classing if already set by Django widget
+                el.classList.add('form-check-input');
+           }
+        }
+        // If form has errors, Django usually adds an 'is-invalid' class or similar.
+        // If not, you could add it based on the presence of sibling error messages.
+    });
+
+    // Specific for CheckboxSelectMultiple (Vacunas)
+    const vacunaCheckboxes = document.querySelectorAll('input[name="{{ form.vacunas_recibidas.name }}"]');
+    vacunaCheckboxes.forEach(cb => {
+        // Ensure form-check-input is on the input itself
+        cb.classList.add('form-check-input');
+        // Wrap label and input in a div.form-check for better layout if not already done by widget
+        if (cb.parentElement.tagName !== 'LABEL' && cb.parentElement.tagName !== 'DIV' ) { // Simple check
+            let wrapper = document.createElement('div');
+            wrapper.className = 'form-check form-check-inline'; // Or 'form-check' for block display
+            cb.parentElement.insertBefore(wrapper, cb);
+            wrapper.appendChild(cb);
+            let label = document.querySelector('label[for="' + cb.id + '"]');
+            if (label) {
+                 label.classList.add('form-check-label');
+                 wrapper.appendChild(label);
+            }
+        } else if (cb.parentElement.tagName === 'LABEL') {
+            // If wrapped by label, ensure label has form-check-label
+            cb.parentElement.classList.add('form-check-label');
+            // And wrap both in a form-check div
+            let div = document.createElement('div');
+            div.className = 'form-check form-check-inline';
+            cb.parentElement.parentElement.insertBefore(div, cb.parentElement);
+            div.appendChild(cb.parentElement);
+
+        }
+    });
+
+
+});
+</script>
+{% endblock %}

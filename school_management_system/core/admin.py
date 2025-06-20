@@ -1,7 +1,7 @@
 # core/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin # Renamed to avoid conflict
-from .models import User, Level, AcademicYear, Section, Subject, SubjectAssignment, AcademicPeriod, StudentEnrollment, GradingScale, GradeValue, GradeLevel # Added GradeLevel
+from .models import User, Level, AcademicYear, Section, Subject, SubjectAssignment, AcademicPeriod, StudentEnrollment, GradingScale, GradeValue, GradeLevel, PreEnrollmentProfile # Added GradeLevel and PreEnrollmentProfile
 from django.utils.translation import gettext_lazy as _ # For admin display names
 
 class UserAdmin(BaseUserAdmin):
@@ -140,3 +140,103 @@ class GradeLevelAdmin(admin.ModelAdmin):
     search_fields = ('name', 'level__name')
     ordering = ('level__name', 'order_in_level', 'name')
     autocomplete_fields = ['level']
+
+@admin.register(PreEnrollmentProfile)
+class PreEnrollmentProfileAdmin(admin.ModelAdmin):
+    list_display = ('apellidos_alumno', 'nombres_alumno', 'cedula_alumno', 'grado_aspirado_nombre_temporal', 'estado_preinscripcion', 'fecha_preinscripcion')
+    list_filter = ('estado_preinscripcion', 'grado_aspirado_nombre_temporal', 'fecha_preinscripcion', 'grado_aspirado__level__name')
+    search_fields = ('nombres_alumno', 'apellidos_alumno', 'cedula_alumno', 'correo_electronico_alumno', 'nombres_madre', 'apellidos_madre', 'cedula_madre', 'nombres_padre', 'apellidos_padre', 'cedula_padre')
+    readonly_fields = ('fecha_preinscripcion', 'fecha_actualizacion') # Make audit fields read-only
+
+    fieldsets = (
+        (None, {
+            'fields': ('estado_preinscripcion', 'notas_administrativas')
+        }),
+        (_('Auditoría'), {
+            'fields': ('fecha_preinscripcion', 'fecha_actualizacion'),
+            'classes': ('collapse',), # Collapsible section
+        }),
+        (_('Datos del Alumno'), {
+            'fields': (
+                'foto_alumno',
+                ('nombres_alumno', 'apellidos_alumno'),
+                ('cedula_alumno', 'edad_alumno'),
+                'correo_electronico_alumno',
+                ('pais_nacimiento_alumno', 'estado_nacimiento_alumno', 'municipio_nacimiento_alumno'),
+                'lugar_residencia_actual_alumno',
+                ('grado_aspirado', 'grado_aspirado_nombre_temporal') # Show both for clarity/transition
+            )
+        }),
+        (_('Datos de la Madre'), {
+            'fields': (
+                'madre_fallecida',
+                ('nombres_madre', 'apellidos_madre'),
+                ('cedula_madre', 'edad_madre'),
+                'correo_electronico_madre',
+                ('pais_nacimiento_madre', 'estado_nacimiento_madre', 'municipio_nacimiento_madre'),
+                'lugar_residencia_actual_madre',
+                ('rif_madre', 'profesion_madre', 'lugar_trabajo_madre'),
+                ('telefono_habitacion_madre', 'telefono_movil_madre')
+            ),
+            'classes': ('collapse',)
+        }),
+        (_('Datos del Padre'), {
+            'fields': (
+                'padre_fallecido',
+                ('nombres_padre', 'apellidos_padre'),
+                ('cedula_padre', 'edad_padre'),
+                'correo_electronico_padre',
+                ('pais_nacimiento_padre', 'estado_nacimiento_padre', 'municipio_nacimiento_padre'),
+                'lugar_residencia_actual_padre',
+                ('rif_padre', 'profesion_padre', 'lugar_trabajo_padre'),
+                ('telefono_habitacion_padre', 'telefono_movil_padre')
+            ),
+            'classes': ('collapse',)
+        }),
+        (_('Datos Médicos del Alumno'), {
+            'fields': (
+                ('peso_alumno_kg', 'altura_alumno_cm'),
+                ('talla_pantalon_alumno', 'talla_camisa_alumno', 'talla_zapatos_alumno'),
+                'vacunas_recibidas_json', # Consider a custom widget or better representation if needed
+                'otras_vacunas_especificar',
+                'condiciones_medicas_relevantes',
+                'alergias_conocidas',
+                'medicamentos_regulares',
+                'seguro_medico'
+            ),
+            'classes': ('collapse',)
+        }),
+        (_('Datos de Vehículos'), {
+            'fields': ('vehiculos_json',), # Consider a custom widget
+            'classes': ('collapse',)
+        }),
+        (_('Representante Legal'), {
+            'fields': (
+                'quien_es_representante_legal_opcion',
+                ('nombres_rl_otro', 'apellidos_rl_otro'),
+                ('cedula_rl_otro', 'parentesco_rl_otro'),
+                'pais_nacimiento_rl_otro', 'estado_nacimiento_rl_otro', 'municipio_nacimiento_rl_otro',
+                'lugar_residencia_actual_rl_otro',
+                ('edad_rl_otro', 'correo_electronico_rl_otro', 'telefono_rl_otro')
+            ),
+            'classes': ('collapse',)
+        }),
+        (_('Responsable del Pago'), {
+            'fields': (
+                'quien_es_responsable_pago_opcion',
+                ('nombres_rp_otro', 'apellidos_rp_otro'),
+                ('cedula_rp_otro', 'rif_rp_otro', 'parentesco_rp_otro'),
+                'pais_nacimiento_rp_otro', 'estado_nacimiento_rp_otro', 'municipio_nacimiento_rp_otro',
+                'lugar_residencia_actual_rp_otro',
+                ('edad_rp_otro', 'correo_electronico_rp_otro', 'telefono_rp_otro')
+            ),
+            'classes': ('collapse',)
+        }),
+    )
+
+    # If you have manytomany for vaccines or separate vehicle model, you'd use inlines:
+    # inlines = [VaccineInline, VehicleInline]
+
+    def get_queryset(self, request):
+        # Optimize query by prefetching related GradeLevel if it's used often in list_display or elsewhere
+        return super().get_queryset(request).prefetch_related('grado_aspirado__level')

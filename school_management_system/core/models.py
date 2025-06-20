@@ -244,3 +244,142 @@ class StudentEnrollment(models.Model):
             section_name=self.section.name,
             academic_year_name=self.section.academic_year.name
         )
+
+# Modelo para la Planilla de Preinscripción
+class PreEnrollmentProfile(models.Model):
+    # Datos del Alumno
+    foto_alumno = models.ImageField(upload_to='preenrollment_photos/', verbose_name=_("Foto del Alumno"), blank=True, null=True)
+    nombres_alumno = models.CharField(max_length=100, verbose_name=_("Nombres del Alumno"))
+    apellidos_alumno = models.CharField(max_length=100, verbose_name=_("Apellidos del Alumno"))
+    cedula_alumno = models.CharField(max_length=20, verbose_name=_("Número de Cédula del Alumno"), unique=True, help_text=_("Formato: V12345678 o E12345678")) # unique=True si se espera que sea único
+    pais_nacimiento_alumno = models.CharField(max_length=100, verbose_name=_("País de Nacimiento del Alumno"))
+    estado_nacimiento_alumno = models.CharField(max_length=100, verbose_name=_("Estado/Provincia de Nacimiento del Alumno"))
+    municipio_nacimiento_alumno = models.CharField(max_length=100, verbose_name=_("Municipio/Ciudad de Nacimiento del Alumno"))
+    lugar_residencia_actual_alumno = models.TextField(verbose_name=_("Dirección de Residencia Actual del Alumno"))
+    edad_alumno = models.PositiveIntegerField(verbose_name=_("Edad del Alumno (años cumplidos)"))
+    correo_electronico_alumno = models.EmailField(verbose_name=_("Correo Electrónico del Alumno"))
+
+    grado_aspirado = models.ForeignKey(
+        GradeLevel,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False, # Debe seleccionar un grado
+        verbose_name=_("Grado/Año al que Aspira")
+    )
+    # Almacenaremos la seleccion temporal del form por si GradeLevel no está listo.
+    grado_aspirado_nombre_temporal = models.CharField(max_length=50, verbose_name=_("Nombre Temporal del Grado Aspirado"), blank=True, null=True)
+
+
+    # Datos de la Madre
+    nombres_madre = models.CharField(max_length=100, verbose_name=_("Nombres Completos (Madre)"), blank=True)
+    apellidos_madre = models.CharField(max_length=100, verbose_name=_("Apellidos Completos (Madre)"), blank=True)
+    cedula_madre = models.CharField(max_length=20, verbose_name=_("Cédula de Identidad (Madre)"), blank=True)
+    pais_nacimiento_madre = models.CharField(max_length=100, verbose_name=_("País de Nacimiento (Madre)"), blank=True)
+    estado_nacimiento_madre = models.CharField(max_length=100, verbose_name=_("Estado de Nacimiento (Madre)"), blank=True)
+    municipio_nacimiento_madre = models.CharField(max_length=100, verbose_name=_("Municipio de Nacimiento (Madre)"), blank=True)
+    lugar_residencia_actual_madre = models.TextField(verbose_name=_("Residencia Actual (Madre)"), blank=True)
+    edad_madre = models.PositiveIntegerField(verbose_name=_("Edad (Madre)"), blank=True, null=True)
+    correo_electronico_madre = models.EmailField(verbose_name=_("Correo Electrónico (Madre)"), blank=True)
+    rif_madre = models.CharField(max_length=20, verbose_name=_("RIF (Madre)"), blank=True)
+    profesion_madre = models.CharField(max_length=100, verbose_name=_("Profesión (Madre)"), blank=True)
+    lugar_trabajo_madre = models.CharField(max_length=100, verbose_name=_("Lugar de Trabajo (Madre)"), blank=True)
+    telefono_habitacion_madre = models.CharField(max_length=20, verbose_name=_("Teléfono Habitación (Madre)"), blank=True)
+    telefono_movil_madre = models.CharField(max_length=20, verbose_name=_("Teléfono Móvil (Madre)"), blank=True)
+    madre_fallecida = models.BooleanField(default=False, verbose_name=_("Madre Fallecida"))
+
+    # Datos del Padre
+    nombres_padre = models.CharField(max_length=100, verbose_name=_("Nombres Completos (Padre)"), blank=True)
+    apellidos_padre = models.CharField(max_length=100, verbose_name=_("Apellidos Completos (Padre)"), blank=True)
+    cedula_padre = models.CharField(max_length=20, verbose_name=_("Cédula de Identidad (Padre)"), blank=True)
+    pais_nacimiento_padre = models.CharField(max_length=100, verbose_name=_("País de Nacimiento (Padre)"), blank=True)
+    estado_nacimiento_padre = models.CharField(max_length=100, verbose_name=_("Estado de Nacimiento (Padre)"), blank=True)
+    municipio_nacimiento_padre = models.CharField(max_length=100, verbose_name=_("Municipio de Nacimiento (Padre)"), blank=True)
+    lugar_residencia_actual_padre = models.TextField(verbose_name=_("Residencia Actual (Padre)"), blank=True)
+    edad_padre = models.PositiveIntegerField(verbose_name=_("Edad (Padre)"), blank=True, null=True)
+    correo_electronico_padre = models.EmailField(verbose_name=_("Correo Electrónico (Padre)"), blank=True)
+    rif_padre = models.CharField(max_length=20, verbose_name=_("RIF (Padre)"), blank=True)
+    profesion_padre = models.CharField(max_length=100, verbose_name=_("Profesión (Padre)"), blank=True)
+    lugar_trabajo_padre = models.CharField(max_length=100, verbose_name=_("Lugar de Trabajo (Padre)"), blank=True)
+    telefono_habitacion_padre = models.CharField(max_length=20, verbose_name=_("Teléfono Habitación (Padre)"), blank=True)
+    telefono_movil_padre = models.CharField(max_length=20, verbose_name=_("Teléfono Móvil (Padre)"), blank=True)
+    padre_fallecido = models.BooleanField(default=False, verbose_name=_("Padre Fallecido"))
+
+    # Datos Médicos del Alumno
+    peso_alumno_kg = models.FloatField(verbose_name=_("Peso del Alumno (kg)"), blank=True, null=True)
+    altura_alumno_cm = models.FloatField(verbose_name=_("Altura del Alumno (cm)"), blank=True, null=True)
+    talla_pantalon_alumno = models.CharField(max_length=10, verbose_name=_("Talla de Pantalón"), blank=True)
+    talla_camisa_alumno = models.CharField(max_length=10, verbose_name=_("Talla de Camisa"), blank=True)
+    talla_zapatos_alumno = models.CharField(max_length=10, verbose_name=_("Talla de Zapatos"), blank=True)
+
+    vacunas_recibidas_json = models.JSONField(verbose_name=_("Vacunas Recibidas (JSON)"), blank=True, null=True, help_text=_("Almacena la selección de vacunas del formulario."))
+    otras_vacunas_especificar = models.TextField(verbose_name=_("Otras Vacunas Especificadas"), blank=True)
+    condiciones_medicas_relevantes = models.TextField(verbose_name=_("Condiciones Médicas Relevantes"), blank=True)
+    alergias_conocidas = models.TextField(verbose_name=_("Alergias Conocidas"), blank=True)
+    medicamentos_regulares = models.TextField(verbose_name=_("Medicamentos que Toma Regularmente"), blank=True)
+    seguro_medico = models.CharField(max_length=150, verbose_name=_("Seguro Médico (Compañía y Póliza)"), blank=True)
+
+    # Datos de Vehículos (JSON para flexibilidad, hasta 2 vehículos)
+    vehiculos_json = models.JSONField(verbose_name=_("Información de Vehículos (JSON)"), blank=True, null=True, help_text=_("Ej: [{'tipo':'Carro', 'marca':'Toyota', 'modelo':'Corolla', 'placa':'XYZ-123', 'color':'Rojo'}, ...]"))
+
+    # Representante Legal
+    # Opciones: 'madre', 'padre', 'otro'
+    quien_es_representante_legal_opcion = models.CharField(max_length=30, verbose_name=_("Opción Representante Legal"), choices=[('madre',_('Madre')), ('padre',_('Padre')), ('otro',_('Otro'))])
+    # Datos para 'Otro' Representante Legal
+    nombres_rl_otro = models.CharField(max_length=100, verbose_name=_("Nombres Completos (Rep. Legal Otro)"), blank=True)
+    apellidos_rl_otro = models.CharField(max_length=100, verbose_name=_("Apellidos Completos (Rep. Legal Otro)"), blank=True)
+    cedula_rl_otro = models.CharField(max_length=20, verbose_name=_("Cédula (Rep. Legal Otro)"), blank=True)
+    pais_nacimiento_rl_otro = models.CharField(max_length=100, verbose_name=_("País Nacimiento (Rep. Legal Otro)"), blank=True)
+    estado_nacimiento_rl_otro = models.CharField(max_length=100, verbose_name=_("Estado Nacimiento (Rep. Legal Otro)"), blank=True)
+    municipio_nacimiento_rl_otro = models.CharField(max_length=100, verbose_name=_("Municipio Nacimiento (Rep. Legal Otro)"), blank=True)
+    lugar_residencia_actual_rl_otro = models.TextField(verbose_name=_("Residencia Actual (Rep. Legal Otro)"), blank=True)
+    edad_rl_otro = models.PositiveIntegerField(verbose_name=_("Edad (Rep. Legal Otro)"), blank=True, null=True)
+    correo_electronico_rl_otro = models.EmailField(verbose_name=_("Correo (Rep. Legal Otro)"), blank=True)
+    telefono_rl_otro = models.CharField(max_length=20, verbose_name=_("Teléfono (Rep. Legal Otro)"), blank=True)
+    parentesco_rl_otro = models.CharField(max_length=50, verbose_name=_("Parentesco con el Alumno (Rep. Legal Otro)"), blank=True)
+
+    # Persona Responsable del Pago
+    # Opciones: 'madre', 'padre', 'representante_legal_seleccionado', 'otra_persona_pago'
+    quien_es_responsable_pago_opcion = models.CharField(max_length=50, verbose_name=_("Opción Responsable Pago"), choices=[('madre',_('Madre')), ('padre',_('Padre')), ('representante_legal_seleccionado',_('Mismo Rep. Legal (si es Otro)')), ('otra_persona_pago',_('Otra Persona'))])
+    # Datos para 'Otra Persona' Responsable del Pago
+    nombres_rp_otro = models.CharField(max_length=100, verbose_name=_("Nombres Completos (Resp. Pago Otro)"), blank=True)
+    apellidos_rp_otro = models.CharField(max_length=100, verbose_name=_("Apellidos Completos (Resp. Pago Otro)"), blank=True)
+    cedula_rp_otro = models.CharField(max_length=20, verbose_name=_("Cédula (Resp. Pago Otro)"), blank=True)
+    rif_rp_otro = models.CharField(max_length=20, verbose_name=_("RIF (Resp. Pago Otro)"), blank=True)
+    pais_nacimiento_rp_otro = models.CharField(max_length=100, verbose_name=_("País Nacimiento (Resp. Pago Otro)"), blank=True)
+    estado_nacimiento_rp_otro = models.CharField(max_length=100, verbose_name=_("Estado Nacimiento (Resp. Pago Otro)"), blank=True)
+    municipio_nacimiento_rp_otro = models.CharField(max_length=100, verbose_name=_("Municipio Nacimiento (Resp. Pago Otro)"), blank=True)
+    lugar_residencia_actual_rp_otro = models.TextField(verbose_name=_("Residencia (Resp. Pago Otro)"), blank=True)
+    edad_rp_otro = models.PositiveIntegerField(verbose_name=_("Edad (Resp. Pago Otro)"), blank=True, null=True)
+    correo_electronico_rp_otro = models.EmailField(verbose_name=_("Correo (Resp. Pago Otro)"), blank=True)
+    telefono_rp_otro = models.CharField(max_length=20, verbose_name=_("Teléfono (Resp. Pago Otro)"), blank=True)
+    parentesco_rp_otro = models.CharField(max_length=50, verbose_name=_("Parentesco con el Alumno (Resp. Pago Otro)"), blank=True)
+
+    # Campos de Auditoría y Estado
+    fecha_preinscripcion = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de Preinscripción"))
+    fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name=_("Última Actualización"))
+    # Podríamos añadir un campo de estado para seguir el proceso: PENDIENTE, REVISADO, APROBADO, RECHAZADO
+    ESTADO_CHOICES = [
+        ('PENDIENTE', _('Pendiente de Revisión')),
+        ('EN_REVISION', _('En Revisión Administrativa')),
+        ('APROBADO', _('Aprobado para Inscripción')),
+        ('RECHAZADO', _('Rechazado')),
+        ('INSCRITO', _('Inscrito Formalmente')),
+    ]
+    estado_preinscripcion = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='PENDIENTE',
+        verbose_name=_("Estado de la Preinscripción")
+    )
+    notas_administrativas = models.TextField(verbose_name=_("Notas Administrativas Internas"), blank=True)
+
+    class Meta:
+        verbose_name = _("Planilla de Preinscripción")
+        verbose_name_plural = _("Planillas de Preinscripción")
+        ordering = ['-fecha_preinscripcion', 'apellidos_alumno', 'nombres_alumno']
+
+    def __str__(self):
+        return f"{self.apellidos_alumno}, {self.nombres_alumno} - {self.cedula_alumno} ({self.get_estado_preinscripcion_display()})"
+
+    # Se podría añadir un método para obtener el representante legal principal (padre, madre o el "otro")
+    # y similar para el responsable del pago.
