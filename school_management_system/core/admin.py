@@ -5,7 +5,8 @@ from .models import (
     User, Level, AcademicYear, Section, Subject, SubjectAssignment, AcademicPeriod, StudentEnrollment,
     GradingScale, GradeValue, GradeLevel, PreEnrollmentProfile,
     PlaceholderEducacionMediaGeneral, PlaceholderEducacionPrimaria, PlaceholderEducacionBasica,
-    TeacherSubjectSectionAssignment, StudentGrade, GuideTeacherAssignment, CoordinatorAssignment
+    # TeacherSubjectSectionAssignment, # Commented out
+    StudentGrade, GuideTeacherAssignment, CoordinatorAssignment
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -225,49 +226,49 @@ class PlaceholderEducacionBasicaAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None): return False
 
 # Admin configurations for "Profesores" (Teachers) Module
-@admin.register(TeacherSubjectSectionAssignment)
-class TeacherSubjectSectionAssignmentAdmin(admin.ModelAdmin):
-    list_display = ('teacher', 'get_subject_name_display', 'get_grade_level_display', 'get_section_display', 'get_academic_year_display')
-    list_filter = (
-        'section__academic_year__name',
-        'subject_assignment__grade_level__level__name',
-        'subject_assignment__grade_level__name',
-        'subject_assignment__subject__name',
-        'teacher__username' # Use username for filtering teacher
-    )
-    search_fields = (
-        'teacher__first_name', 'teacher__last_name', 'teacher__username',
-        'subject_assignment__subject__name',
-        'subject_assignment__grade_level__name',
-        'section__name',
-        'section__academic_year__name'
-    )
-    autocomplete_fields = ['teacher', 'subject_assignment', 'section']
-    ordering = ('teacher__last_name', 'teacher__first_name', 'subject_assignment__subject__name') # Added ordering
+# @admin.register(TeacherSubjectSectionAssignment) # Commented out
+# class TeacherSubjectSectionAssignmentAdmin(admin.ModelAdmin):
+#     list_display = ('teacher', 'get_subject_name_display', 'get_grade_level_display', 'get_section_display', 'get_academic_year_display')
+#     list_filter = (
+#         'section__academic_year__name',
+#         'subject_assignment__grade_level__level__name',
+#         'subject_assignment__grade_level__name',
+#         'subject_assignment__subject__name',
+#         'teacher__username' # Use username for filtering teacher
+#     )
+#     search_fields = (
+#         'teacher__first_name', 'teacher__last_name', 'teacher__username',
+#         'subject_assignment__subject__name',
+#         'subject_assignment__grade_level__name',
+#         'section__name',
+#         'section__academic_year__name'
+#     )
+#     autocomplete_fields = ['teacher', 'subject_assignment', 'section']
+#     ordering = ('teacher__last_name', 'teacher__first_name', 'subject_assignment__subject__name') # Added ordering
 
-    @admin.display(description=_('Asignatura'), ordering='subject_assignment__subject__name')
-    def get_subject_name_display(self, obj):
-        return obj.subject_assignment.subject.name
+#     @admin.display(description=_('Asignatura'), ordering='subject_assignment__subject__name')
+#     def get_subject_name_display(self, obj):
+#         return obj.subject_assignment.subject.name
 
-    @admin.display(description=_('Grado/Año'), ordering='subject_assignment__grade_level__name')
-    def get_grade_level_display(self, obj):
-        return obj.subject_assignment.grade_level.name
+#     @admin.display(description=_('Grado/Año'), ordering='subject_assignment__grade_level__name')
+#     def get_grade_level_display(self, obj):
+#         return obj.subject_assignment.grade_level.name
 
-    @admin.display(description=_('Sección'), ordering='section__name')
-    def get_section_display(self, obj):
-        return obj.section.name
+#     @admin.display(description=_('Sección'), ordering='section__name')
+#     def get_section_display(self, obj):
+#         return obj.section.name
 
-    @admin.display(description=_('Año Académico'), ordering='section__academic_year__name')
-    def get_academic_year_display(self, obj):
-        return obj.section.academic_year.name
+#     @admin.display(description=_('Año Académico'), ordering='section__academic_year__name')
+#     def get_academic_year_display(self, obj):
+#         return obj.section.academic_year.name
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'teacher',
-            'subject_assignment__subject',
-            'subject_assignment__grade_level__level', # Include level for potential use
-            'section__academic_year'
-        )
+#     def get_queryset(self, request):
+#         return super().get_queryset(request).select_related(
+#             'teacher',
+#             'subject_assignment__subject',
+#             'subject_assignment__grade_level__level', # Include level for potential use
+#             'section__academic_year'
+#         )
 
 @admin.register(StudentGrade)
 class StudentGradeAdmin(admin.ModelAdmin):
