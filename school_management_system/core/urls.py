@@ -13,6 +13,6 @@ urlpatterns = [
     # Chat URLs
     path('chat/', views.chat_room_list_view, name='chat_room_list'),
     path('chat/room/<int:room_id>/', views.chat_room_detail_view, name='chat_room_detail'),
-    path('chat/crear/profesor/<int:teacher_id>/', views.create_chat_with_teacher_view, name='create_chat_with_teacher'),
-    # Add more chat-related URLs as needed, e.g., for creating rooms with students for teachers
+    path('chat/crear/profesor/<int:teacher_id>/', views.create_chat_with_teacher_view, name='create_chat_with_teacher'), # Kept for specific student->teacher initiation if different logic is ever needed
+    path('chat/crear/con/<int:user_id>/', views.create_chat_with_user_view, name='create_chat_with_user'),
 ]

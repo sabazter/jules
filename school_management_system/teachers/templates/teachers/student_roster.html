@@ -43,7 +43,7 @@
                             <th scope="col">{% trans "First Name" %}</th>
                             <th scope="col">{% trans "Username" %}</th>
                             <th scope="col">{% trans "Email" %}</th>
-                            {# Add other relevant student columns if needed #}
+                            <th scope="col">{% trans "Actions" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,7 +54,14 @@
                                 <td>{{ enrollment.student.first_name|default:_("N/A") }}</td>
                                 <td>{{ enrollment.student.username }}</td>
                                 <td>{{ enrollment.student.email|default:_("N/A") }}</td>
-                                {# Display other student fields here #}
+                                <td>
+                                    {% if enrollment.student.id != request.user.id %} {# Teacher can't chat with themselves #}
+                                        <a href="{% url 'core:create_chat_with_user' user_id=enrollment.student.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-comments"></i> {% trans "Contactar" %}
+                                        </a>
+                                    {% endif %}
+                                    {# Add other actions like 'View Profile' if needed #}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

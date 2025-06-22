@@ -7,6 +7,7 @@ from django.contrib import messages # To display messages to the user
 from django.contrib.auth.decorators import login_required # For chat views
 from django.shortcuts import get_object_or_404 # For chat views
 from django.http import JsonResponse # For AJAX in chat (optional)
+from django.db import models # For models.Count
 
 from .forms import PreEnrollmentForm, ChatMessageForm
 from .models import PreEnrollmentProfile, GradeLevel, ChatRoom, ChatMessage, User # Assuming GradeLevel is needed for mapping
@@ -330,5 +331,48 @@ def create_chat_with_teacher_view(request, teacher_id):
         chat_room = ChatRoom.objects.create(name=room_name)
         chat_room.members.add(student, teacher)
 
+
+    return redirect('core:chat_room_detail', room_id=chat_room.id)
+
+@login_required
+def create_chat_with_user_view(request, user_id):
+    """
+    Creates or finds an existing 1-on-1 chat room between the logged-in user
+    and the user specified by user_id.
+    """
+    current_user = request.user
+    other_user = get_object_or_404(User, id=user_id)
+
+    if current_user.id == other_user.id:
+        messages.error(request, _("No puedes iniciar un chat contigo mismo."))
+        return redirect('core:chat_room_list') # Or appropriate redirect
+
+    # Try to find an existing 1-on-1 chat room
+    # A chat room is considered 1-on-1 if it has exactly two members: current_user and other_user.
+    chat_room = ChatRoom.objects.annotate(num_members=models.Count('members')) \
+                                .filter(members=current_user) \
+                                .filter(members=other_user) \
+                                .filter(num_members=2) \
+                                .first()
+
+    if not chat_room:
+        # Create a new chat room
+        # Ensure a unique and predictable name for 1-on-1 chats if possible
+        # Sorting usernames/IDs can help make names canonical:
+        user_ids = sorted([current_user.id, other_user.id])
+        user_names = sorted([current_user.username, other_user.username])
+
+        # A more robust unique name might involve UUIDs if names can clash often
+        # For now, simple username combination:
+        room_name = _("Chat entre {user1} y {user2}").format(user1=user_names[0], user2=user_names[1])
+
+        # Check if a room with this conventional name already exists (less robust than member check)
+        # The previous query is more robust. If it didn't find one, we create.
+
+        # Create the room
+        chat_room = ChatRoom.objects.create(name=room_name)
+        chat_room.members.add(current_user, other_user)
+        other_user_display_name = other_user.get_full_name() or other_user.username
+        messages.success(request, _("Nueva sala de chat creada con {other_user_name}.").format(other_user_name=other_user_display_name))
 
     return redirect('core:chat_room_detail', room_id=chat_room.id)
