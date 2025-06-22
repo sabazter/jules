@@ -342,7 +342,9 @@ def student_subject_detail_view(request, tssa_id):
     # We need TeacherAssignment from teachers.models to find EvaluationActivity and Activity
 
     current_teacher_assignment_for_eval_plan = None
-    if teacher_assignment_for_content_exists: # This is already the correct TeacherAssignment instance
+    # Use the actual object 'teacher_assignment_for_content' for the check here,
+    # not the template context variable name.
+    if teacher_assignment_for_content is not None:
         current_teacher_assignment_for_eval_plan = teacher_assignment_for_content
 
     if current_teacher_assignment_for_eval_plan:
