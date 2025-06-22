@@ -325,12 +325,6 @@ def student_subject_detail_view(request, tssa_id):
         'submission_form': submission_form
     }
 
-        'submissions_by_activity_id': submissions_by_activity_id,
-        'class_roster': class_roster,
-        'teacher_assignment_for_content_exists': teacher_assignment_for_content is not None,
-        'submission_form': submission_form
-    }
-
     # --- Subject-Specific Statistics Calculation (Revised) ---
     subject_stats = {
         'percentage_evaluations_completed': 0,
