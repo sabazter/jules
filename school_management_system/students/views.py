@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages # For displaying messages
 from django.http import HttpResponseForbidden, Http404
+from decimal import Decimal, InvalidOperation
 
 
 from .forms import StudentRegistrationForm, StudentSubmissionForm
@@ -380,17 +381,59 @@ def student_subject_detail_view(request, tssa_id):
             subject_stats['percentage_evaluations_completed'] = round(
                 (completed_planned_count / subject_stats['total_planned_evaluations']) * 100, 1
             )
+        # Initialize accumulated_subject_points for weighted calculation if high school
+        accumulated_subject_points = Decimal('0.0')
 
-    # Accumulated points calculation remains based on actual graded activities
-    accumulated_subject_points = 0
-    for activity_obj_id, grade_obj in grades_by_activity_id.items():
-        if grade_obj.score is not None:
-            accumulated_subject_points += grade_obj.score
+        if subject_stats['is_high_school_subject']:
+            for planned_eval in planned_evaluations:
+                corresponding_activity = None
+                for actual_activity in activities: # 'activities' is from context
+                    if actual_activity.title.strip().lower() == planned_eval.name.strip().lower():
+                        corresponding_activity = actual_activity
+                        break
 
-    if subject_stats['is_high_school_subject']:
-        subject_stats['accumulated_points'] = accumulated_subject_points
-    else:
+                if corresponding_activity and corresponding_activity.id in grades_by_activity_id:
+                    grade_obj = grades_by_activity_id[corresponding_activity.id]
+                    student_score = grade_obj.score
+                    activity_max_score = corresponding_activity.max_score
+                    planned_percentage = planned_eval.percentage
+
+                    if student_score is not None and \
+                       activity_max_score is not None and activity_max_score > 0 and \
+                       planned_percentage is not None:
+                        try:
+                            student_score_d = Decimal(student_score)
+                            activity_max_score_d = Decimal(activity_max_score)
+                            planned_percentage_d = Decimal(planned_percentage)
+
+                            # Contribution to the final 20-point scale
+                            points_contribution = (student_score_d / activity_max_score_d) * \
+                                                  (planned_percentage_d / Decimal('100.0')) * \
+                                                  Decimal('20.0')
+                            accumulated_subject_points += points_contribution
+                        except InvalidOperation:
+                            # Log error or handle if decimal conversion fails for some reason
+                            messages.warning(request, _("Error al calcular puntos para una actividad. Datos inválidos."))
+                    # else:
+                        # Optionally log if expected data for calculation is missing
+                        # print(f"Skipping points for {planned_eval.name}: missing score, max_score, or percentage")
+
+            subject_stats['accumulated_points'] = accumulated_subject_points # This is now a Decimal
+        else:
+            # For non-high school, keep original sum of scores if that's desired, or set to None.
+            # The original plan was to set it to None if not high school.
+            # Let's calculate raw sum for consistency if not high school, or make it explicitly None.
+            # For now, if not high_school_subject, it's None as per the initial subject_stats setup.
+            raw_score_sum = Decimal('0.0')
+            for activity_obj_id, grade_obj in grades_by_activity_id.items():
+                 if grade_obj.score is not None:
+                    raw_score_sum += Decimal(grade_obj.score)
+            # subject_stats['accumulated_points'] = raw_score_sum # If we want raw sum for non-HS
+            subject_stats['accumulated_points'] = None # As per previous logic for non-HS
+
+    else: # No current_teacher_assignment_for_eval_plan
         subject_stats['accumulated_points'] = None
+
 
     context['subject_stats'] = subject_stats
     # --- End Subject-Specific Statistics ---
