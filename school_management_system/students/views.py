@@ -9,10 +9,9 @@ from django.http import HttpResponseForbidden, Http404
 from .forms import StudentRegistrationForm, StudentSubmissionForm
 from .models import StudentSubmission
 # Explicitly import necessary core models:
-from core.models import User, StudentEnrollment, SubjectAssignment, TeacherSubjectSectionAssignment, AcademicYear
+from core.models import User, StudentEnrollment, SubjectAssignment, TeacherSubjectSectionAssignment, AcademicYear, AcademicPeriod # AcademicPeriod was already here
 # Import teacher models:
-from teachers.models import TeacherAssignment, EvaluationPlanDocument, Activity, Grade
-from core.models import AcademicPeriod # For statistics calculation
+from teachers.models import TeacherAssignment, EvaluationPlanDocument, Activity, Grade, EvaluationActivity as TeacherEvaluationActivity
 
 @login_required
 def student_dashboard(request):
@@ -326,40 +325,76 @@ def student_subject_detail_view(request, tssa_id):
         'submission_form': submission_form
     }
 
-    # --- Subject-Specific Statistics Calculation ---
+        'submissions_by_activity_id': submissions_by_activity_id,
+        'class_roster': class_roster,
+        'teacher_assignment_for_content_exists': teacher_assignment_for_content is not None,
+        'submission_form': submission_form
+    }
+
+    # --- Subject-Specific Statistics Calculation (Revised) ---
     subject_stats = {
         'percentage_evaluations_completed': 0,
-        'accumulated_points': 0, # Default to 0
-        'is_high_school_subject': False # Determine if this subject is part of a high school level
+        'accumulated_points': 0,
+        'is_high_school_subject': False,
+        'total_planned_evaluations': 0,
+        'completed_planned_evaluations': 0
     }
 
     if assignment.section.grade_level.level.name == 'media_general':
         subject_stats['is_high_school_subject'] = True
 
-    subject_activities = activities # These are already filtered for the current TeacherAssignment (subject/section)
-    total_subject_evaluations = len(subject_activities)
-    completed_subject_evaluations = 0
+    # `teacher_assignment_for_content` is the TeacherAssignment from teachers.models
+    # `assignment` is TeacherSubjectSectionAssignment from core.models
+    # We need TeacherAssignment from teachers.models to find EvaluationActivity and Activity
+
+    current_teacher_assignment_for_eval_plan = None
+    if teacher_assignment_for_content_exists: # This is already the correct TeacherAssignment instance
+        current_teacher_assignment_for_eval_plan = teacher_assignment_for_content
+
+    if current_teacher_assignment_for_eval_plan:
+        planned_evaluations = TeacherEvaluationActivity.objects.filter(teacher_assignment=current_teacher_assignment_for_eval_plan)
+        subject_stats['total_planned_evaluations'] = planned_evaluations.count()
+
+        # `activities` variable already holds Activity instances for this teacher_assignment_for_content
+        # `grades_by_activity_id` and `submissions_by_activity_id` are already populated for the student for these activities
+
+        completed_planned_count = 0
+        for planned_eval in planned_evaluations:
+            # Try to find a corresponding actual Activity by title match (case-insensitive)
+            # This is the fragile part noted in the plan.
+            corresponding_activity = None
+            for actual_activity in activities: # 'activities' is from context, linked to teacher_assignment_for_content
+                if actual_activity.title.strip().lower() == planned_eval.name.strip().lower():
+                    corresponding_activity = actual_activity
+                    break
+
+            if corresponding_activity:
+                is_completed = False
+                if corresponding_activity.id in grades_by_activity_id:
+                    is_completed = True
+                elif corresponding_activity.activity_type == Activity.ActivityType.ONLINE and \
+                     corresponding_activity.id in submissions_by_activity_id:
+                    is_completed = True
+
+                if is_completed:
+                    completed_planned_count += 1
+
+        subject_stats['completed_planned_evaluations'] = completed_planned_count
+        if subject_stats['total_planned_evaluations'] > 0:
+            subject_stats['percentage_evaluations_completed'] = round(
+                (completed_planned_count / subject_stats['total_planned_evaluations']) * 100, 1
+            )
+
+    # Accumulated points calculation remains based on actual graded activities
     accumulated_subject_points = 0
+    for activity_obj_id, grade_obj in grades_by_activity_id.items():
+        if grade_obj.score is not None:
+            accumulated_subject_points += grade_obj.score
 
-    if total_subject_evaluations > 0:
-        for activity_obj in subject_activities:
-            is_completed = False
-            if activity_obj.id in grades_by_activity_id:
-                is_completed = True
-                grade_obj = grades_by_activity_id[activity_obj.id]
-                if grade_obj.score is not None:
-                    accumulated_subject_points += grade_obj.score
-            elif activity_obj.activity_type == Activity.ActivityType.ONLINE and activity_obj.id in submissions_by_activity_id:
-                is_completed = True # Considered completed if submitted, even if not graded for percentage
-
-            if is_completed:
-                completed_subject_evaluations += 1
-
-        subject_stats['percentage_evaluations_completed'] = round((completed_subject_evaluations / total_subject_evaluations) * 100, 1)
-        if subject_stats['is_high_school_subject']:
-            subject_stats['accumulated_points'] = accumulated_subject_points
-        else:
-            subject_stats['accumulated_points'] = None # Not applicable if not high school subject
+    if subject_stats['is_high_school_subject']:
+        subject_stats['accumulated_points'] = accumulated_subject_points
+    else:
+        subject_stats['accumulated_points'] = None
 
     context['subject_stats'] = subject_stats
     # --- End Subject-Specific Statistics ---
