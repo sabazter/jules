@@ -1,66 +1,68 @@
 {% extends "base.html" %}
+{% load static %}
 {% load i18n %}
 
-{% block title %}{% trans "Student Dashboard" %} - {{ block.super }}{% endblock %}
+{% block title %}{% translate "Student Dashboard" %}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h1 class="card-title h3">
-                        {% if student.first_name and student.last_name %}
-                            {% blocktrans with first_name=student.first_name last_name=student.last_name %}{{ first_name }} {{ last_name }}'s Dashboard{% endblocktrans %}
-                        {% elif student.first_name %}
-                            {% blocktrans with first_name=student.first_name %}{{ first_name }}'s Dashboard{% endblocktrans %}
-                        {% else %}
-                            {% blocktrans with username=student.username %}{{ username }}'s Dashboard{% endblocktrans %}
-                        {% endif %}
-                    </h1>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-subtitle mb-2 text-muted">{% blocktrans with username=student.username %}Welcome, {{ username }}!{% endblocktrans %}</h5>
-                    <p class="card-text">
-                        <strong>{% trans "Email:" %}</strong> {{ student.email }} <br>
-                        <strong>{% trans "Role:" %}</strong> {{ student.get_role_display }}
-                    </p>
-                    <p class="mt-3">{% trans "This is your student portal. More features will be added here soon!" %}</p>
+    <h2>{% translate "Student Dashboard" %}</h2>
+    <p>{% translate "Welcome" %}, {{ student.get_full_name|default:student.username }}!</p>
 
-                    <div id="enrolled-subjects" class="mt-4">
-                        <h4>{% trans "My Enrolled Subjects" %}</h4>
-                        {% if enrolled_subjects %}
-                            <div class="list-group">
-                                {% for subject_data in enrolled_subjects %}
-                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h5 class="mb-1">{{ subject_data.name }}</h5>
-                                            <small class="text-muted">{{ subject_data.academic_year }}</small>
-                                        </div>
-                                        <p class="mb-1">
-                                            {% if subject_data.description %}
-                                                {{ subject_data.description|truncatewords:20 }}
-                                            {% else %}
-                                                {% trans "No description available." %}
-                                            {% endif %}
-                                        </p>
-                                        <small class="text-muted">
-                                            {% blocktrans with grade_level=subject_data.grade_level_name level=subject_data.level_name load=subject_data.hourly_load trimmed %}
-                                                Grado: {{ grade_level }} ({{ level }}) - Carga Horaria: {{ load }} hrs
-                                            {% endblocktrans %}
-                                        </small>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="alert alert-info" role="alert">
-                                {% trans "You are not currently enrolled in any subjects or your subject list could not be determined at this time." %}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+    <div class="card mb-4">
+        <div class="card-header">
+            {% translate "Current Enrollment" %}
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">{% translate "Current Section" %}: {{ current_section_display }}</h5>
+            <p class="card-text">
+                <em>{% translate "Click on your current section to view your subjects." %}</em>
+            </p>
+            {# Se asume que current_section_display es clickeable para ir a la lista de materias del año actual #}
+            {# La URL para esto se definirá en el siguiente paso del plan. Provisionalmente 'students:student_subjects_current' #}
+            <a href="{% url 'students:student_subjects_current' %}" class="btn btn-primary">{% translate "View Current Subjects" %}</a>
         </div>
     </div>
+
+    <div class="card">
+        <div class="card-header">
+            {% translate "Academic History" %}
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{% url 'students:dashboard' %}">
+                <div class="form-group">
+                    <label for="schoolYearSelect">{% translate "Select School Year to View" %}:</label>
+                    <select class="form-control" id="schoolYearSelect" name="selected_year" onchange="this.form.submit()">
+                        <option value="">{% translate "Select a year" %}</option>
+                        {% for year in school_years %}
+                            <option value="{{ year }}" {% if request.GET.selected_year == year %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {# El botón de submit ya no es necesario si el select hace submit onchange #}
+                {# <button type="submit" class="btn btn-info mt-2">{% translate "View Selected Year Data" %}</button> #}
+            </form>
+
+            {% if request.GET.selected_year %}
+            <div class="mt-3">
+                <p><em>{% translate "Displaying data for year" %} {{ request.GET.selected_year }}.</em></p>
+                {# Aquí iría el enlace a ver boletas para el año seleccionado #}
+                <a href="{% url 'students:view_report_card_for_year' year=request.GET.selected_year %}" class="btn btn-secondary">{% translate "View Report Card for" %} {{ request.GET.selected_year }}</a>
+                {# Aquí se podrían listar los cursos de ese año también #}
+            </div>
+            {% else %}
+            <div class="mt-3">
+                <p><em>{% translate "Select a year to see past records or report cards." %}</em></p>
+                 <button class="btn btn-secondary" disabled>{% translate "View Report Cards" %}</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Eliminamos la sección de materias enlistadas aquí, ya que el botón "View Current Subjects" #}
+    {# y la selección de año manejarán la visualización de materias/boletas. #}
+
 </div>
+
+{# Necesitaremos URLs para 'student_subjects_current' y 'view_report_card_for_year' #}
 {% endblock %}

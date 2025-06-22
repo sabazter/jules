@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "My Subjects" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% translate "My Subjects" %}</h2>
+    <p>{% translate "Welcome" %}, {{ student.get_full_name|default:student.username }}!</p>
+
+    <h4>{% translate "Subjects for Academic Year" %}: {{ academic_year }}</h4>
+
+    {% if subjects_list %}
+        <p>{% translate "Here are the subjects you are enrolled in for the current academic year. Click on a subject to view its details." %}</p>
+        <div class="list-group">
+            {% for subject_info in subjects_list %}
+                <a href="{% url 'students:student_subject_detail' tssa_id=subject_info.teacher_subject_section_assignment_id %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ subject_info.name }}</h5>
+                        <small>{{ subject_info.academic_year_name }}</small>
+                    </div>
+                    <p class="mb-1">{% translate "Section" %}: {{ subject_info.section_name }}</p>
+                    <small>{% translate "Teacher" %}: {{ subject_info.teacher_name }}</small>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>{% translate "No subjects found for your current enrollment in this academic year." %}</p>
+    {% endif %}
+
+    <a href="{% url 'students:dashboard' %}" class="btn btn-secondary mt-3">{% translate "Back to Dashboard" %}</a>
+</div>
+{% endblock %}

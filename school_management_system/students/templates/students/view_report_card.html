@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Report Card" %} - {{ year }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% translate "Report Card for" %} {{ year }}</h2>
+    <p>{% translate "Student" %}: {{ student.get_full_name|default:student.username }}</p>
+
+    <div class="alert alert-info" role="alert">
+        {% blocktranslate %}The functionality to display detailed report cards is currently under development. This page will show your grades and performance for the academic year {{ year }}.{% endblocktranslate %}
+    </div>
+
+    {# Placeholder content - La lógica real para mostrar la boleta se implementará más tarde #}
+    <p><em>({% translate "Report card details will appear here." %})</em></p>
+
+    <a href="{% url 'students:dashboard' %}" class="btn btn-secondary mt-3">{% translate "Back to Dashboard" %}</a>
+    <a href="{% url 'students:dashboard' %}?selected_year={{ year }}" class="btn btn-info mt-3">{% translate "Back to Year Selection on Dashboard" %}</a>
+</div>
+{% endblock %}

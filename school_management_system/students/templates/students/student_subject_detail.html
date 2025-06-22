@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load student_tags %} {# Load custom template tags #}
+
+{% block title %}{{ subject.name }} - {{ section.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'students:dashboard' %}">{% translate "Dashboard" %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'students:student_subjects_current' %}">{% translate "My Subjects" %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ subject.name }}</li>
+        </ol>
+    </nav>
+
+    <h2>{{ subject.name }}</h2>
+    <p>
+        <strong>{% translate "Section" %}:</strong> {{ section.grade_level.name }} - {{ section.name }} ({{ section.academic_year.name }})<br>
+        <strong>{% translate "Teacher" %}:</strong> {{ teacher.get_full_name|default:teacher.username }}
+    </p>
+
+    <hr>
+
+    {# Pestañas para diferentes secciones de la página de la materia #}
+    <ul class="nav nav-tabs" id="subjectTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="true">{% translate "Content & Announcements" %}</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="activities-tab" data-bs-toggle="tab" data-bs-target="#activities" type="button" role="tab" aria-controls="activities" aria-selected="false">{% translate "Activities & Assignments" %}</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="roster-tab" data-bs-toggle="tab" data-bs-target="#roster" type="button" role="tab" aria-controls="roster" aria-selected="false">{% translate "Class Roster" %}</button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3" id="subjectTabContent">
+        <div class="tab-pane fade show active p-3 border rounded" id="content" role="tabpanel" aria-labelledby="content-tab">
+            <h5>{% translate "Evaluation Plan & Resources" %}</h5>
+            {% if not teacher_assignment_for_content_exists %}
+                <div class="alert alert-warning" role="alert">
+                    {% translate "The content for this subject (evaluation plans, activities) might not be fully linked if the specific teacher assignment record in the 'teachers' app module is missing. Please contact administration if you believe this is an error." %}
+                </div>
+            {% endif %}
+            {% if evaluation_plan_documents %}
+                <ul class="list-group">
+                    {% for doc in evaluation_plan_documents %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|filename }}</a>
+                                {% if doc.description %}<p class="mb-0"><small>{{ doc.description }}</small></p>{% endif %}
+                            </div>
+                            <small class="text-muted">{% translate "Uploaded" %}: {{ doc.uploaded_at|date:"d M Y, H:i" }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p><em>({% translate "No evaluation plan documents or general resources have been published by the teacher yet." %})</em></p>
+            {% endif %}
+            <h5 class="mt-3">{% translate "General Announcements" %}</h5>
+            <p><em>({% translate "General announcements from the teacher will appear here. This feature is under development." %})</em></p>
+        </div>
+
+        <div class="tab-pane fade p-3 border rounded" id="activities" role="tabpanel" aria-labelledby="activities-tab">
+            <h5>{% translate "Activities and Assignments" %}</h5>
+            {% if not teacher_assignment_for_content_exists %}
+                <div class="alert alert-warning" role="alert">
+                    {% translate "Activities cannot be listed as the specific teacher assignment record in the 'teachers' app module is missing." %}
+                </div>
+            {% endif %}
+            {% if activities %}
+                {% for activity in activities %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>{{ activity.title }}</strong>
+                            {% if activity.due_date %}
+                                <span class="badge bg-warning float-end">{% translate "Due" %}: {{ activity.due_date|date:"d M Y" }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% if activity.description %}<p>{{ activity.description|linebreaksbr }}</p>{% endif %}
+                            <p>
+                                <small>{% translate "Type" %}: {{ activity.get_activity_type_display }}</small><br>
+                                {% if activity.max_score %}<small>{% translate "Max Score" %}: {{ activity.max_score }}</small><br>{% endif %}
+                                {% if activity.academic_period %}<small>{% translate "Period" %}: {{ activity.academic_period.name }}</small>{% endif %}
+                            </p>
+
+                            {% with grade_info=grades_by_activity_id|get_item:activity.id %}
+                                {% if grade_info %}
+                                    <div class="alert alert-success">
+                                        <p class="mb-1"><strong>{% translate "Status" %}:</strong> {% translate "Submitted/Graded" %}</p>
+                                        {% if grade_info.score is not None %}
+                                        <p class="mb-1"><strong>{% translate "Your Score" %}:</strong> {{ grade_info.score }}</p>
+                                        {% endif %}
+                                        {% if grade_info.feedback %}
+                                        <p class="mb-1"><strong>{% translate "Feedback" %}:</strong> {{ grade_info.feedback|linebreaksbr }}</p>
+                                        {% endif %}
+                                        <small>{% translate "Submitted/Graded on" %}: {{ grade_info.submission_date|date:"d M Y, H:i" }}</small>
+                                    </div>
+                                {% else %}
+                                    <form method="post" enctype="multipart/form-data" action=""> {# Placeholder action #}
+                                        {% csrf_token %}
+                                        <input type="hidden" name="activity_id" value="{{ activity.id }}">
+                                        <div class="mb-3">
+                                            <label for="submissionFile_{{ activity.id }}" class="form-label">{% translate "Submit your work (file)" %}:</label>
+                                            <input class="form-control" type="file" id="submissionFile_{{ activity.id }}" name="submission_file">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm">{% translate "Upload Submission" %}</button>
+                                        <small class="text-muted ms-2"><em>({% translate "Submission functionality is under development." %})</em></small>
+                                    </form>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p><em>({% translate "No activities have been assigned for this subject yet, or they cannot be listed due to a missing teacher assignment configuration." %})</em></p>
+            {% endif %}
+            {# <button class="btn btn-info mt-3">{% translate "View All Pending Assignments" %}</button> #} {# Funcionalidad futura, podría ir al dashboard #}
+        </div>
+
+        <div class="tab-pane fade p-3 border rounded" id="roster" role="tabpanel" aria-labelledby="roster-tab">
+            <h5>{% translate "Class Roster" %}</h5>
+            {% if class_roster %}
+                <ul class="list-group">
+                    {% for enrollment in class_roster %}
+                        <li class="list-group-item">
+                            {{ forloop.counter }}. {{ enrollment.student.last_name }}, {{ enrollment.student.first_name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p><em>({% translate "Could not load class roster." %})</em></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr class="mt-4">
+    <h4>{% translate "Quick Actions" %}</h4>
+    <div class="btn-group" role="group" aria-label="Quick Actions">
+        <button type="button" class="btn btn-primary">{% translate "Contact Teacher" %}</button> {# Funcionalidad futura de chat #}
+        <button type="button" class="btn btn-warning">{% translate "Set Reminders" %}</button> {# Funcionalidad futura #}
+    </div>
+
+</div>
+{% endblock %}
