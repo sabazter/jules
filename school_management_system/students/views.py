@@ -48,6 +48,27 @@ def student_dashboard(request):
         subject_assignments_for_grade_level = grade_level.subject_assignments.all().select_related('subject', 'grading_scale')
 
         for sa in subject_assignments_for_grade_level:
+            teacher_name = _("Not assigned")
+            # The section is derived from the current enrollment in the outer loop
+            # section = enrollment.section
+            try:
+                # Find the TeacherSubjectSectionAssignment for this subject_assignment (sa)
+                # and the student's current section for this enrollment.
+                tssa = TeacherSubjectSectionAssignment.objects.select_related('teacher').get(
+                    subject_assignment=sa,
+                    section=section
+                )
+                if tssa.teacher:
+                    teacher_name = tssa.teacher.get_full_name()
+            except TeacherSubjectSectionAssignment.DoesNotExist:
+                # Teacher not assigned to this subject in this specific section, name remains "Not assigned"
+                pass
+            except AttributeError:
+                # This might happen if tssa.teacher is None, though get_full_name should handle it.
+                # Or if tssa itself is None, but DoesNotExist should catch that.
+                # Keeping teacher_name as "Not assigned" is a safe fallback.
+                pass
+
             subjects_context_list.append({
                 'id': sa.subject.id, # Añadimos ID para la URL de la materia
                 'name': sa.subject.name,
@@ -57,7 +78,7 @@ def student_dashboard(request):
                 'level_name': grade_level.level.name,
                 'academic_year': academic_year_instance.name,
                 'section_name': section.name, # Añadimos nombre de la sección
-                'teacher_name': sa.teacher.get_full_name() if sa.teacher else "No asignado", # Nombre del profesor
+                'teacher_name': teacher_name, # Nombre del profesor
             })
 
     # Ordenar puede ser complejo si hay múltiples años, considerar filtrar por año seleccionado
