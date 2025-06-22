@@ -6,7 +6,8 @@ from .models import (
     GradingScale, GradeValue, GradeLevel, PreEnrollmentProfile,
     PlaceholderEducacionMediaGeneral, PlaceholderEducacionPrimaria, PlaceholderEducacionBasica,
     # TeacherSubjectSectionAssignment, # Commented out
-    StudentGrade, GuideTeacherAssignment, CoordinatorAssignment
+    StudentGrade, GuideTeacherAssignment, CoordinatorAssignment,
+    ChatRoom, ChatMessage
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -354,3 +355,20 @@ class CoordinatorAssignmentAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related(
             'teacher', 'level', 'academic_year'
         )
+
+@admin.register(ChatRoom)
+class ChatRoomAdmin(admin.ModelAdmin):
+    list_display = ('name', 'created_at')
+    search_fields = ('name',)
+    filter_horizontal = ('members',)
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('room', 'sender', 'content_preview', 'timestamp')
+    list_filter = ('room', 'sender', 'timestamp')
+    search_fields = ('sender__username', 'content')
+    readonly_fields = ('timestamp',)
+
+    def content_preview(self, obj):
+        return obj.content[:50] + '...' if len(obj.content) > 50 else obj.content
+    content_preview.short_description = _("Contenido")

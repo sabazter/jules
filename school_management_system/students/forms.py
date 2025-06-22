@@ -18,3 +18,22 @@ class StudentRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+from .models import StudentSubmission
+
+class StudentSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = StudentSubmission
+        fields = ['submitted_file', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 3, 'placeholder': _("Notas adicionales sobre tu entrega (opcional)...")}),
+            'submitted_file': forms.FileInput(attrs={'class': 'form-control'})
+        }
+        labels = {
+            'submitted_file': _("Archivo a Entregar"),
+            'notes': _("Notas Adicionales")
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['submitted_file'].required = True

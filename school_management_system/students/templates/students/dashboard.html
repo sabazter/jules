@@ -16,17 +16,46 @@
         <div class="card-body">
             <h5 class="card-title">{% translate "Current Section" %}: {{ current_section_display }}</h5>
             <p class="card-text">
-                <em>{% translate "Click on your current section to view your subjects." %}</em>
+                <em>{% translate "Your main academic information and actions." %}</em>
             </p>
-            {# Se asume que current_section_display es clickeable para ir a la lista de materias del año actual #}
-            {# La URL para esto se definirá en el siguiente paso del plan. Provisionalmente 'students:student_subjects_current' #}
-            <a href="{% url 'students:student_subjects_current' %}" class="btn btn-primary">{% translate "View Current Subjects" %}</a>
+            <a href="{% url 'students:student_subjects_current' %}" class="btn btn-primary">{% translate "View Current Subjects & Activities" %}</a>
+        </div>
+    </div>
+
+    {# Statistics Section Card #}
+    <div class="card mb-4">
+        <div class="card-header">
+            {% translate "Statistics for Current Year" %}
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>{% translate "Evaluations Progress" %}</h5>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ stats.percentage_evaluations_completed }}%;" aria-valuenow="{{ stats.percentage_evaluations_completed }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ stats.percentage_evaluations_completed }}%
+                        </div>
+                    </div>
+                    <p class="mt-2">{% translate "Percentage of evaluations completed/submitted." %}</p>
+                </div>
+                {% if stats.is_high_school %}
+                <div class="col-md-6">
+                    <h5>{% translate "Accumulated Points" %}</h5>
+                    {% if stats.accumulated_points is not None %}
+                        <h2>{{ stats.accumulated_points }} <small class="text-muted">{% translate "points" %}</small></h2>
+                        <p>{% translate "Total points accumulated from graded activities in the current period." %}</p>
+                    {% else %}
+                        <p><em>({% translate "Accumulated points will be shown here once activities are graded." %})</em></p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            {% translate "Academic History" %}
+            {% translate "Academic History & Reports" %}
         </div>
         <div class="card-body">
             <form method="GET" action="{% url 'students:dashboard' %}">

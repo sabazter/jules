@@ -16,7 +16,14 @@
             {% for subject_info in subjects_list %}
                 <a href="{% url 'students:student_subject_detail' tssa_id=subject_info.teacher_subject_section_assignment_id %}" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ subject_info.name }}</h5>
+                        <h5 class="mb-1">
+                            {{ subject_info.name }}
+                            {% if report_cards_released and subject_info.final_grade %}
+                                <span class="badge bg-success ms-2">{% translate "Final Grade" %}: {{ subject_info.final_grade }}</span>
+                            {% elif report_cards_released and not subject_info.final_grade %}
+                                <span class="badge bg-secondary ms-2">{% translate "Final Grade: N/A" %}</span>
+                            {% endif %}
+                        </h5>
                         <small>{{ subject_info.academic_year_name }}</small>
                     </div>
                     <p class="mb-1">{% translate "Section" %}: {{ subject_info.section_name }}</p>

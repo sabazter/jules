@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %} {# For potential static files like custom JS for chat #}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .chat-container {
+        max-width: 800px;
+        margin: auto;
+    }
+    .chat-messages {
+        height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+    }
+    .message {
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        border-radius: 15px;
+        max-width: 70%;
+        word-wrap: break-word;
+    }
+    .message.sent {
+        background-color: #dcf8c6; /* Light green for sent messages */
+        margin-left: auto;
+        text-align: right;
+    }
+    .message.received {
+        background-color: #fff; /* White for received messages */
+        border: 1px solid #eee;
+        margin-right: auto;
+        text_align: left;
+    }
+    .message .sender {
+        font-weight: bold;
+        font-size: 0.9em;
+        color: #555;
+        display: block;
+        margin-bottom: 3px;
+    }
+    .message .timestamp {
+        font-size: 0.75em;
+        color: #999;
+        display: block;
+        margin-top: 5px;
+    }
+    .message-form textarea {
+        resize: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 chat-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>{{ page_title }}</h3>
+        <a href="{% url 'core:chat_room_list' %}" class="btn btn-sm btn-outline-secondary">{% trans "Volver a la Lista de Chats" %}</a>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+        {% for message in messages_list %}
+            <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                <span class="sender">
+                    {% if message.sender == request.user %}
+                        {% trans "Yo" %}
+                    {% else %}
+                        {{ message.sender.get_full_name|default:message.sender.username }}
+                    {% endif %}
+                </span>
+                {{ message.content|linebreaksbr }}
+                <span class="timestamp">{{ message.timestamp|date:"d/m/Y H:i" }}</span>
+            </div>
+        {% empty %}
+            <p class="text-center text-muted">{% trans "No hay mensajes en esta conversación aún. ¡Envía el primero!" %}</p>
+        {% endfor %}
+    </div>
+
+    <form method="post" id="chat-form" class="message-form">
+        {% csrf_token %}
+        <div class="input-group">
+            {{ form.content }}
+            {# <textarea name="content" class="form-control" rows="3" placeholder="{% trans 'Escribe tu mensaje...' %}" required></textarea> #}
+            <button type="submit" class="btn btn-primary">{% trans "Enviar" %}</button>
+        </div>
+        {% if form.content.errors %}
+            <div class="text-danger mt-1">
+                {% for error in form.content.errors %}
+                    <small>{{ error }}</small>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </form>
+</div>
+
+{# Basic JavaScript to scroll to the bottom of the chat messages #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessages = document.getElementById('chat-messages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Optional: Basic AJAX for sending messages without full page reload
+        // This is a very basic example and would need more robust error handling, etc.
+        // const chatForm = document.getElementById('chat-form');
+        // if (chatForm) {
+        //     chatForm.addEventListener('submit', function(e) {
+        //         e.preventDefault();
+        //         const formData = new FormData(chatForm);
+        //         fetch(chatForm.action, {
+        //             method: 'POST',
+        //             body: formData,
+        //             headers: {
+        //                 'X-Requested-With': 'XMLHttpRequest', // Important for Django view to detect AJAX
+        //                 'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        //             }
+        //         })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             if (data.sender && data.content && data.timestamp) {
+        //                 const messagesDiv = document.getElementById('chat-messages');
+        //                 const newMessageDiv = document.createElement('div');
+        //                 newMessageDiv.classList.add('message', 'sent'); // Assuming sent by current user
+        //                 newMessageDiv.innerHTML = `
+        //                     <span class="sender">{% trans "Yo" %}</span>
+        //                     ${data.content.replace(/\n/g, '<br>')}
+        //                     <span class="timestamp">${data.timestamp} (Recibido)</span>`; // Format timestamp as needed
+        //                 messagesDiv.appendChild(newMessageDiv);
+        //                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        //                 chatForm.reset(); // Clear the textarea
+        //             } else {
+        //                 // Handle error, e.g., display a message
+        //                 console.error('Error sending message:', data);
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error('Fetch error:', error);
+        //             // Handle network error
+        //         });
+        //     });
+        // }
+    });
+</script>
+{% endblock %}

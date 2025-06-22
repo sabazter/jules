@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ page_title }}</h2>
+
+    {% if request.user.role == 'STUDENT' %}
+        <p class="mb-3">{% trans "Aquí puedes ver tus conversaciones con profesores. Para iniciar una nueva conversación, visita el perfil del profesor o la lista de tus profesores." %}</p>
+        {# Link to a hypothetical teacher list page for students #}
+        {# <a href="{% url 'students:teacher_list' %}" class="btn btn-primary mb-3">{% trans "Ver Profesores" %}</a> #}
+    {% elif request.user.role == 'TEACHER' %}
+        <p class="mb-3">{% trans "Aquí puedes ver tus conversaciones con estudiantes." %}</p>
+        {# Link to a hypothetical student list page for teachers #}
+        {# <a href="{% url 'teachers:student_list' %}" class="btn btn-primary mb-3">{% trans "Ver Estudiantes de Mis Clases" %}</a> #}
+    {% endif %}
+
+    {% if chat_rooms %}
+        <div class="list-group">
+            {% for room in chat_rooms %}
+                {% with other_members=room.members.all|cut:request.user %}
+                    <a href="{% url 'core:chat_room_detail' room.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">
+                                {% if other_members %}
+                                    {% for member in other_members %}
+                                        {{ member.get_full_name|default:member.username }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {{ room.name }}
+                                {% endif %}
+                            </h5>
+                            <small class="text-muted">{% trans "Creada" %}: {{ room.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        {% with last_message=room.messages.last %}
+                            {% if last_message %}
+                                <p class="mb-1">
+                                    <strong>{{ last_message.sender.username }}:</strong>
+                                    {{ last_message.content|truncatechars:70 }}
+                                </p>
+                                <small class="text-muted">{{ last_message.timestamp|timesince }} {% trans "atrás" %}</small>
+                            {% else %}
+                                <p class="mb-1 fst-italic">{% trans "No hay mensajes aún." %}</p>
+                            {% endif %}
+                        {% endwith %}
+                    </a>
+                {% endwith %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            {% trans "No tienes chats activos en este momento." %}
+        </div>
+    {% endif %}
+
+    {# Example: Button to create a new chat (might need more specific target) #}
+    {# This is more complex as it requires selecting a user to chat with #}
+    {# {% if request.user.role == 'STUDENT' or request.user.role == 'TEACHER' %}
+        <div class="mt-4">
+             <a href="#" class="btn btn-success">{% trans "Iniciar Nuevo Chat" %}</a>
+             <small class="form-text text-muted"> (Esta funcionalidad requiere seleccionar un usuario)</small>
+        </div>
+    {% endif %} #}
+
+</div>
+{% endblock %}

@@ -143,3 +143,8 @@ AUTH_USER_MODEL = 'core.User'
 # LOGIN_REDIRECT_URL = '/student/dashboard/'
 LOGIN_REDIRECT_URL = '/' # Default to home page
 LOGOUT_REDIRECT_URL = '/'
+
+# Media files (User-uploaded files)
+# https://docs.djangoproject.com/en/5.2/topics/files/
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

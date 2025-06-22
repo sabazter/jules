@@ -19,6 +19,8 @@ from django.contrib import admin
 from django.urls import path, include # Make sure include is imported
 from django.contrib.auth import views as auth_views
 from core.views import home_page_view, CustomLoginView # Import CustomLoginView
+from django.conf import settings # For serving media files during development
+from django.conf.urls.static import static # For serving media files during development
 
 urlpatterns = [
     path('', include('core.urls')), # For pre-enrollment and other core app URLs
@@ -29,3 +31,6 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'), # Use CustomLoginView
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

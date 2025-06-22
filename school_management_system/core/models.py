@@ -204,6 +204,11 @@ class AcademicPeriod(models.Model):
         verbose_name=_("Cierre de Carga de Notas del Lapso"),
         help_text=_("Fecha hasta la cual se pueden cargar notas para este lapso.")
     )
+    report_cards_released = models.BooleanField(
+        default=False,
+        verbose_name=_("Boletas Liberadas"),
+        help_text=_("Marcar si las boletas/calificaciones finales para este lapso han sido publicadas.")
+    )
 
     class Meta:
         verbose_name = _("Lapso Académico")
@@ -580,3 +585,30 @@ class PlaceholderEducacionBasica(models.Model): # Assuming "básica" refers to a
     class Meta:
         verbose_name = _("Evaluación: Educación Básica") # For example, could be "Educación Inicial" or a more specific "Basic Cycle"
         verbose_name_plural = _("Evaluación: Educación Básica")
+
+class ChatRoom(models.Model):
+    name = models.CharField(max_length=255, verbose_name=_("Nombre de la Sala de Chat"), unique=True)
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_rooms', verbose_name=_("Miembros"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de Creación"))
+
+    class Meta:
+        verbose_name = _("Sala de Chat")
+        verbose_name_plural = _("Salas de Chat")
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+class ChatMessage(models.Model):
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages', verbose_name=_("Sala de Chat"))
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages', verbose_name=_("Remitente"))
+    content = models.TextField(verbose_name=_("Contenido del Mensaje"))
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("Marca de Tiempo"))
+
+    class Meta:
+        verbose_name = _("Mensaje de Chat")
+        verbose_name_plural = _("Mensajes de Chat")
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.content[:50]}..."

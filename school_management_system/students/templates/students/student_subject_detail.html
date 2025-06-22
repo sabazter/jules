@@ -98,19 +98,64 @@
                                         {% endif %}
                                         <small>{% translate "Submitted/Graded on" %}: {{ grade_info.submission_date|date:"d M Y, H:i" }}</small>
                                     </div>
-                                {% else %}
-                                    <form method="post" enctype="multipart/form-data" action=""> {# Placeholder action #}
+                                {% endif %} {# End of grade_info check #}
+
+                                <hr>
+                                <h6>{% translate "Entregar Trabajo" %}</h6>
+                                {% with current_submission=submissions_by_activity_id|get_item:activity.id %}
+                                    <form method="post" enctype="multipart/form-data" action="{% url 'students:student_subject_detail' tssa_id=assignment.id %}">
                                         {% csrf_token %}
                                         <input type="hidden" name="activity_id" value="{{ activity.id }}">
+
+                                        {% if submission_form.non_field_errors %}
+                                            <div class="alert alert-danger">
+                                                {% for error in submission_form.non_field_errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+
                                         <div class="mb-3">
-                                            <label for="submissionFile_{{ activity.id }}" class="form-label">{% translate "Submit your work (file)" %}:</label>
-                                            <input class="form-control" type="file" id="submissionFile_{{ activity.id }}" name="submission_file">
+                                            <label for="id_submitted_file_{{ activity.id }}" class="form-label">{{ submission_form.submitted_file.label }}</label>
+                                            {{ submission_form.submitted_file }}
+                                            {% if submission_form.submitted_file.help_text %}
+                                                <small class="form-text text-muted">{{ submission_form.submitted_file.help_text }}</small>
+                                            {% endif %}
+                                            {% for error in submission_form.submitted_file.errors %}
+                                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                            {% endfor %}
                                         </div>
-                                        <button type="submit" class="btn btn-primary btn-sm">{% translate "Upload Submission" %}</button>
-                                        <small class="text-muted ms-2"><em>({% translate "Submission functionality is under development." %})</em></small>
+
+                                        <div class="mb-3">
+                                            <label for="id_notes_{{ activity.id }}" class="form-label">{{ submission_form.notes.label }}</label>
+                                            {{ submission_form.notes }}
+                                            {% if submission_form.notes.help_text %}
+                                                <small class="form-text text-muted">{{ submission_form.notes.help_text }}</small>
+                                            {% endif %}
+                                            {% for error in submission_form.notes.errors %}
+                                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <button type="submit" name="submit_activity_file" class="btn btn-primary btn-sm">
+                                            {% if current_submission %}{% translate "Actualizar Entrega" %}{% else %}{% translate "Enviar Entrega" %}{% endif %}
+                                        </button>
                                     </form>
-                                {% endif %}
-                            {% endwith %}
+                                    {% if current_submission %}
+                                        <div class="mt-2">
+                                            <p>
+                                                <strong>{% translate "Entregado Actualmente" %}:</strong>
+                                                <a href="{{ current_submission.submitted_file.url }}" target="_blank">{{ current_submission.submitted_file.name|filename }}</a>
+                                                <br>
+                                                <small class="text-muted">{% translate "Fecha" %}: {{ current_submission.submission_date|date:"d M Y, H:i" }}</small>
+                                            </p>
+                                            {% if current_submission.notes %}
+                                                <p><strong>{% translate "Tus Notas" %}:</strong><br>{{ current_submission.notes|linebreaksbr }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endwith %} {# End of grade_info/submission form block #}
                         </div>
                     </div>
                 {% endfor %}

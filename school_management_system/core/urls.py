@@ -9,4 +9,10 @@ urlpatterns = [
     # path('preinscripcion/exito/', views.pre_enrollment_success_view, name='pre_enrollment_success'),
     # And potentially an edit view for existing pre-enrollments if needed:
     # path('preinscripcion/<int:pk>/editar/', views.pre_enrollment_edit_view, name='pre_enrollment_edit'),
+
+    # Chat URLs
+    path('chat/', views.chat_room_list_view, name='chat_room_list'),
+    path('chat/room/<int:room_id>/', views.chat_room_detail_view, name='chat_room_detail'),
+    path('chat/crear/profesor/<int:teacher_id>/', views.create_chat_with_teacher_view, name='create_chat_with_teacher'),
+    # Add more chat-related URLs as needed, e.g., for creating rooms with students for teachers
 ]

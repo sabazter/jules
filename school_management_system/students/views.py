@@ -1,16 +1,28 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import gettext_lazy as _
-from .forms import StudentRegistrationForm
+from django.contrib import messages # For displaying messages
+from django.http import HttpResponseForbidden, Http404
+
+
+from .forms import StudentRegistrationForm, StudentSubmissionForm
+from .models import StudentSubmission
 # Explicitly import necessary core models:
 from core.models import User, StudentEnrollment, SubjectAssignment, TeacherSubjectSectionAssignment, AcademicYear
 # Import teacher models:
 from teachers.models import TeacherAssignment, EvaluationPlanDocument, Activity, Grade
+from core.models import AcademicPeriod # For statistics calculation
 
 @login_required
 def student_dashboard(request):
     student = request.user
+    stats_context = {
+        'percentage_evaluations_completed': 0,
+        'accumulated_points': None, # None means not applicable or no data
+        'is_high_school': False,
+        'final_grades_by_subject': {} # To store final grades if report cards are "released"
+    }
 
     student_enrollments = student.enrollments.select_related(
         'section__grade_level__level',
@@ -18,78 +30,142 @@ def student_dashboard(request):
     ).order_by('-section__academic_year__start_date', 'section__name').distinct()
 
     current_enrollment = student_enrollments.first()
-    current_section_display = "N/A"
+    current_section_display = _("N/A")
+    current_academic_year = None
+    current_grade_level = None
+
     if current_enrollment:
         current_section_display = f"{current_enrollment.section.grade_level.name} - {current_enrollment.section.name} ({current_enrollment.section.academic_year.name})"
+        current_academic_year = current_enrollment.section.academic_year
+        current_grade_level = current_enrollment.section.grade_level
+
+        if current_grade_level.level.name == 'media_general':
+            stats_context['is_high_school'] = True
+
+        # --- Statistics Calculation ---
+        # Assuming we calculate stats for the current academic year and its periods
+        if current_academic_year:
+            # Get all activities for the student in their current section for the current year
+            # This requires finding all TeacherAssignments for the student's section
+            teacher_assignments_for_section = TeacherAssignment.objects.filter(
+                section=current_enrollment.section
+            ).prefetch_related('activities')
+
+            all_activities_for_student = []
+            for ta in teacher_assignments_for_section:
+                all_activities_for_student.extend(list(ta.activities.all()))
+
+            total_evaluations = len(all_activities_for_student)
+            completed_evaluations = 0
+            accumulated_points_value = 0
+
+            if total_evaluations > 0:
+                student_grades_for_activities = Grade.objects.filter(
+                    student=student,
+                    activity__in=all_activities_for_student
+                ).select_related('activity')
+
+                student_submissions_for_activities = StudentSubmission.objects.filter(
+                    student=student,
+                    activity__in=all_activities_for_student
+                ).select_related('activity')
+
+                grades_map = {grade.activity_id: grade for grade in student_grades_for_activities}
+                submissions_map = {sub.activity_id: sub for sub in student_submissions_for_activities}
+
+                for activity in all_activities_for_student:
+                    is_completed = False
+                    if activity.id in grades_map:
+                        is_completed = True
+                        grade_obj = grades_map[activity.id]
+                        if grade_obj.score is not None:
+                            accumulated_points_value += grade_obj.score
+                    elif activity.activity_type == Activity.ActivityType.ONLINE and activity.id in submissions_map:
+                        # Consider submitted online activities as "completed" for percentage, even if not graded yet
+                        is_completed = True
+
+                    if is_completed:
+                        completed_evaluations += 1
+
+                if total_evaluations > 0:
+                    stats_context['percentage_evaluations_completed'] = round((completed_evaluations / total_evaluations) * 100, 1)
+
+                if stats_context['is_high_school']:
+                    stats_context['accumulated_points'] = accumulated_points_value
+
+            # --- Final Grades ---
+            # Fetch final grades if report cards are released for any relevant period in the current year
+            # This assumes final grades are stored in StudentGrade linked to an AcademicPeriod.
+            relevant_periods = AcademicPeriod.objects.filter(
+                academic_year=current_academic_year,
+                report_cards_released=True
+            )
+            if relevant_periods.exists():
+                student_final_grades_qs = StudentGrade.objects.filter(
+                    student_enrollment__student=student,
+                    student_enrollment__section=current_enrollment.section, # Grades for the current section
+                    academic_period__in=relevant_periods
+                ).select_related('subject_assignment__subject', 'grade_value', 'academic_period')
+
+                # If multiple periods have released grades, decide how to show them.
+                # For now, let's assume we take the latest period or one specific final period.
+                # Or, if StudentGrade is unique per (student, subject_assignment, academic_year) for final grades, simplify.
+                # The current StudentGrade model is unique on (student_enrollment, subject_assignment, academic_period).
+                # So, a student can have a grade for a subject in multiple periods.
+                # We need to define which one is "the final grade" for the year for display on dashboard.
+                # For now, let's just collect them all if multiple periods are released.
+                # A better approach might be a specific "final" AcademicPeriod type or a specific StudentGrade entry.
+
+                for sg in student_final_grades_qs:
+                    subject_name = sg.subject_assignment.subject.name
+                    grade_display = sg.grade_value.display_value if sg.grade_value else _("N/A")
+                    # If multiple periods, this will overwrite. Needs refinement if showing multiple period grades.
+                    # For now, if multiple periods, the last one processed will be shown.
+                    stats_context['final_grades_by_subject'][subject_name] = grade_display
+
 
     school_years_qs = student.enrollments.select_related('section__academic_year') \
                                          .values_list('section__academic_year__name', flat=True) \
                                          .distinct().order_by('-section__academic_year__name')
     school_years = list(school_years_qs)
 
-    # La lógica existente para las materias puede permanecer o ser movida a otra vista si es necesario.
-    # Por ahora, la mantenemos aquí, ya que el plan original implicaba un clic para ver materias.
-    # Si el dashboard principal solo debe mostrar la sección y años, esta parte se puede simplificar.
+    # Subject listing - can be kept or moved to student_subjects_current_view
     subjects_context_list = []
-    processed_grade_levels = set()
-
-    for enrollment in student_enrollments: # Usamos los enrollments ya ordenados
-        section = enrollment.section
+    if current_enrollment: # Only list subjects if there's a current enrollment
+        section = current_enrollment.section
         grade_level = section.grade_level
         academic_year_instance = section.academic_year
 
-        # Para evitar duplicados si el estudiante está en múltiples secciones del mismo grado/año (poco probable)
-        # O si queremos mostrar solo las materias del año seleccionado (lógica futura)
-        # if grade_level.id in processed_grade_levels:
-        # continue
-        # processed_grade_levels.add(grade_level.id)
-
-        # Asumiendo que SubjectAssignment está relacionado con GradeLevel
         subject_assignments_for_grade_level = grade_level.subject_assignments.all().select_related('subject', 'grading_scale')
-
         for sa in subject_assignments_for_grade_level:
-            teacher_name = _("Not assigned")
-            # The section is derived from the current enrollment in the outer loop
-            # section = enrollment.section
+            teacher_name = _("No asignado")
             try:
-                # Find the TeacherSubjectSectionAssignment for this subject_assignment (sa)
-                # and the student's current section for this enrollment.
                 tssa = TeacherSubjectSectionAssignment.objects.select_related('teacher').get(
                     subject_assignment=sa,
                     section=section
                 )
                 if tssa.teacher:
-                    teacher_name = tssa.teacher.get_full_name()
+                    teacher_name = tssa.teacher.get_full_name() or tssa.teacher.username
             except TeacherSubjectSectionAssignment.DoesNotExist:
-                # Teacher not assigned to this subject in this specific section, name remains "Not assigned"
                 pass
-            except AttributeError:
-                # This might happen if tssa.teacher is None, though get_full_name should handle it.
-                # Or if tssa itself is None, but DoesNotExist should catch that.
-                # Keeping teacher_name as "Not assigned" is a safe fallback.
-                pass
+
+            final_grade_display = stats_context['final_grades_by_subject'].get(sa.subject.name)
 
             subjects_context_list.append({
-                'id': sa.subject.id, # Añadimos ID para la URL de la materia
+                'id': sa.subject.id,
                 'name': sa.subject.name,
-                'description': sa.subject.description,
-                'hourly_load': sa.hourly_load,
-                'grade_level_name': grade_level.name,
-                'level_name': grade_level.level.name,
-                'academic_year': academic_year_instance.name,
-                'section_name': section.name, # Añadimos nombre de la sección
-                'teacher_name': teacher_name, # Nombre del profesor
+                'teacher_name': teacher_name,
+                'final_grade': final_grade_display # Add final grade here
             })
-
-    # Ordenar puede ser complejo si hay múltiples años, considerar filtrar por año seleccionado
-    subjects_context_list.sort(key=lambda x: (x['academic_year'], x['level_name'], x['grade_level_name'], x['name']))
+        subjects_context_list.sort(key=lambda x: x['name'])
 
 
     context = {
         'student': student,
         'current_section_display': current_section_display,
         'school_years': school_years,
-        'enrolled_subjects': subjects_context_list, # Esto podría moverse a otra vista si el dashboard es solo resumen
+        'enrolled_subjects': subjects_context_list,
+        'stats': stats_context # Add statistics to context
     }
     return render(request, 'students/dashboard.html', context)
 
@@ -168,10 +244,50 @@ def student_subjects_current_view(request):
 
     subjects_context_list.sort(key=lambda x: x['name']) # Ordenar por nombre de materia
 
+    # --- Final Grades Logic (similar to dashboard) ---
+    final_grades_by_subject_id = {} # Keyed by subject.id
+    report_cards_released_for_any_period = False
+
+    if current_academic_year:
+        relevant_periods = AcademicPeriod.objects.filter(
+            academic_year=current_academic_year,
+            report_cards_released=True
+        )
+        if relevant_periods.exists():
+            report_cards_released_for_any_period = True
+            # Fetch grades for the student's current enrollments in these released periods
+            # Assuming student_enrollments is correctly filtered for the current_academic_year if needed,
+            # or we use current_enrollment.section.
+
+            # Get all sections the student is enrolled in for the current academic year.
+            # This is simplified if a student is in one section per year.
+            # For this view, we are focused on the 'current_enrollment' context.
+
+            current_student_enrollment_obj = StudentEnrollment.objects.filter(
+                student=student,
+                section__academic_year=current_academic_year
+            ).first() # Assuming one main enrollment per year for this context
+
+            if current_student_enrollment_obj:
+                student_final_grades_qs = StudentGrade.objects.filter(
+                    student_enrollment = current_student_enrollment_obj,
+                    academic_period__in=relevant_periods
+                ).select_related('subject_assignment__subject', 'grade_value')
+
+                for sg in student_final_grades_qs:
+                    # Using subject_id as key for consistency with how subjects_context_list is built
+                    final_grades_by_subject_id[sg.subject_assignment.subject.id] = sg.grade_value.display_value if sg.grade_value else _("N/A")
+
+    # Add final grade to subjects_context_list
+    for subject_item in subjects_context_list:
+        # subject_item['id'] is subject.id
+        subject_item['final_grade'] = final_grades_by_subject_id.get(subject_item['id']) if report_cards_released_for_any_period else None
+
     context = {
         'student': student,
         'subjects_list': subjects_context_list,
         'academic_year': current_academic_year.name if current_academic_year else _("N/A"),
+        'report_cards_released': report_cards_released_for_any_period
     }
     return render(request, 'students/student_subjects_list.html', context)
 
@@ -207,14 +323,35 @@ def student_subject_detail_view(request, tssa_id):
         ).exists()
 
         if not is_enrolled:
-            # Idealmente, redirigir a una página de error o al dashboard con un mensaje.
-            # Por ahora, un simple HttpResponseForbidden o similar.
-            from django.http import HttpResponseForbidden
             return HttpResponseForbidden(_("You are not enrolled in this subject's section."))
 
     except TeacherSubjectSectionAssignment.DoesNotExist:
-        from django.http import Http404
         raise Http404(_("Subject assignment not found."))
+
+
+    submission_form = StudentSubmissionForm() # Initialize for GET request
+
+    if request.method == 'POST':
+        # Check if this POST request is for a file submission
+        if 'submit_activity_file' in request.POST: # Name of the submit button
+            activity_id = request.POST.get('activity_id')
+            activity_instance = get_object_or_404(Activity, id=activity_id)
+
+            # Check if student already submitted for this activity
+            existing_submission = StudentSubmission.objects.filter(student=request.user, activity=activity_instance).first()
+
+            submission_form_posted = StudentSubmissionForm(request.POST, request.FILES, instance=existing_submission) # Pass instance to update
+            if submission_form_posted.is_valid():
+                submission = submission_form_posted.save(commit=False)
+                submission.student = request.user
+                submission.activity = activity_instance
+                submission.save()
+                messages.success(request, _("Tu archivo para la actividad '{activity_title}' ha sido enviado/actualizado exitosamente.").format(activity_title=activity_instance.title))
+                return redirect('students:student_subject_detail', tssa_id=tssa_id)
+            else:
+                messages.error(request, _("Error al enviar el archivo. Por favor, revisa el formulario."))
+                # We will re-render the page with this form instance containing errors
+                submission_form = submission_form_posted # Use the form with errors for display
 
     # Intentar encontrar el TeacherAssignment correspondiente en la app 'teachers'
     # Esto asume que teachers.TeacherAssignment es el que contiene las actividades y planes.
@@ -230,11 +367,17 @@ def student_subject_detail_view(request, tssa_id):
         student_grades = Grade.objects.filter(student=request.user, activity__in=activities).select_related('activity')
         grades_by_activity_id = {grade.activity_id: grade for grade in student_grades}
 
+        # También obtener las entregas de archivos de los estudiantes para estas actividades
+        student_file_submissions = StudentSubmission.objects.filter(student=request.user, activity__in=activities)
+        submissions_by_activity_id = {sub.activity_id: sub for sub in student_file_submissions}
+
+
     except TeacherAssignment.DoesNotExist:
         teacher_assignment_for_content = None
         evaluation_plan_documents = []
         activities = []
         grades_by_activity_id = {}
+        submissions_by_activity_id = {}
 
 
     # Nómina de la sección
@@ -252,7 +395,9 @@ def student_subject_detail_view(request, tssa_id):
         'evaluation_plan_documents': evaluation_plan_documents,
         'activities': activities,
         'grades_by_activity_id': grades_by_activity_id,
+        'submissions_by_activity_id': submissions_by_activity_id, # Pass submissions to template
         'class_roster': class_roster,
-        'teacher_assignment_for_content_exists': teacher_assignment_for_content is not None
+        'teacher_assignment_for_content_exists': teacher_assignment_for_content is not None,
+        'submission_form': submission_form # Pass the form to the template
     }
     return render(request, 'students/student_subject_detail.html', context)

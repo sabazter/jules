@@ -295,3 +295,16 @@ class PreEnrollmentForm(forms.Form):
 
 
         return cleaned_data
+
+from .models import ChatMessage # Import ChatMessage model
+
+class ChatMessageForm(forms.ModelForm):
+    class Meta:
+        model = ChatMessage
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={'rows': 3, 'placeholder': _('Escribe tu mensaje...')})
+        }
+        labels = {
+            'content': _('Mensaje')
+        }

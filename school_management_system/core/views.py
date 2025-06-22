@@ -4,9 +4,12 @@ from django.urls import reverse_lazy, reverse # Added reverse
 from django.conf import settings # To access User model if needed, though request.user is better
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages # To display messages to the user
+from django.contrib.auth.decorators import login_required # For chat views
+from django.shortcuts import get_object_or_404 # For chat views
+from django.http import JsonResponse # For AJAX in chat (optional)
 
-from .forms import PreEnrollmentForm
-from .models import PreEnrollmentProfile, GradeLevel # Assuming GradeLevel is needed for mapping
+from .forms import PreEnrollmentForm, ChatMessageForm
+from .models import PreEnrollmentProfile, GradeLevel, ChatRoom, ChatMessage, User # Assuming GradeLevel is needed for mapping
 
 
 # Create your views here.
@@ -200,3 +203,132 @@ def pre_enrollment_form_view(request):
 # A simple success view (optional, can be created later)
 # def pre_enrollment_success_view(request):
 #    return render(request, 'core/pre_enrollment_success.html')
+
+@login_required
+def chat_room_list_view(request):
+    # Students see chats with their teachers
+    # Teachers see chats with their students
+    # Admins might see all chats or specific ones based on further logic
+
+    user = request.user
+    chat_rooms = ChatRoom.objects.filter(members=user).prefetch_related('members')
+
+    # For students, try to auto-create chat rooms with their teachers if they don't exist
+    if user.role == 'STUDENT':
+        # This logic needs to be more specific: which teachers?
+        # For now, let's assume a student might want to chat with any teacher
+        # This should be refined to teachers of their courses or section guide.
+        # Example: find teachers associated with the student's section/courses
+        # student_enrollments = user.enrollments.select_related('section__teacher_allocations__teacher').all()
+        # teacher_ids = set()
+        # for enrollment in student_enrollments:
+        #     for allocation in enrollment.section.teacher_allocations.all():
+        #         teacher_ids.add(allocation.teacher.id)
+        #
+        # for teacher_id in teacher_ids:
+        #     teacher = User.objects.get(id=teacher_id)
+        #     room_name = f"Chat entre {user.username} y {teacher.username}"
+        #     room, created = ChatRoom.objects.get_or_create(name=room_name)
+        #     if created:
+        #         room.members.add(user, teacher)
+        pass # Placeholder for more complex logic
+
+    # For teachers, similar logic to find students.
+    if user.role == 'TEACHER':
+        # Example: find students in the teacher's sections/courses
+        # teacher_assignments = user.teacher_subject_assignments.select_related('section__enrollments__student').all()
+        # student_ids = set()
+        # for assignment in teacher_assignments:
+        #     for enrollment in assignment.section.enrollments.all():
+        #         student_ids.add(enrollment.student.id)
+        #
+        # for student_id in student_ids:
+        #     student = User.objects.get(id=student_id)
+        #     room_name = f"Chat entre {user.username} y {student.username}"
+        #     room, created = ChatRoom.objects.get_or_create(name=room_name)
+        #     if created:
+        #         room.members.add(user, student)
+        pass # Placeholder
+
+    context = {
+        'chat_rooms': chat_rooms,
+        'page_title': _("Mis Chats")
+    }
+    return render(request, 'core/chat_room_list.html', context)
+
+
+@login_required
+def chat_room_detail_view(request, room_id):
+    user = request.user
+    chat_room = get_object_or_404(ChatRoom, id=room_id, members=user)
+    messages_list = chat_room.messages.select_related('sender').order_by('timestamp')
+
+    # Determine the other member(s) in the chat for display
+    other_members = chat_room.members.exclude(id=user.id)
+    chat_with_str = ", ".join([member.get_full_name() or member.username for member in other_members])
+    page_title = _("Chat con {chat_with}").format(chat_with=chat_with_str)
+
+
+    if request.method == 'POST':
+        form = ChatMessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.room = chat_room
+            message.sender = user
+            message.save()
+            # If using AJAX, return JsonResponse. Otherwise, redirect to refresh.
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'sender': message.sender.username,
+                    'content': message.content,
+                    'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                })
+            return redirect('core:chat_room_detail', room_id=room_id)
+    else:
+        form = ChatMessageForm()
+
+    context = {
+        'chat_room': chat_room,
+        'messages_list': messages_list,
+        'form': form,
+        'page_title': page_title,
+        'other_members': other_members
+    }
+    return render(request, 'core/chat_room_detail.html', context)
+
+@login_required
+def create_chat_with_teacher_view(request, teacher_id):
+    student = request.user
+    if student.role != 'STUDENT':
+        messages.error(request, _("Esta función es solo para estudiantes."))
+        return redirect('core:chat_room_list')
+
+    teacher = get_object_or_404(User, id=teacher_id, role='TEACHER')
+
+    # Check if a chat room already exists (more robustly)
+    # Look for a room with exactly these two members.
+    # This can be complex if rooms can have >2 members. For 1-on-1:
+    existing_rooms = ChatRoom.objects.filter(members=student).filter(members=teacher)
+    if existing_rooms.count() == 1 and existing_rooms.first().members.count() == 2 : # Check if it's a 1-on-1 chat
+        chat_room = existing_rooms.first()
+    elif existing_rooms.count() > 1: # Ambiguous, maybe take the most recent or specific one
+        # This case needs careful handling. For now, take the first one.
+        # Or, better, iterate and find one with exactly two members.
+        chat_room = None
+        for room_candidate in existing_rooms:
+            if room_candidate.members.count() == 2:
+                chat_room = room_candidate
+                break
+        if not chat_room: # If no existing 1-on-1, create new
+            room_name = _("Chat entre {student_name} y {teacher_name}").format(student_name=student.username, teacher_name=teacher.username)
+            # Ensure unique name if multiple chats could exist, e.g., by adding IDs or a UUID
+            chat_room = ChatRoom.objects.create(name=room_name)
+            chat_room.members.add(student, teacher)
+    else: # No existing room found or existing rooms are group chats not specific to this pair
+        room_name = _("Chat entre {student_name} y {teacher_name}").format(student_name=student.username, teacher_name=teacher.username)
+        # Ensure unique name
+        chat_room = ChatRoom.objects.create(name=room_name)
+        chat_room.members.add(student, teacher)
+
+
+    return redirect('core:chat_room_detail', room_id=chat_room.id)
