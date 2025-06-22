@@ -33,6 +33,9 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="roster-tab" data-bs-toggle="tab" data-bs-target="#roster" type="button" role="tab" aria-controls="roster" aria-selected="false">{% translate "Class Roster" %}</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab" aria-controls="stats" aria-selected="false">{% translate "Subject Statistics" %}</button>
+        </li>
     </ul>
 
     <div class="tab-content mt-3" id="subjectTabContent">
@@ -179,13 +182,49 @@
                 <p><em>({% translate "Could not load class roster." %})</em></p>
             {% endif %}
         </div>
+
+        <div class="tab-pane fade p-3 border rounded" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+            <h5>{% translate "Subject Statistics" %}</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>{% translate "Evaluations Progress" %}</h6>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ subject_stats.percentage_evaluations_completed }}%;" aria-valuenow="{{ subject_stats.percentage_evaluations_completed }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ subject_stats.percentage_evaluations_completed }}%
+                        </div>
+                    </div>
+                    <p class="mt-2"><small>{% translate "Percentage of this subject's evaluations completed/submitted." %}</small></p>
+                </div>
+                {% if subject_stats.is_high_school_subject %}
+                <div class="col-md-6">
+                    <h6>{% translate "Accumulated Points in Subject" %}</h6>
+                    {% if subject_stats.accumulated_points is not None %}
+                        <h4>{{ subject_stats.accumulated_points }} <small class="text-muted">{% translate "points" %}</small></h4>
+                        <p><small>{% translate "Total points accumulated from graded activities in this subject." %}</small></p>
+                    {% else %}
+                        <p><em>({% translate "Accumulated points for this subject will be shown here once activities are graded." %})</em></p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <hr class="mt-4">
     <h4>{% translate "Quick Actions" %}</h4>
     <div class="btn-group" role="group" aria-label="Quick Actions">
-        <button type="button" class="btn btn-primary">{% translate "Contact Teacher" %}</button> {# Funcionalidad futura de chat #}
-        <button type="button" class="btn btn-warning">{% translate "Set Reminders" %}</button> {# Funcionalidad futura #}
+        {% if teacher %}
+            <a href="{% url 'core:create_chat_with_teacher' teacher_id=teacher.id %}" class="btn btn-primary">
+                {% translate "Contact Teacher" %}
+            </a>
+        {% else %}
+            <button type="button" class="btn btn-primary" disabled title="{% translate 'Teacher not assigned to this subject/section' %}">
+                {% translate "Contact Teacher" %}
+            </button>
+        {% endif %}
+        <button type="button" class="btn btn-warning" disabled>
+            {% translate "Set Reminders" %} <small><em>({% translate "Future feature" %})</em></small>
+        </button>
     </div>
 
 </div>

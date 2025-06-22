@@ -17,12 +17,8 @@ from core.models import AcademicPeriod # For statistics calculation
 @login_required
 def student_dashboard(request):
     student = request.user
-    stats_context = {
-        'percentage_evaluations_completed': 0,
-        'accumulated_points': None, # None means not applicable or no data
-        'is_high_school': False,
-        'final_grades_by_subject': {} # To store final grades if report cards are "released"
-    }
+    # Basic context, detailed stats are moved to subject detail view
+    final_grades_by_subject_name = {}
 
     student_enrollments = student.enrollments.select_related(
         'section__grade_level__level',
@@ -39,63 +35,8 @@ def student_dashboard(request):
         current_academic_year = current_enrollment.section.academic_year
         current_grade_level = current_enrollment.section.grade_level
 
-        if current_grade_level.level.name == 'media_general':
-            stats_context['is_high_school'] = True
-
-        # --- Statistics Calculation ---
-        # Assuming we calculate stats for the current academic year and its periods
+        # Basic final grade info for dashboard's subject list (if kept or for other uses)
         if current_academic_year:
-            # Get all activities for the student in their current section for the current year
-            # This requires finding all TeacherAssignments for the student's section
-            teacher_assignments_for_section = TeacherAssignment.objects.filter(
-                section=current_enrollment.section
-            ).prefetch_related('activities')
-
-            all_activities_for_student = []
-            for ta in teacher_assignments_for_section:
-                all_activities_for_student.extend(list(ta.activities.all()))
-
-            total_evaluations = len(all_activities_for_student)
-            completed_evaluations = 0
-            accumulated_points_value = 0
-
-            if total_evaluations > 0:
-                student_grades_for_activities = Grade.objects.filter(
-                    student=student,
-                    activity__in=all_activities_for_student
-                ).select_related('activity')
-
-                student_submissions_for_activities = StudentSubmission.objects.filter(
-                    student=student,
-                    activity__in=all_activities_for_student
-                ).select_related('activity')
-
-                grades_map = {grade.activity_id: grade for grade in student_grades_for_activities}
-                submissions_map = {sub.activity_id: sub for sub in student_submissions_for_activities}
-
-                for activity in all_activities_for_student:
-                    is_completed = False
-                    if activity.id in grades_map:
-                        is_completed = True
-                        grade_obj = grades_map[activity.id]
-                        if grade_obj.score is not None:
-                            accumulated_points_value += grade_obj.score
-                    elif activity.activity_type == Activity.ActivityType.ONLINE and activity.id in submissions_map:
-                        # Consider submitted online activities as "completed" for percentage, even if not graded yet
-                        is_completed = True
-
-                    if is_completed:
-                        completed_evaluations += 1
-
-                if total_evaluations > 0:
-                    stats_context['percentage_evaluations_completed'] = round((completed_evaluations / total_evaluations) * 100, 1)
-
-                if stats_context['is_high_school']:
-                    stats_context['accumulated_points'] = accumulated_points_value
-
-            # --- Final Grades ---
-            # Fetch final grades if report cards are released for any relevant period in the current year
-            # This assumes final grades are stored in StudentGrade linked to an AcademicPeriod.
             relevant_periods = AcademicPeriod.objects.filter(
                 academic_year=current_academic_year,
                 report_cards_released=True
@@ -103,26 +44,11 @@ def student_dashboard(request):
             if relevant_periods.exists():
                 student_final_grades_qs = StudentGrade.objects.filter(
                     student_enrollment__student=student,
-                    student_enrollment__section=current_enrollment.section, # Grades for the current section
+                    student_enrollment__section=current_enrollment.section,
                     academic_period__in=relevant_periods
-                ).select_related('subject_assignment__subject', 'grade_value', 'academic_period')
-
-                # If multiple periods have released grades, decide how to show them.
-                # For now, let's assume we take the latest period or one specific final period.
-                # Or, if StudentGrade is unique per (student, subject_assignment, academic_year) for final grades, simplify.
-                # The current StudentGrade model is unique on (student_enrollment, subject_assignment, academic_period).
-                # So, a student can have a grade for a subject in multiple periods.
-                # We need to define which one is "the final grade" for the year for display on dashboard.
-                # For now, let's just collect them all if multiple periods are released.
-                # A better approach might be a specific "final" AcademicPeriod type or a specific StudentGrade entry.
-
+                ).select_related('subject_assignment__subject', 'grade_value')
                 for sg in student_final_grades_qs:
-                    subject_name = sg.subject_assignment.subject.name
-                    grade_display = sg.grade_value.display_value if sg.grade_value else _("N/A")
-                    # If multiple periods, this will overwrite. Needs refinement if showing multiple period grades.
-                    # For now, if multiple periods, the last one processed will be shown.
-                    stats_context['final_grades_by_subject'][subject_name] = grade_display
-
+                    final_grades_by_subject_name[sg.subject_assignment.subject.name] = sg.grade_value.display_value if sg.grade_value else _("N/A")
 
     school_years_qs = student.enrollments.select_related('section__academic_year') \
                                          .values_list('section__academic_year__name', flat=True) \
@@ -149,23 +75,22 @@ def student_dashboard(request):
             except TeacherSubjectSectionAssignment.DoesNotExist:
                 pass
 
-            final_grade_display = stats_context['final_grades_by_subject'].get(sa.subject.name)
+            final_grade_display = final_grades_by_subject_name.get(sa.subject.name) # Use the locally scoped dict
 
             subjects_context_list.append({
                 'id': sa.subject.id,
                 'name': sa.subject.name,
                 'teacher_name': teacher_name,
-                'final_grade': final_grade_display # Add final grade here
+                'final_grade': final_grade_display
             })
         subjects_context_list.sort(key=lambda x: x['name'])
-
 
     context = {
         'student': student,
         'current_section_display': current_section_display,
         'school_years': school_years,
         'enrolled_subjects': subjects_context_list,
-        'stats': stats_context # Add statistics to context
+        # 'stats': stats_context # Removed detailed stats from here
     }
     return render(request, 'students/dashboard.html', context)
 
@@ -395,9 +320,48 @@ def student_subject_detail_view(request, tssa_id):
         'evaluation_plan_documents': evaluation_plan_documents,
         'activities': activities,
         'grades_by_activity_id': grades_by_activity_id,
-        'submissions_by_activity_id': submissions_by_activity_id, # Pass submissions to template
+        'submissions_by_activity_id': submissions_by_activity_id,
         'class_roster': class_roster,
         'teacher_assignment_for_content_exists': teacher_assignment_for_content is not None,
-        'submission_form': submission_form # Pass the form to the template
+        'submission_form': submission_form
     }
+
+    # --- Subject-Specific Statistics Calculation ---
+    subject_stats = {
+        'percentage_evaluations_completed': 0,
+        'accumulated_points': 0, # Default to 0
+        'is_high_school_subject': False # Determine if this subject is part of a high school level
+    }
+
+    if assignment.section.grade_level.level.name == 'media_general':
+        subject_stats['is_high_school_subject'] = True
+
+    subject_activities = activities # These are already filtered for the current TeacherAssignment (subject/section)
+    total_subject_evaluations = len(subject_activities)
+    completed_subject_evaluations = 0
+    accumulated_subject_points = 0
+
+    if total_subject_evaluations > 0:
+        for activity_obj in subject_activities:
+            is_completed = False
+            if activity_obj.id in grades_by_activity_id:
+                is_completed = True
+                grade_obj = grades_by_activity_id[activity_obj.id]
+                if grade_obj.score is not None:
+                    accumulated_subject_points += grade_obj.score
+            elif activity_obj.activity_type == Activity.ActivityType.ONLINE and activity_obj.id in submissions_by_activity_id:
+                is_completed = True # Considered completed if submitted, even if not graded for percentage
+
+            if is_completed:
+                completed_subject_evaluations += 1
+
+        subject_stats['percentage_evaluations_completed'] = round((completed_subject_evaluations / total_subject_evaluations) * 100, 1)
+        if subject_stats['is_high_school_subject']:
+            subject_stats['accumulated_points'] = accumulated_subject_points
+        else:
+            subject_stats['accumulated_points'] = None # Not applicable if not high school subject
+
+    context['subject_stats'] = subject_stats
+    # --- End Subject-Specific Statistics ---
+
     return render(request, 'students/student_subject_detail.html', context)
