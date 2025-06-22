@@ -17,11 +17,11 @@ class TeacherAssignmentAdmin(admin.ModelAdmin):
     def get_subject_name(self, obj):
         return obj.subject.name
 
-    @admin.display(description=_("Section (Level)"), ordering='section__name')
+    @admin.display(description=_("Section (Level)"), ordering=('section__grade_level__level__name', 'section__grade_level__order_in_level', 'section__name'))
     def get_section_details(self, obj):
         return _("{section_name} ({level_name})").format(
             section_name=obj.section.name,
-            level_name=obj.section.academic_year.level.name
+            level_name=obj.section.grade_level.level.get_name_display() if obj.section.grade_level and obj.section.grade_level.level else _("N/A")
         )
 
     @admin.display(description=_('Academic Year'), ordering='section__academic_year__name')
