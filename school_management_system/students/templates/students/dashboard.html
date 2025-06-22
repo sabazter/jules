@@ -9,6 +9,23 @@
     <h2>{% translate "Student Dashboard" %}</h2>
     <p>{% translate "Welcome" %}, {{ student.get_full_name|default:student.username }}!</p>
 
+    {% if upcoming_pending_activities %}
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">{% translate "Upcoming Activities Due Soon!" %}</h4>
+        <p>{% translate "You have the following activities due in the next 7 days that are not yet completed:" %}</p>
+        <hr>
+        <ul class="mb-0">
+            {% for activity in upcoming_pending_activities %}
+                <li>
+                    <strong>{{ activity.title }}</strong> ({% translate "Subject" %}: {{ activity.subject_name }})
+                    - {% translate "Due" %}: {{ activity.due_date|date:"l, d M Y" }}
+                    {# Consider adding a link to the subject detail page here if tssa_id was easily available #}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-header">
             {% translate "Current Enrollment" %}

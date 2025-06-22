@@ -72,13 +72,17 @@
                     {% translate "Activities cannot be listed as the specific teacher assignment record in the 'teachers' app module is missing." %}
                 </div>
             {% endif %}
-            {% if activities %}
-                {% for activity in activities %}
+            {% if activities_with_status %}
+                {% for item in activities_with_status %}
+                    {% with activity=item.activity submission_closed=item.submission_closed %}
                     <div class="card mb-3">
                         <div class="card-header">
                             <strong>{{ activity.title }}</strong>
                             {% if activity.due_date %}
-                                <span class="badge bg-warning float-end">{% translate "Due" %}: {{ activity.due_date|date:"d M Y" }}</span>
+                                <span class="badge {% if submission_closed %}bg-danger{% elif activity.due_date < today_date %}bg-secondary{% else %}bg-warning{% endif %} float-end">
+                                    {% translate "Due" %}: {{ activity.due_date|date:"d M Y" }}
+                                    {% if submission_closed %} ({% translate "Cerrada" %}){% endif %}
+                                </span>
                             {% endif %}
                         </div>
                         <div class="card-body">
@@ -89,28 +93,48 @@
                                 {% if activity.academic_period %}<small>{% translate "Period" %}: {{ activity.academic_period.name }}</small>{% endif %}
                             </p>
 
-                            {% with grade_info=grades_by_activity_id|get_item:activity.id %}
+                            {% with grade_info=grades_by_activity_id|get_item:activity.id current_submission=submissions_by_activity_id|get_item:activity.id %}
                                 {% if grade_info %}
                                     <div class="alert alert-success">
-                                        <p class="mb-1"><strong>{% translate "Status" %}:</strong> {% translate "Submitted/Graded" %}</p>
+                                        <p class="mb-1"><strong>{% translate "Status" %}:</strong> {% translate "Calificado" %}</p>
                                         {% if grade_info.score is not None %}
                                         <p class="mb-1"><strong>{% translate "Your Score" %}:</strong> {{ grade_info.score }}</p>
                                         {% endif %}
                                         {% if grade_info.feedback %}
                                         <p class="mb-1"><strong>{% translate "Feedback" %}:</strong> {{ grade_info.feedback|linebreaksbr }}</p>
                                         {% endif %}
-                                        <small>{% translate "Submitted/Graded on" %}: {{ grade_info.submission_date|date:"d M Y, H:i" }}</small>
+                                        <small>{% translate "Graded on" %}: {{ grade_info.submission_date|date:"d M Y, H:i" }}</small>
                                     </div>
-                                {% endif %} {# End of grade_info check #}
+                                {% elif current_submission %}
+                                    <div class="alert alert-info">
+                                        <p class="mb-1"><strong>{% translate "Status" %}:</strong> {% translate "Entregado" %}</p>
+                                        <p class="mb-1">
+                                            <strong>{% translate "Archivo" %}:</strong>
+                                            <a href="{{ current_submission.submitted_file.url }}" target="_blank">{{ current_submission.submitted_file.name|filename }}</a>
+                                        </p>
+                                        {% if current_submission.notes %}
+                                        <p class="mb-1"><strong>{% translate "Tus Notas" %}:</strong><br>{{ current_submission.notes|linebreaksbr }}</p>
+                                        {% endif %}
+                                        <small>{% translate "Fecha de Entrega" %}: {{ current_submission.submission_date|date:"d M Y, H:i" }}</small>
+                                    </div>
+                                {% endif %}
 
                                 <hr>
                                 <h6>{% translate "Entregar Trabajo" %}</h6>
-                                {% with current_submission=submissions_by_activity_id|get_item:activity.id %}
+                                {% if submission_closed %}
+                                    <div class="alert alert-warning" role="alert">
+                                        {% translate "La fecha de entrega para esta actividad ha pasado y no se permiten más entregas." %}
+                                    </div>
+                                {% else %}
+                                    {% with current_submission=submissions_by_activity_id|get_item:activity.id %} {# Re-fetch for form context if needed, or rely on outer one #}
                                     <form method="post" enctype="multipart/form-data" action="{% url 'students:student_subject_detail' tssa_id=assignment.id %}">
                                         {% csrf_token %}
                                         <input type="hidden" name="activity_id" value="{{ activity.id }}">
 
-                                        {% if submission_form.non_field_errors %}
+                                        {# Display form errors specific to this activity if submission_form was for this activity_id #}
+                                        {# This part is tricky if submission_form in context is generic and not per-activity #}
+                                        {# Assuming submission_form is generic for now. Specific error display would need more context. #}
+                                        {% if submission_form.non_field_errors and request.POST.activity_id == activity.id|stringformat:"s" %}
                                             <div class="alert alert-danger">
                                                 {% for error in submission_form.non_field_errors %}
                                                     {{ error }}

@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib import messages # For displaying messages
 from django.http import HttpResponseForbidden, Http404
 from decimal import Decimal, InvalidOperation
+from django.utils import timezone
 
 
 from .forms import StudentRegistrationForm, StudentSubmissionForm
@@ -13,12 +14,14 @@ from .models import StudentSubmission
 from core.models import User, StudentEnrollment, SubjectAssignment, TeacherSubjectSectionAssignment, AcademicYear, AcademicPeriod # AcademicPeriod was already here
 # Import teacher models:
 from teachers.models import TeacherAssignment, EvaluationPlanDocument, Activity, Grade, EvaluationActivity as TeacherEvaluationActivity
+from datetime import timedelta # For upcoming activities reminder
 
 @login_required
 def student_dashboard(request):
     student = request.user
     # Basic context, detailed stats are moved to subject detail view
     final_grades_by_subject_name = {}
+    upcoming_pending_activities = []
 
     student_enrollments = student.enrollments.select_related(
         'section__grade_level__level',
@@ -44,11 +47,43 @@ def student_dashboard(request):
             if relevant_periods.exists():
                 student_final_grades_qs = StudentGrade.objects.filter(
                     student_enrollment__student=student,
-                    student_enrollment__section=current_enrollment.section,
+                    student_enrollment__section=current_enrollment.section, # Use the specific current section for these grades
                     academic_period__in=relevant_periods
                 ).select_related('subject_assignment__subject', 'grade_value')
                 for sg in student_final_grades_qs:
                     final_grades_by_subject_name[sg.subject_assignment.subject.name] = sg.grade_value.display_value if sg.grade_value else _("N/A")
+
+            # Upcoming Activities Reminder
+            today = timezone.now().date()
+            seven_days_later = today + timedelta(days=7)
+
+            # Get all TeacherAssignments for the student's current section(s) in the current academic year
+            # For simplicity, assuming current_enrollment.section is the single relevant section.
+            # If a student could be in multiple sections simultaneously in the same year, this would need adjustment.
+            teacher_assignments_for_current_section = TeacherAssignment.objects.filter(
+                section=current_enrollment.section
+            ).select_related('subject')
+
+            activities_in_current_section = Activity.objects.filter(
+                teacher_assignment__in=teacher_assignments_for_current_section,
+                due_date__gte=today,
+                due_date__lte=seven_days_later
+            ).order_by('due_date')
+
+            student_submissions_qs = StudentSubmission.objects.filter(student=student, activity__in=activities_in_current_section).values_list('activity_id', flat=True)
+            student_graded_activities_qs = Grade.objects.filter(student=student, activity__in=activities_in_current_section).values_list('activity_id', flat=True)
+
+            completed_activity_ids = set(list(student_submissions_qs) + list(student_graded_activities_qs))
+
+            for activity in activities_in_current_section:
+                if activity.id not in completed_activity_ids:
+                    upcoming_pending_activities.append({
+                        'title': activity.title,
+                        'subject_name': activity.teacher_assignment.subject.name,
+                        'due_date': activity.due_date,
+                        # Could add link to student_subject_detail for this activity's subject later
+                        # 'tssa_id': # Need to find the TeacherSubjectSectionAssignment for this subject/section
+                    })
 
     school_years_qs = student.enrollments.select_related('section__academic_year') \
                                          .values_list('section__academic_year__name', flat=True) \
@@ -90,6 +125,7 @@ def student_dashboard(request):
         'current_section_display': current_section_display,
         'school_years': school_years,
         'enrolled_subjects': subjects_context_list,
+        'upcoming_pending_activities': upcoming_pending_activities, # Add this to context
         # 'stats': stats_context # Removed detailed stats from here
     }
     return render(request, 'students/dashboard.html', context)
@@ -262,6 +298,20 @@ def student_subject_detail_view(request, tssa_id):
             activity_id = request.POST.get('activity_id')
             activity_instance = get_object_or_404(Activity, id=activity_id)
 
+            # Late submission check
+            is_late = False
+            if activity_instance.due_date and timezone.now().date() > activity_instance.due_date:
+                is_late = True
+
+            if is_late and not activity_instance.allow_late_submissions:
+                messages.error(request, _("La fecha de entrega para la actividad '{activity_title}' ha pasado y no se permiten entregas tardías.").format(activity_title=activity_instance.title))
+                # submission_form remains the empty one for GET, or could pass the erroneous one if desired
+                # but since we are not saving, it's better to prevent re-display of data that won't be saved.
+                # To show errors on the specific form for this activity, this needs more complex handling
+                # For now, a general message and redirect is simpler.
+                return redirect('students:student_subject_detail', tssa_id=tssa_id)
+
+
             # Check if student already submitted for this activity
             existing_submission = StudentSubmission.objects.filter(student=request.user, activity=activity_instance).first()
 
@@ -287,13 +337,29 @@ def student_subject_detail_view(request, tssa_id):
             section=assignment.section
         )
         evaluation_plan_documents = EvaluationPlanDocument.objects.filter(teacher_assignment=teacher_assignment_for_content).order_by('-uploaded_at')
-        activities = Activity.objects.filter(teacher_assignment=teacher_assignment_for_content).order_by('due_date', 'title')
+
+        # Prepare activities with submission status
+        activities_qs = Activity.objects.filter(teacher_assignment=teacher_assignment_for_content).order_by('due_date', 'title')
+        activities_with_status = []
+        today = timezone.now().date()
+        for act in activities_qs:
+            submission_is_late_and_closed = False
+            if act.due_date and today > act.due_date and not act.allow_late_submissions:
+                submission_is_late_and_closed = True
+            activities_with_status.append({
+                'activity': act,
+                'submission_closed': submission_is_late_and_closed
+            })
+
+        # activities_with_status is now the primary source for activity data in the template and stats calculation.
+        # The original 'activities' queryset (activities_qs) is used below for fetching grades and submissions.
+
         # Para cada actividad, podríamos querer saber si el estudiante actual tiene una entrega/calificación
-        student_grades = Grade.objects.filter(student=request.user, activity__in=activities).select_related('activity')
+        student_grades = Grade.objects.filter(student=request.user, activity__in=activities_qs).select_related('activity')
         grades_by_activity_id = {grade.activity_id: grade for grade in student_grades}
 
         # También obtener las entregas de archivos de los estudiantes para estas actividades
-        student_file_submissions = StudentSubmission.objects.filter(student=request.user, activity__in=activities)
+        student_file_submissions = StudentSubmission.objects.filter(student=request.user, activity__in=activities_qs)
         submissions_by_activity_id = {sub.activity_id: sub for sub in student_file_submissions}
 
 
@@ -318,7 +384,7 @@ def student_subject_detail_view(request, tssa_id):
         'section': assignment.section,
         'teacher': assignment.teacher,
         'evaluation_plan_documents': evaluation_plan_documents,
-        'activities': activities,
+        'activities_with_status': activities_with_status, # Use this in template
         'grades_by_activity_id': grades_by_activity_id,
         'submissions_by_activity_id': submissions_by_activity_id,
         'class_roster': class_roster,
@@ -338,13 +404,7 @@ def student_subject_detail_view(request, tssa_id):
     if assignment.section.grade_level.level.name == 'media_general':
         subject_stats['is_high_school_subject'] = True
 
-    # `teacher_assignment_for_content` is the TeacherAssignment from teachers.models
-    # `assignment` is TeacherSubjectSectionAssignment from core.models
-    # We need TeacherAssignment from teachers.models to find EvaluationActivity and Activity
-
     current_teacher_assignment_for_eval_plan = None
-    # Use the actual object 'teacher_assignment_for_content' for the check here,
-    # not the template context variable name.
     if teacher_assignment_for_content is not None:
         current_teacher_assignment_for_eval_plan = teacher_assignment_for_content
 
@@ -352,48 +412,43 @@ def student_subject_detail_view(request, tssa_id):
         planned_evaluations = TeacherEvaluationActivity.objects.filter(teacher_assignment=current_teacher_assignment_for_eval_plan)
         subject_stats['total_planned_evaluations'] = planned_evaluations.count()
 
-        # `activities` variable already holds Activity instances for this teacher_assignment_for_content
-        # `grades_by_activity_id` and `submissions_by_activity_id` are already populated for the student for these activities
-
         completed_planned_count = 0
+        # Use activities_with_status for matching, as it contains the 'activity' object
+        # The 'activities' variable (original queryset) might be removed later if not needed elsewhere.
         for planned_eval in planned_evaluations:
-            # Try to find a corresponding actual Activity by title match (case-insensitive)
-            # This is the fragile part noted in the plan.
-            corresponding_activity = None
-            for actual_activity in activities: # 'activities' is from context, linked to teacher_assignment_for_content
-                if actual_activity.title.strip().lower() == planned_eval.name.strip().lower():
-                    corresponding_activity = actual_activity
+            corresponding_activity_obj = None # This will be the actual Activity model instance
+            for item in activities_with_status: # Iterate through list of dicts
+                actual_activity_model_instance = item['activity']
+                if actual_activity_model_instance.title.strip().lower() == planned_eval.name.strip().lower():
+                    corresponding_activity_obj = actual_activity_model_instance
                     break
 
-            if corresponding_activity:
+            if corresponding_activity_obj:
                 is_completed = False
-                if corresponding_activity.id in grades_by_activity_id:
+                if corresponding_activity_obj.id in grades_by_activity_id:
                     is_completed = True
-                elif corresponding_activity.activity_type == Activity.ActivityType.ONLINE and \
-                     corresponding_activity.id in submissions_by_activity_id:
+                elif corresponding_activity_obj.activity_type == Activity.ActivityType.ONLINE and \
+                     corresponding_activity_obj.id in submissions_by_activity_id:
                     is_completed = True
 
                 if is_completed:
                     completed_planned_count += 1
 
         subject_stats['completed_planned_evaluations'] = completed_planned_count
-        if subject_stats['total_planned_evaluations'] > 0:
-            subject_stats['percentage_evaluations_completed'] = round(
-                (completed_planned_count / subject_stats['total_planned_evaluations']) * 100, 1
-            )
-        # Initialize accumulated_subject_points for weighted calculation if high school
+
         accumulated_subject_points = Decimal('0.0')
 
         if subject_stats['is_high_school_subject']:
             for planned_eval in planned_evaluations:
-                corresponding_activity = None
-                for actual_activity in activities: # 'activities' is from context
-                    if actual_activity.title.strip().lower() == planned_eval.name.strip().lower():
-                        corresponding_activity = actual_activity
+                corresponding_activity_obj = None
+                for item in activities_with_status: # Iterate through list of dicts
+                    actual_activity_model_instance = item['activity']
+                    if actual_activity_model_instance.title.strip().lower() == planned_eval.name.strip().lower():
+                        corresponding_activity_obj = actual_activity_model_instance
                         break
 
-                if corresponding_activity and corresponding_activity.id in grades_by_activity_id:
-                    grade_obj = grades_by_activity_id[corresponding_activity.id]
+                if corresponding_activity_obj and corresponding_activity_obj.id in grades_by_activity_id:
+                    grade_obj = grades_by_activity_id[corresponding_activity_obj.id]
                     student_score = grade_obj.score
                     activity_max_score = corresponding_activity.max_score
                     planned_percentage = planned_eval.percentage
@@ -429,13 +484,36 @@ def student_subject_detail_view(request, tssa_id):
                  if grade_obj.score is not None:
                     raw_score_sum += Decimal(grade_obj.score)
             # subject_stats['accumulated_points'] = raw_score_sum # If we want raw sum for non-HS
-            subject_stats['accumulated_points'] = None # As per previous logic for non-HS
+            subject_stats['accumulated_points'] = None # Non-high-school: no weighted points total.
+            # For non-high school, progress bar is based on count of completed planned evaluations
+            if subject_stats['total_planned_evaluations'] > 0:
+                subject_stats['percentage_evaluations_completed'] = round(
+                    (completed_planned_count / subject_stats['total_planned_evaluations']) * 100, 1
+                )
+            else:
+                subject_stats['percentage_evaluations_completed'] = 0
 
-    else: # No current_teacher_assignment_for_eval_plan
+        # After points are accumulated (for HS) or set (for non-HS), calculate percentage for HS
+        if subject_stats['is_high_school_subject']:
+            if subject_stats['accumulated_points'] is not None: # Should be Decimal for HS
+                # Progress bar for HS is based on accumulated points out of 20
+                subject_stats['percentage_evaluations_completed'] = round(
+                    (subject_stats['accumulated_points'] / Decimal('20.0')) * Decimal('100.0'), 1
+                )
+                # Ensure percentage does not exceed 100 (e.g. if total weighted points somehow go over 20)
+                if subject_stats['percentage_evaluations_completed'] > 100:
+                    subject_stats['percentage_evaluations_completed'] = Decimal('100.0')
+            else: # Should not happen if is_high_school_subject is true and points were calculated
+                subject_stats['percentage_evaluations_completed'] = 0
+
+
+    else: # No current_teacher_assignment_for_eval_plan (no planned evaluations)
         subject_stats['accumulated_points'] = None
+        subject_stats['percentage_evaluations_completed'] = 0
 
 
     context['subject_stats'] = subject_stats
+    context['today_date'] = timezone.now().date() # Add today's date for template comparisons
     # --- End Subject-Specific Statistics ---
 
     return render(request, 'students/student_subject_detail.html', context)

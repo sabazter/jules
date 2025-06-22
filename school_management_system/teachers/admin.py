@@ -32,10 +32,18 @@ from .models import Activity # Add Activity
 
 @admin.register(Activity)
 class ActivityAdmin(admin.ModelAdmin):
-    list_display = ('title', 'get_subject', 'get_section', 'get_teacher_name', 'academic_period', 'activity_type', 'due_date', 'max_score')
-    list_filter = ('teacher_assignment__section__academic_year__name', 'teacher_assignment__subject__name', 'teacher_assignment__teacher__username', 'academic_period', 'activity_type', 'due_date')
+    list_display = ('title', 'get_subject', 'get_section', 'get_teacher_name', 'academic_period', 'activity_type', 'due_date', 'max_score', 'allow_late_submissions')
+    list_filter = ('teacher_assignment__section__academic_year__name', 'teacher_assignment__subject__name', 'teacher_assignment__teacher__username', 'academic_period', 'activity_type', 'due_date', 'allow_late_submissions')
     search_fields = ('title', 'description', 'teacher_assignment__subject__name', 'teacher_assignment__section__name', 'teacher_assignment__teacher__username', 'academic_period__name', 'activity_type')
     autocomplete_fields = ['teacher_assignment', 'academic_period']
+    fieldsets = (
+        (None, {
+            'fields': ('teacher_assignment', 'title', 'description', 'activity_type')
+        }),
+        (_('Fechas y Ponderación'), {
+            'fields': ('due_date', 'allow_late_submissions', 'max_score', 'academic_period')
+        }),
+    )
 
     @admin.display(description=_('Subject'), ordering='teacher_assignment__subject__name')
     def get_subject(self, obj):

@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 class ActivityForm(forms.ModelForm):
     class Meta:
         model = Activity
-        fields = ['teacher_assignment', 'title', 'description', 'due_date', 'max_score', 'academic_period', 'activity_type']
+        fields = ['teacher_assignment', 'title', 'description', 'due_date', 'max_score', 'academic_period', 'activity_type', 'allow_late_submissions']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),

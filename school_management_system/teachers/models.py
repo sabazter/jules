@@ -86,9 +86,14 @@ class Activity(models.Model):
         verbose_name=_("Tipo de Actividad"),
         help_text=_("Seleccione si la actividad es presencial o en línea.")
     )
+    allow_late_submissions = models.BooleanField(
+        default=False,
+        verbose_name=_("Permitir entregas tardías"),
+        help_text=_("Si se marca, los estudiantes podrán enviar trabajos después de la fecha de entrega.")
+    )
 
     class Meta:
-        verbose_name = _("Activity")
+        verbose_name = _("Actividad")
         verbose_name_plural = _("Activities")
         ordering = ['teacher_assignment', 'due_date', 'title']
 
@@ -166,8 +171,8 @@ class EvaluationActivity(models.Model):
         max_digits=5,
         decimal_places=2,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
-        verbose_name=_("Percentage"),
-        help_text=_("Percentage of the total grade (0-100).")
+        verbose_name=_("Porcentaje"),
+        help_text=_("Porcentaje sobre la calificación total (0-100).")
     )
 
     class Meta:

@@ -24,7 +24,7 @@ class Level(models.Model):
         ('asp', _('ASP')),
         ('extracurricular', _('Extracurriculares')),
     ]
-    name = models.CharField(max_length=50, choices=LEVEL_CHOICES, unique=True, verbose_name=_("Name"))
+    name = models.CharField(max_length=50, choices=LEVEL_CHOICES, unique=True, verbose_name=_("Nombre"))
 
     def __str__(self):
         return self.get_name_display()
