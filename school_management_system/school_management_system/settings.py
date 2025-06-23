@@ -148,3 +148,8 @@ LOGOUT_REDIRECT_URL = '/'
 # https://docs.djangoproject.com/en/5.2/topics/files/
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Custom School Settings (example)
+SCHOOL_NAME = "Nombre de Mi Colegio"
+# SCHOOL_LOGO_URL = STATIC_URL + "images/school_logo.png" # Example if you have a logo in static/images
+SCHOOL_LOGO_URL = None # Set to your logo's path or None

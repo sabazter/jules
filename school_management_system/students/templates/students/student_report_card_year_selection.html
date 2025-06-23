@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Select Report Card for Year" %} {{ year_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">{% translate "Report Cards for Academic Year" %}: {{ academic_year.name }}</h4>
+        </div>
+        <div class="card-body">
+            <p>
+                {% blocktranslate with student_name=student.get_full_name|default:student.username year=academic_year.name %}
+                Hello {{ student_name }}. Please select an academic period below to view your report card for the year {{ year }}.
+                {% endblocktranslate %}
+            </p>
+
+            {% if report_card_links %}
+                <div class="list-group">
+                    {% for link_info in report_card_links %}
+                        <a href="{% url 'students:view_student_report_card' enrollment_id=link_info.enrollment_id period_id=link_info.period_id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{% translate "Academic Period" %}: {{ link_info.period_name }}</h5>
+                                <span class="badge bg-success rounded-pill">{% translate "View Report" %}</span>
+                            </div>
+                            <p class="mb-1">
+                                {% blocktranslate with period_name=link_info.period_name %}
+                                Click here to view your detailed report card for {{ period_name }}.
+                                {% endblocktranslate %}
+                            </p>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    {% translate "No report cards have been released for this academic year yet, or no academic periods are available." %}
+                </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{% url 'students:dashboard' %}" class="btn btn-secondary">{% translate "Back to Dashboard" %}</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

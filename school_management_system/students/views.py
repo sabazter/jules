@@ -94,11 +94,12 @@ def student_dashboard(request):
     # Subject listing - can be kept or moved to student_subjects_current_view
     subjects_context_list = []
     academic_periods_for_current_year = []
+    academic_periods_for_selected_year = [] # For the dropdown selected year
 
     if current_enrollment: # Only list subjects if there's a current enrollment
         section = current_enrollment.section
         grade_level = section.grade_level
-        current_academic_year = section.academic_year # Already defined, re-assign for clarity in this block
+        # current_academic_year is already defined and set based on current_enrollment
 
         if current_academic_year:
             academic_periods_for_current_year = AcademicPeriod.objects.filter(
@@ -110,6 +111,7 @@ def student_dashboard(request):
         for sa in subject_assignments_for_grade_level:
             subject_obj = sa.subject
             teacher_name = _("No asignado")
+            tssa_id_for_link = None
             try:
                 tssa = TeacherSubjectSectionAssignment.objects.select_related('teacher').get(
                     subject_assignment=sa,
@@ -117,52 +119,79 @@ def student_dashboard(request):
                 )
                 if tssa.teacher:
                     teacher_name = tssa.teacher.get_full_name() or tssa.teacher.username
+                tssa_id_for_link = tssa.id
             except TeacherSubjectSectionAssignment.DoesNotExist:
                 pass
 
-            # final_grade_display = final_grades_by_subject_name.get(subject_obj.name) # Old logic for single final grade
-
             approximate_grades_by_period = {}
-            tssa_id_for_link = None # Initialize tssa_id for the subject link
-
             if current_enrollment and current_academic_year:
-                # Try to get the TSSA ID for the link (already fetched for teacher_name)
-                try:
-                    tssa = TeacherSubjectSectionAssignment.objects.get(
-                        subject_assignment=sa,
-                        section=section
-                    )
-                    tssa_id_for_link = tssa.id
-                except TeacherSubjectSectionAssignment.DoesNotExist:
-                    pass # tssa_id_for_link remains None
-
                 for period in academic_periods_for_current_year:
                     if period.report_cards_released:
-                        approx_grade = current_enrollment.get_approximate_subject_grade(subject_obj, period)
-                        approximate_grades_by_period[period.name] = approx_grade
+                        # Using StudentGrade model for final grades if available
+                        try:
+                            student_grade = StudentGrade.objects.get(
+                                student_enrollment=current_enrollment,
+                                subject_assignment=sa,
+                                academic_period=period
+                            )
+                            approximate_grades_by_period[period.name] = student_grade.grade_value.display_value if student_grade.grade_value else _("N/A")
+                        except StudentGrade.DoesNotExist:
+                            # Fallback to approximate calculation if StudentGrade doesn't exist for released period
+                            # This might indicate that report cards were released but grades not finalized in StudentGrade
+                            # Or it's a period where detailed grades aren't the final ones.
+                            # For dashboard summary, using the existing approximation is fine as a fallback.
+                            approx_grade_val = current_enrollment.get_approximate_subject_grade(subject_obj, period)
+                            approximate_grades_by_period[period.name] = approx_grade_val if approx_grade_val is not None else _("Pending")
                     else:
-                        # Store None or a placeholder if reports are not yet released for this period
-                        approximate_grades_by_period[period.name] = None
+                        approximate_grades_by_period[period.name] = _("Pending")
+
 
             subjects_context_list.append({
                 'id': subject_obj.id,
                 'name': subject_obj.name,
                 'teacher_name': teacher_name,
-                'tssa_id': tssa_id_for_link, # For linking to student_subject_detail
-                # 'final_grade': final_grade_display, # Replaced by per-period grades
+                'tssa_id': tssa_id_for_link,
                 'approximate_grades_by_period': approximate_grades_by_period
             })
         subjects_context_list.sort(key=lambda x: x['name'])
 
+    # Handle selected year from dropdown
+    selected_year_name = request.GET.get('selected_year')
+    selected_enrollment_for_year_context = None # For providing specific enrollment to template if past year selected
+    if selected_year_name:
+        try:
+            selected_academic_year_obj = AcademicYear.objects.get(name=selected_year_name)
+            academic_periods_for_selected_year = AcademicPeriod.objects.filter(
+                academic_year=selected_academic_year_obj
+            ).order_by('start_date')
+
+            # Attempt to find the student's enrollment for the selected historical year
+            if selected_academic_year_obj != current_academic_year:
+                historical_enrollment = StudentEnrollment.objects.filter(
+                    student=student,
+                    section__academic_year=selected_academic_year_obj
+                ).first() # Get the first one if multiple exist (e.g. section changes)
+                selected_enrollment_for_year_context = historical_enrollment
+            else:
+                # If selected year is current year, use current_enrollment
+                selected_enrollment_for_year_context = current_enrollment
+
+        except AcademicYear.DoesNotExist:
+            academic_periods_for_selected_year = []
+
+
     context = {
         'student': student,
         'current_section_display': current_section_display,
-        'current_academic_year': current_academic_year, # Pass current academic year
-        'academic_periods_for_current_year': list(academic_periods_for_current_year), # Pass periods for header/column display
+        'current_academic_year': current_academic_year,
+        'academic_periods_for_current_year': list(academic_periods_for_current_year),
         'school_years': school_years,
         'enrolled_subjects': subjects_context_list,
-        'upcoming_pending_activities': upcoming_pending_activities, # Add this to context
-        # 'stats': stats_context # Removed detailed stats from here
+        'upcoming_pending_activities': upcoming_pending_activities,
+        'selected_year_name': selected_year_name,
+        'academic_periods_for_selected_year': list(academic_periods_for_selected_year),
+        'current_enrollment': current_enrollment,
+        'selected_enrollment_for_year': selected_enrollment_for_year_context, # Pass this to the template
     }
     return render(request, 'students/dashboard.html', context)
 
@@ -290,15 +319,62 @@ def student_subjects_current_view(request):
 
 
 @login_required
-def view_report_card_for_year_view(request, year):
-    # Esta vista se desarrollará más adelante.
-    # Mostrará la boleta del alumno para el año especificado.
+def view_report_card_for_year_view(request, year_name): # Renamed 'year' to 'year_name' for clarity
+    student = request.user
+    try:
+        academic_year_obj = get_object_or_404(AcademicYear, name=year_name)
+    except Http404:
+        messages.error(request, _("El año académico '{year}' no fue encontrado.").format(year=year_name))
+        return redirect('students:dashboard')
+
+    # Find student enrollments for that specific academic year
+    student_enrollments_for_year = StudentEnrollment.objects.filter(
+        student=student,
+        section__academic_year=academic_year_obj
+    ).select_related('section', 'section__grade_level')
+
+    if not student_enrollments_for_year.exists():
+        messages.info(request, _("No se encontraron inscripciones para ti en el año académico {year}.").format(year=year_name))
+        return redirect('students:dashboard')
+
+    # For simplicity, taking the first enrollment if multiple exist for the same year (e.g., section change)
+    # A more complex app might need to handle this differently or let the user choose.
+    current_enrollment_for_year = student_enrollments_for_year.first()
+
+    # Get academic periods for that year where report cards are released
+    released_periods = AcademicPeriod.objects.filter(
+        academic_year=academic_year_obj,
+        report_cards_released=True
+    ).order_by('start_date')
+
+    # Prepare data for template: periods with links to their specific report cards
+    report_card_links = []
+    for period in released_periods:
+        # Check if a ReportCard object actually exists - though view_student_report_card would create it.
+        # This is more for display logic here.
+        report_card_exists = ReportCard.objects.filter(
+            student_enrollment=current_enrollment_for_year,
+            academic_period=period
+        ).exists()
+
+        report_card_links.append({
+            'period_name': period.name,
+            'period_id': period.id,
+            'enrollment_id': current_enrollment_for_year.id,
+            'report_card_exists': report_card_exists # Could be used in template
+        })
+
     context = {
-        'year': year,
-        'student': request.user
+        'student': student,
+        'academic_year': academic_year_obj,
+        'enrollment_for_year': current_enrollment_for_year, # Pass the specific enrollment
+        'report_card_links': report_card_links, # List of periods and their report card links
+        'year_name': year_name
     }
-    # Se necesitará una plantilla para 'students/view_report_card.html'
-    return render(request, 'students/view_report_card.html', context)
+    # The template 'students/view_report_card_for_year.html' needs to be created or updated.
+    # It should list the periods and link to the view_student_report_card view.
+    return render(request, 'students/student_report_card_year_selection.html', context)
+
 
 @login_required
 def student_subject_detail_view(request, tssa_id):
@@ -553,3 +629,107 @@ def student_subject_detail_view(request, tssa_id):
     # --- End Subject-Specific Statistics ---
 
     return render(request, 'students/student_subject_detail.html', context)
+
+@login_required
+def view_student_report_card(request, enrollment_id, period_id):
+    try:
+        enrollment = get_object_or_404(StudentEnrollment.objects.select_related(
+            'student', 'section__grade_level', 'section__academic_year'
+        ), id=enrollment_id)
+        academic_period = get_object_or_404(AcademicPeriod, id=period_id)
+    except Http404:
+        messages.error(request, _("La inscripción o el período académico especificado no existe."))
+        return redirect('students:dashboard') # Or some other appropriate error page
+
+    # Security check: Ensure the logged-in user is the student or authorized
+    if request.user != enrollment.student:
+        # Add more sophisticated checks for parents/admins if necessary
+        if not request.user.is_staff: # Basic check for admin/staff
+            return HttpResponseForbidden(_("No tienes permiso para ver esta boleta."))
+
+    if not academic_period.report_cards_released:
+        messages.warning(request, _("Las boletas para este período aún no han sido publicadas."))
+        return redirect('students:dashboard')
+
+    # Try to get existing ReportCard or create a new one
+    report_card, created = ReportCard.objects.get_or_create(
+        student_enrollment=enrollment,
+        academic_period=academic_period,
+        defaults={'overall_average': None} # Default overall_average, will be calculated
+    )
+
+    report_card_entries = []
+    total_grades_sum = Decimal('0.0')
+    valid_grades_count = 0
+
+    # Fetch existing entries or generate them if the report card was just created or needs update
+    # For simplicity, we'll regenerate/update entries each time this view is accessed
+    # if the report card was just created or if we want to ensure it's up-to-date.
+    # A more optimized approach might only create entries once.
+
+    # Clear existing entries if we intend to always regenerate (simplifies logic for now)
+    if not created: # If it existed, maybe we want to refresh it. Or only if some "force_refresh" flag is set.
+        # For now, let's assume we don't automatically clear. If `created` is True, we definitely populate.
+        # If `created` is False, we fetch existing.
+        pass # Keep existing entries for now.
+
+    # Fetch all subject assignments for the student's grade level in that section
+    subject_assignments = SubjectAssignment.objects.filter(
+        grade_level=enrollment.section.grade_level
+    ).select_related('subject')
+
+    for sa in subject_assignments:
+        final_grade_obj = None
+        final_grade_numeric = None
+        try:
+            student_grade = StudentGrade.objects.get(
+                student_enrollment=enrollment,
+                subject_assignment=sa,
+                academic_period=academic_period
+            )
+            if student_grade.grade_value:
+                final_grade_obj = student_grade.grade_value
+                final_grade_numeric = final_grade_obj.numeric_equivalent
+                total_grades_sum += final_grade_numeric
+                valid_grades_count += 1
+        except StudentGrade.DoesNotExist:
+            # No grade recorded for this subject in this period
+            pass
+
+        # Create or update ReportCardEntry
+        entry, entry_created = ReportCardEntry.objects.update_or_create(
+            report_card=report_card,
+            subject_assignment=sa,
+            defaults={
+                'final_grade_numeric': final_grade_numeric,
+                'final_grade_qualitative': final_grade_obj,
+                # 'observations': "Observación de prueba" # Add actual observation logic if needed
+            }
+        )
+        report_card_entries.append(entry)
+
+    # Calculate overall average
+    if valid_grades_count > 0:
+        overall_average = total_grades_sum / Decimal(valid_grades_count)
+        report_card.overall_average = round(overall_average, 2)
+    else:
+        report_card.overall_average = None # Or Decimal('0.0')
+
+    report_card.save() # Save overall average and any updates to the report card itself
+
+    # Sort entries by subject name (already handled by ReportCardEntry.Meta.ordering)
+    # report_card_entries = sorted(report_card_entries, key=lambda x: x.subject_assignment.subject.name)
+    # Querying with order_by is better:
+    final_entries_for_template = report_card.entries.all().order_by('subject_assignment__subject__name')
+
+
+    context = {
+        'student': enrollment.student,
+        'enrollment': enrollment,
+        'academic_period': academic_period,
+        'report_card': report_card,
+        'report_card_entries': final_entries_for_template,
+        'school_name': settings.SCHOOL_NAME, # Assuming SCHOOL_NAME is in settings
+        'school_logo_url': settings.SCHOOL_LOGO_URL if hasattr(settings, 'SCHOOL_LOGO_URL') else None,
+    }
+    return render(request, 'students/student_report_card.html', context)

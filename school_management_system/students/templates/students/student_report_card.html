@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Report Card" %} - {{ student.get_full_name|default:student.username }} - {{ academic_period.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">{% translate "Student Report Card" %}</h4>
+                    {% if school_name %}
+                        <h5 class="mb-0">{{ school_name }}</h5>
+                    {% endif %}
+                </div>
+                {% if school_logo_url %}
+                    <img src="{{ school_logo_url }}" alt="{% translate 'School Logo' %}" style="max-height: 50px;">
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p><strong>{% translate "Student" %}:</strong> {{ student.get_full_name|default:student.username }}</p>
+                    <p><strong>{% translate "ID Card" %}:</strong> {{ student.username }}</p> {# Assuming username is ID card #}
+                    <p><strong>{% translate "Grade Level" %}:</strong> {{ enrollment.section.grade_level.name }}</p>
+                    <p><strong>{% translate "Section" %}:</strong> {{ enrollment.section.name }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p><strong>{% translate "Academic Year" %}:</strong> {{ enrollment.section.academic_year.name }}</p>
+                    <p><strong>{% translate "Academic Period" %}:</strong> {{ academic_period.name }}</p>
+                    <p><strong>{% translate "Date Issued" %}:</strong> {{ report_card.updated_at|date:"d M Y" }}</p>
+                </div>
+            </div>
+
+            <h5 class="text-center mb-3">{% translate "Academic Performance" %}</h5>
+
+            {% if report_card_entries %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">{% translate "Subject" %}</th>
+                                <th scope="col" class="text-center">{% translate "Final Grade" %}</th>
+                                <th scope="col">{% translate "Observations" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in report_card_entries %}
+                            <tr>
+                                <td>{{ entry.subject_assignment.subject.name }}</td>
+                                <td class="text-center">
+                                    {% if entry.final_grade_numeric is not None %}
+                                        {{ entry.final_grade_numeric|floatformat:2 }}
+                                        {% if entry.final_grade_qualitative %}
+                                            ({{ entry.final_grade_qualitative.display_value }})
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>{{ entry.observations|default:"" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if report_card.overall_average is not None %}
+                        <tfoot>
+                            <tr class="table-group-divider">
+                                <td colspan="2" class="text-end"><strong>{% translate "Overall Average" %}:</strong></td>
+                                <td class="text-center"><strong>{{ report_card.overall_average|floatformat:2 }}</strong></td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    {% translate "No grade entries found for this report card." %}
+                </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <p class="text-muted small">
+                    <em>{% translate "This report card reflects the student's performance for the specified academic period." %}</em>
+                </p>
+            </div>
+
+            <div class="text-center mt-4">
+                <button onclick="window.print();" class="btn btn-secondary">{% translate "Print Report Card" %}</button>
+                <a href="{% url 'students:dashboard' %}" class="btn btn-outline-primary">{% translate "Back to Dashboard" %}</a>
+            </div>
+        </div>
+        <div class="card-footer text-muted">
+            {% translate "Generated on" %}: {% now "d M Y, H:i" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

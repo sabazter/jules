@@ -667,3 +667,95 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.content[:50]}..."
+
+# Models for Report Card Feature
+
+class ReportCard(models.Model):
+    student_enrollment = models.ForeignKey(
+        StudentEnrollment,
+        on_delete=models.CASCADE,
+        related_name='report_cards',
+        verbose_name=_("Inscripción del Estudiante")
+    )
+    academic_period = models.ForeignKey(
+        AcademicPeriod,
+        on_delete=models.CASCADE,
+        related_name='report_cards',
+        verbose_name=_("Lapso Académico")
+    )
+    overall_average = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_("Promedio General")
+    )
+    # Consider a status if report cards go through an approval process
+    # STATUS_CHOICES = [('DRAFT', _('Borrador')), ('PUBLISHED', _('Publicada')), ('ARCHIVED', _('Archivada'))]
+    # status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT', verbose_name=_("Estado"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de Creación"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Última Actualización"))
+
+    class Meta:
+        verbose_name = _("Boleta de Calificaciones")
+        verbose_name_plural = _("Boletas de Calificaciones")
+        unique_together = ('student_enrollment', 'academic_period')
+        ordering = ['student_enrollment', 'academic_period__start_date']
+
+    def __str__(self):
+        return _("Boleta de {student} para {period} ({year})").format(
+            student=self.student_enrollment.student.get_full_name() or self.student_enrollment.student.username,
+            period=self.academic_period.name,
+            year=self.academic_period.academic_year.name
+        )
+
+class ReportCardEntry(models.Model):
+    report_card = models.ForeignKey(
+        ReportCard,
+        on_delete=models.CASCADE,
+        related_name='entries',
+        verbose_name=_("Boleta")
+    )
+    subject_assignment = models.ForeignKey(
+        SubjectAssignment,
+        on_delete=models.CASCADE, # Or SET_NULL if a subject assignment could be deleted but entry retained
+        related_name='report_card_entries',
+        verbose_name=_("Asignatura")
+    )
+    # Storing the final grade. Could be a direct DecimalField or ForeignKey to GradeValue.
+    # Using DecimalField for simplicity here, assuming a numeric grade is what's needed for the report card.
+    # If qualitative grades (A, B, C) are also needed, a GradeValue ForeignKey would be better.
+    # The user request implies "nota definitiva", often numeric.
+    final_grade_numeric = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True, # Null if grade not available or not applicable
+        blank=True,
+        verbose_name=_("Nota Definitiva Numérica")
+    )
+    # Optionally, if you also want to store the qualitative grade (e.g., "Aprobado", "Excelente")
+    final_grade_qualitative = models.ForeignKey(
+        GradeValue,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='report_card_qualitative_entries',
+        verbose_name=_("Nota Definitiva Cualitativa (Opcional)")
+    )
+    observations = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_("Observaciones")
+    )
+
+    class Meta:
+        verbose_name = _("Entrada de Boleta")
+        verbose_name_plural = _("Entradas de Boleta")
+        unique_together = ('report_card', 'subject_assignment') # One entry per subject per report card
+        ordering = ['subject_assignment__subject__name'] # Order by subject name alphabetically
+
+    def __str__(self):
+        return _("Entrada: {subject} para {report_card}").format(
+            subject=self.subject_assignment.subject.name,
+            report_card=str(self.report_card)
+        )
