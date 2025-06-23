@@ -230,57 +230,57 @@ def input_grades_view(request, activity_id):
             errors_found = False
             for item_data in student_grades_data:
                 student_obj = item_data['student']
-            score_field_name = f'score_{student_obj.id}'
-            feedback_field_name = f'feedback_{student_obj.id}'
+                score_field_name = f'score_{student_obj.id}'
+                feedback_field_name = f'feedback_{student_obj.id}'
 
-            score_str = request.POST.get(score_field_name)
-            feedback = request.POST.get(feedback_field_name, "").strip()
-            grade_defaults = {'feedback': feedback}
-            current_score_is_none = True
-
-            if score_str and score_str.strip():
-                try:
-                    score_val = Decimal(score_str.strip())
-                    current_score_is_none = False
-
-                    if grade_values and grade_values.exists():
-                        valid_numeric_equivalents = [gv.numeric_equivalent for gv in grade_values]
-                        if score_val not in valid_numeric_equivalents:
-                            messages.error(request, _("Puntaje inválido '%(score)s' para %(student)s. No está en la escala definida.") % {'score': score_val, 'student': student_obj.get_full_name() or student_obj.username})
-                            errors_found = True
-                            continue # to next student
-                    elif activity.max_score is not None: # Ensure max_score is defined on activity for this check
-                        if not (Decimal(0) <= score_val <= Decimal(activity.max_score)):
-                            messages.error(request, _("Puntaje '%(score)s' para %(student)s fuera del rango permitido (0-%(max_score)s).") % {'score': score_val, 'student': student_obj.get_full_name() or student_obj.username, 'max_score': activity.max_score})
-                            errors_found = True
-                            continue # to next student
-                    grade_defaults['score'] = score_val
-                except (ValueError, TypeError, InvalidOperation): # Catch specific errors
-                    messages.error(request, _("Valor de puntaje inválido '%(score)s' para %(student)s.") % {'score': score_str, 'student': student_obj.get_full_name() or student_obj.username})
-                    errors_found = True
-                    continue # to next student
-            else: # score_str is empty or None
-                grade_defaults['score'] = None
+                score_str = request.POST.get(score_field_name)
+                feedback = request.POST.get(feedback_field_name, "").strip()
+                grade_defaults = {'feedback': feedback}
                 current_score_is_none = True
 
-            existing_grade = item_data['grade_object']
+                if score_str and score_str.strip():
+                    try:
+                        score_val = Decimal(score_str.strip())
+                        current_score_is_none = False
 
-            # Only save if there's something to save (new score, new feedback, or clearing existing score/feedback)
-            # or if it's an existing grade being modified (score or feedback changed).
-            should_save = False
-            if not current_score_is_none: # Score is provided
-                should_save = True
-            elif feedback: # Feedback is provided
-                should_save = True
-            elif existing_grade and (existing_grade.score is not None or existing_grade.feedback): # Clearing existing data
-                should_save = True
+                        if grade_values and grade_values.exists():
+                            valid_numeric_equivalents = [gv.numeric_equivalent for gv in grade_values]
+                            if score_val not in valid_numeric_equivalents:
+                                messages.error(request, _("Puntaje inválido '%(score)s' para %(student)s. No está en la escala definida.") % {'score': score_val, 'student': student_obj.get_full_name() or student_obj.username})
+                                errors_found = True
+                                continue # to next student
+                        elif activity.max_score is not None: # Ensure max_score is defined on activity for this check
+                            if not (Decimal(0) <= score_val <= Decimal(activity.max_score)):
+                                messages.error(request, _("Puntaje '%(score)s' para %(student)s fuera del rango permitido (0-%(max_score)s).") % {'score': score_val, 'student': student_obj.get_full_name() or student_obj.username, 'max_score': activity.max_score})
+                                errors_found = True
+                                continue # to next student
+                        grade_defaults['score'] = score_val
+                    except (ValueError, TypeError, InvalidOperation): # Catch specific errors
+                        messages.error(request, _("Valor de puntaje inválido '%(score)s' para %(student)s.") % {'score': score_str, 'student': student_obj.get_full_name() or student_obj.username})
+                        errors_found = True
+                        continue # to next student
+                else: # score_str is empty or None
+                    grade_defaults['score'] = None
+                    current_score_is_none = True
 
-            if should_save:
-                Grade.objects.update_or_create(
-                    student=student_obj,
-                    activity=activity,
-                    defaults=grade_defaults
-                )
+                existing_grade = item_data['grade_object']
+
+                # Only save if there's something to save (new score, new feedback, or clearing existing score/feedback)
+                # or if it's an existing grade being modified (score or feedback changed).
+                should_save = False
+                if not current_score_is_none: # Score is provided
+                    should_save = True
+                elif feedback: # Feedback is provided
+                    should_save = True
+                elif existing_grade and (existing_grade.score is not None or existing_grade.feedback): # Clearing existing data
+                    should_save = True
+
+                if should_save:
+                    Grade.objects.update_or_create(
+                        student=student_obj,
+                        activity=activity,
+                        defaults=grade_defaults
+                    )
 
         if not errors_found:
             messages.success(request, _("Notas guardadas exitosamente."))
