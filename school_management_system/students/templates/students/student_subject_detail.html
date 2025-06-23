@@ -186,6 +186,7 @@
                             {% endwith %} {# End of grade_info/submission form block #}
                         </div>
                     </div>
+                    {% endwith %} {# Closes the with activity=item.activity block #}
                 {% endfor %}
             {% else %}
                 <p><em>({% translate "No activities have been assigned for this subject yet, or they cannot be listed due to a missing teacher assignment configuration." %})</em></p>
