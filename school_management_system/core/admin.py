@@ -96,8 +96,8 @@ class SubjectAssignmentAdmin(admin.ModelAdmin):
 
 @admin.register(AcademicPeriod)
 class AcademicPeriodAdmin(admin.ModelAdmin):
-    list_display = ('name', 'academic_year', 'start_date', 'end_date', 'grading_open_date', 'grading_close_date')
-    list_filter = ('academic_year__name', 'start_date', 'grading_open_date')
+    list_display = ('name', 'academic_year', 'start_date', 'end_date', 'grading_open_date', 'grading_close_date', 'report_cards_released')
+    list_filter = ('academic_year__name', 'report_cards_released', 'start_date', 'grading_open_date')
     search_fields = ('name', 'academic_year__name')
     ordering = ('-academic_year__start_date', '-start_date')
     autocomplete_fields = ['academic_year']

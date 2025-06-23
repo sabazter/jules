@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from decimal import Decimal
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -255,6 +256,60 @@ class StudentEnrollment(models.Model):
             section_name=self.section.name,
             academic_year_name=self.section.academic_year.name
         )
+
+    def get_approximate_subject_grade(self, subject, academic_period, target_scale_max=20):
+        """
+        Calculates the approximate grade for a given subject within an academic period for this student enrollment.
+        The calculation is based on the sum of scores achieved by the student versus the sum of max_scores
+        for all activities they were graded on within that period for the specified subject.
+        Returns the grade scaled to target_scale_max (e.g., 20 points), or None if not calculable.
+        """
+        from teachers.models import Activity, Grade, TeacherAssignment
+
+        try:
+            # Find the relevant teacher assignment for this student's section and the given subject
+            teacher_assignment = TeacherAssignment.objects.get(
+                section=self.section,
+                subject=subject
+            )
+        except TeacherAssignment.DoesNotExist:
+            return None # Subject not assigned to this section
+
+        # Get all activities for this teacher_assignment (subject/section) within the academic_period
+        activities_in_period_for_subject = Activity.objects.filter(
+            teacher_assignment=teacher_assignment,
+            academic_period=academic_period
+        )
+
+        # Get all grades for the student for these specific activities
+        student_grades_for_activities = Grade.objects.filter(
+            student=self.student,
+            activity__in=activities_in_period_for_subject
+        ).select_related('activity') # select_related to access activity.max_score
+
+        total_score_obtained = Decimal(0)
+        total_max_score_of_graded_activities = Decimal(0)
+
+        if not student_grades_for_activities.exists():
+            return None # No grades recorded for this student in this subject/period
+
+        for grade_item in student_grades_for_activities:
+            if grade_item.score is not None and grade_item.activity.max_score is not None and grade_item.activity.max_score > 0:
+                total_score_obtained += grade_item.score
+                total_max_score_of_graded_activities += Decimal(grade_item.activity.max_score)
+
+        if total_max_score_of_graded_activities == 0:
+            return None # Avoid division by zero if no activities had max_score > 0
+
+        # Calculate the raw proportional grade (0 to 1)
+        raw_grade_proportion = total_score_obtained / total_max_score_of_graded_activities
+
+        # Scale to the target scale (e.g., 0-20 or 0-100)
+        final_grade = raw_grade_proportion * Decimal(target_scale_max)
+
+        # Optionally, round to a certain number of decimal places, e.g., 2
+        return round(final_grade, 2)
+
 
 # Modelo para la Planilla de Preinscripción
 class PreEnrollmentProfile(models.Model):

@@ -64,7 +64,8 @@
                                                name="score_{{ item_data.student.id }}"
                                                value="{{ item_data.score|default_if_none:'' }}"
                                                placeholder="{% if not item_data.score and activity.max_score and not grading_scale %}{{ activity.max_score }}{% elif not item_data.score and grade_values %}{{ grade_values.0.numeric_equivalent }}{% else %}{% trans "Score" %}{% endif %}"
-                                               aria-label="{% trans "Score input" %}">
+                                               aria-label="{% trans "Score input" %}"
+                                               {% if grades_finalized and not user.is_superuser %}readonly{% endif %}>
                                     </div>
                                     <div class="mt-1">
                                         {% if item_data.display_score %}
@@ -79,7 +80,8 @@
                                 <td>
                                     <textarea class="form-control form-control-sm"
                                               name="feedback_{{ item_data.student.id }}"
-                                              rows="2">{{ item_data.feedback|default_if_none:'' }}</textarea>
+                                              rows="2"
+                                              {% if grades_finalized and not user.is_superuser %}readonly{% endif %}>{{ item_data.feedback|default_if_none:'' }}</textarea>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -87,7 +89,11 @@
                     </table>
                 </div>
                 <div class="mt-3">
-                    <button type="submit" class="btn btn-primary">{% trans "Save Grades" %}</button>
+                    {% if not grades_finalized or user.is_superuser %}
+                        <button type="submit" class="btn btn-primary">{% trans "Save Grades" %}</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary" disabled title="{% trans "Grades are finalized for this period." %}">{% trans "Save Grades" %}</button>
+                    {% endif %}
                     <a href="{% url 'teachers:dashboard' %}" class="btn btn-secondary">{% trans "Back to Dashboard" %}</a>
                 </div>
             </form>

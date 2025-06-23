@@ -11,10 +11,11 @@ from django.utils import timezone
 from .forms import StudentRegistrationForm, StudentSubmissionForm
 from .models import StudentSubmission
 # Explicitly import necessary core models:
-from core.models import User, StudentEnrollment, SubjectAssignment, TeacherSubjectSectionAssignment, AcademicYear, AcademicPeriod # AcademicPeriod was already here
+from core.models import User, StudentEnrollment, Subject, SubjectAssignment, TeacherSubjectSectionAssignment, AcademicYear, AcademicPeriod # Added Subject
 # Import teacher models:
 from teachers.models import TeacherAssignment, EvaluationPlanDocument, Activity, Grade, EvaluationActivity as TeacherEvaluationActivity
 from datetime import timedelta # For upcoming activities reminder
+from decimal import Decimal # For type hinting or explicit conversion if needed
 
 @login_required
 def student_dashboard(request):
@@ -92,13 +93,22 @@ def student_dashboard(request):
 
     # Subject listing - can be kept or moved to student_subjects_current_view
     subjects_context_list = []
+    academic_periods_for_current_year = []
+
     if current_enrollment: # Only list subjects if there's a current enrollment
         section = current_enrollment.section
         grade_level = section.grade_level
-        academic_year_instance = section.academic_year
+        current_academic_year = section.academic_year # Already defined, re-assign for clarity in this block
+
+        if current_academic_year:
+            academic_periods_for_current_year = AcademicPeriod.objects.filter(
+                academic_year=current_academic_year
+            ).order_by('start_date')
 
         subject_assignments_for_grade_level = grade_level.subject_assignments.all().select_related('subject', 'grading_scale')
+
         for sa in subject_assignments_for_grade_level:
+            subject_obj = sa.subject
             teacher_name = _("No asignado")
             try:
                 tssa = TeacherSubjectSectionAssignment.objects.select_related('teacher').get(
@@ -110,19 +120,45 @@ def student_dashboard(request):
             except TeacherSubjectSectionAssignment.DoesNotExist:
                 pass
 
-            final_grade_display = final_grades_by_subject_name.get(sa.subject.name) # Use the locally scoped dict
+            # final_grade_display = final_grades_by_subject_name.get(subject_obj.name) # Old logic for single final grade
+
+            approximate_grades_by_period = {}
+            tssa_id_for_link = None # Initialize tssa_id for the subject link
+
+            if current_enrollment and current_academic_year:
+                # Try to get the TSSA ID for the link (already fetched for teacher_name)
+                try:
+                    tssa = TeacherSubjectSectionAssignment.objects.get(
+                        subject_assignment=sa,
+                        section=section
+                    )
+                    tssa_id_for_link = tssa.id
+                except TeacherSubjectSectionAssignment.DoesNotExist:
+                    pass # tssa_id_for_link remains None
+
+                for period in academic_periods_for_current_year:
+                    if period.report_cards_released:
+                        approx_grade = current_enrollment.get_approximate_subject_grade(subject_obj, period)
+                        approximate_grades_by_period[period.name] = approx_grade
+                    else:
+                        # Store None or a placeholder if reports are not yet released for this period
+                        approximate_grades_by_period[period.name] = None
 
             subjects_context_list.append({
-                'id': sa.subject.id,
-                'name': sa.subject.name,
+                'id': subject_obj.id,
+                'name': subject_obj.name,
                 'teacher_name': teacher_name,
-                'final_grade': final_grade_display
+                'tssa_id': tssa_id_for_link, # For linking to student_subject_detail
+                # 'final_grade': final_grade_display, # Replaced by per-period grades
+                'approximate_grades_by_period': approximate_grades_by_period
             })
         subjects_context_list.sort(key=lambda x: x['name'])
 
     context = {
         'student': student,
         'current_section_display': current_section_display,
+        'current_academic_year': current_academic_year, # Pass current academic year
+        'academic_periods_for_current_year': list(academic_periods_for_current_year), # Pass periods for header/column display
         'school_years': school_years,
         'enrolled_subjects': subjects_context_list,
         'upcoming_pending_activities': upcoming_pending_activities, # Add this to context

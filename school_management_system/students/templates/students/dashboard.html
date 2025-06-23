@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load i18n %}
+{% load student_extras %}
 
 {% block title %}{% translate "Student Dashboard" %}{% endblock %}
 
@@ -74,10 +75,77 @@
         </div>
     </div>
 
-    {# Eliminamos la sección de materias enlistadas aquí, ya que el botón "View Current Subjects" #}
-    {# y la selección de año manejarán la visualización de materias/boletas. #}
+    {# Sección para mostrar materias y notas del año académico actual #}
+    {% if current_enrollment and current_academic_year %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4>{% translate "Subjects and Grades for Academic Year" %}: {{ current_academic_year.name }}</h4>
+            {% if academic_periods_for_current_year %}
+                <p class="mb-0">
+                    {% for period in academic_periods_for_current_year %}
+                        <span class="badge
+                            {% if period.report_cards_released %}bg-success{% else %}bg-secondary{% endif %}
+                            me-1" title="{% if period.report_cards_released %}{% translate "Grades Released" %}{% else %}{% translate "Grades Pending" %}{% endif %}">
+                            {{ period.name }}
+                            {% if period.name|lower == "asp" %}({% translate "Special Period" %}){% endif %}
+                        </span>
+                    {% endfor %}
+                </p>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if enrolled_subjects %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% translate "Subject" %}</th>
+                            <th>{% translate "Teacher" %}</th>
+                            {% for period in academic_periods_for_current_year %}
+                                <th class="text-center">
+                                    {{ period.name }}
+                                    {% if period.report_cards_released %}
+                                        <small class="d-block text-success">({% translate "Final" %})</small>
+                                    {% else %}
+                                        <small class="d-block text-muted">({% translate "Partial" %})</small>
+                                    {% endif %}
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject_item in enrolled_subjects %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'students:student_subject_detail' subject_item.tssa_id %}" class="text-decoration-none"> {# Assuming tssa_id is available #}
+                                    {{ subject_item.name }}
+                                </a>
+                            </td>
+                            <td>{{ subject_item.teacher_name }}</td>
+                            {% for period in academic_periods_for_current_year %}
+                                <td class="text-center">
+                                    {% if period.report_cards_released %}
+                                        {{ subject_item.approximate_grades_by_period|get_item:period.name|default:"-" }}
+                                    {% else %}
+                                        <span class="text-muted">{% translate "Pending" %}</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>{% translate "No subjects found for the current enrollment." %}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {# Fin de la sección de materias y notas #}
 
 </div>
 
 {# Necesitaremos URLs para 'student_subjects_current' y 'view_report_card_for_year' #}
+{# También un templatetag 'get_item' si no existe uno globalmente #}
 {% endblock %}

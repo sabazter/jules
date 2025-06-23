@@ -7,7 +7,7 @@ from collections import defaultdict # Add this import
 
 from .models import TeacherAssignment, Activity, Grade, EvaluationPlanDocument, EvaluationActivity
 from .forms import ActivityForm, EvaluationPlanDocumentForm, EvaluationActivityForm
-from core.models import User, StudentEnrollment, SubjectAssignment
+from core.models import User, StudentEnrollment, SubjectAssignment, AcademicYear, AcademicPeriod # Added AcademicYear, AcademicPeriod
 
 
 @login_required
@@ -32,13 +32,34 @@ def teacher_dashboard(request):
     )
 
     structured_assignments = defaultdict(list)
+    current_academic_year = None
+    academic_periods_for_current_year = []
+
+    if assignments_query.exists():
+        # Determine current_academic_year from the latest assignment
+        # The query is ordered by subject name, then academic year, grade level, section.
+        # To get the "latest" academic year reliably, we should sort by academic year start date descending primarily for this.
+        # However, for simplicity with the existing query, we can pick the year from the first assignment in the current sort,
+        # or iterate to find the one with the latest year if multiple years are present.
+        # A more robust way would be to get the distinct academic years from assignments and pick the latest.
+
+        # Let's try to get the academic year from the first assignment, assuming assignments are typically for the current year.
+        # If assignments span multiple years, this might not be strictly the "current" school-wide year.
+        first_assignment = assignments_query.first()
+        if first_assignment:
+            current_academic_year = first_assignment.section.academic_year
+            academic_periods_for_current_year = AcademicPeriod.objects.filter(
+                academic_year=current_academic_year
+            ).order_by('start_date')
+
     for assignment in assignments_query:
         structured_assignments[assignment.subject].append(assignment)
 
     context = {
         'teacher': teacher,
-        # Pass the new structured data. Convert defaultdict to dict for template if preferred, though not strictly necessary.
         'structured_assignments': dict(structured_assignments),
+        'current_academic_year': current_academic_year,
+        'academic_periods_for_current_year': academic_periods_for_current_year,
         'welcome_message': _("Bienvenido al Portal del Profesor")
     }
     return render(request, 'teachers/dashboard.html', context)
@@ -132,6 +153,16 @@ def input_grades_view(request, activity_id):
         return redirect('home')
 
     activity = get_object_or_404(Activity, pk=activity_id, teacher_assignment__teacher=request.user)
+    academic_period = activity.academic_period # Get the academic period of the activity
+
+    # Grade Finalization Check
+    grades_finalized = False
+    if academic_period and academic_period.report_cards_released:
+        if not request.user.is_superuser: # Superusers can always edit
+            grades_finalized = True
+
+    if grades_finalized:
+        messages.warning(request, _("Las calificaciones para el lapso '%(period_name)s' han sido finalizadas y no pueden ser modificadas por profesores.") % {'period_name': academic_period.name})
 
     teacher_assign_model = activity.teacher_assignment
 
@@ -190,9 +221,15 @@ def input_grades_view(request, activity_id):
         })
 
     if request.method == 'POST':
-        errors_found = False
-        for item_data in student_grades_data:
-            student_obj = item_data['student']
+        if grades_finalized and not request.user.is_superuser:
+            # Message already shown, just redirect or render
+            # No changes should be processed.
+            pass # Will fall through to render the page as read-only
+        else:
+            # Process form submission if grades are not finalized or user is superuser
+            errors_found = False
+            for item_data in student_grades_data:
+                student_obj = item_data['student']
             score_field_name = f'score_{student_obj.id}'
             feedback_field_name = f'feedback_{student_obj.id}'
 
@@ -211,31 +248,39 @@ def input_grades_view(request, activity_id):
                         if score_val not in valid_numeric_equivalents:
                             messages.error(request, _("Puntaje inválido '%(score)s' para %(student)s. No está en la escala definida.") % {'score': score_val, 'student': student_obj.get_full_name() or student_obj.username})
                             errors_found = True
-                            continue
-                    elif activity.max_score is not None:
+                            continue # to next student
+                    elif activity.max_score is not None: # Ensure max_score is defined on activity for this check
                         if not (Decimal(0) <= score_val <= Decimal(activity.max_score)):
                             messages.error(request, _("Puntaje '%(score)s' para %(student)s fuera del rango permitido (0-%(max_score)s).") % {'score': score_val, 'student': student_obj.get_full_name() or student_obj.username, 'max_score': activity.max_score})
                             errors_found = True
-                            continue
+                            continue # to next student
                     grade_defaults['score'] = score_val
-                except (ValueError, TypeError, InvalidOperation):
+                except (ValueError, TypeError, InvalidOperation): # Catch specific errors
                     messages.error(request, _("Valor de puntaje inválido '%(score)s' para %(student)s.") % {'score': score_str, 'student': student_obj.get_full_name() or student_obj.username})
                     errors_found = True
-                    continue
-            else:
+                    continue # to next student
+            else: # score_str is empty or None
                 grade_defaults['score'] = None
                 current_score_is_none = True
 
             existing_grade = item_data['grade_object']
 
-            if current_score_is_none and not feedback and not existing_grade:
-                continue
+            # Only save if there's something to save (new score, new feedback, or clearing existing score/feedback)
+            # or if it's an existing grade being modified (score or feedback changed).
+            should_save = False
+            if not current_score_is_none: # Score is provided
+                should_save = True
+            elif feedback: # Feedback is provided
+                should_save = True
+            elif existing_grade and (existing_grade.score is not None or existing_grade.feedback): # Clearing existing data
+                should_save = True
 
-            Grade.objects.update_or_create(
-                student=student_obj,
-                activity=activity,
-                defaults=grade_defaults
-            )
+            if should_save:
+                Grade.objects.update_or_create(
+                    student=student_obj,
+                    activity=activity,
+                    defaults=grade_defaults
+                )
 
         if not errors_found:
             messages.success(request, _("Notas guardadas exitosamente."))
@@ -243,13 +288,16 @@ def input_grades_view(request, activity_id):
             messages.warning(request, _("Algunas notas no se pudieron guardar. Por favor revise los errores."))
 
         return redirect(request.path)
+    # END OF POST REQUEST (conditionally handled)
 
     context = {
         'activity': activity,
+        'academic_period': academic_period, # Pass academic_period to context
         'student_grades_data': student_grades_data,
         'page_title': _("Ingresar/Ver Notas para '%(activity_title)s'") % {'activity_title': activity.title},
         'grading_scale': grading_scale,
         'grade_values': grade_values,
+        'grades_finalized': grades_finalized, # Pass finalization status to template
     }
     return render(request, 'teachers/input_grades.html', context)
 

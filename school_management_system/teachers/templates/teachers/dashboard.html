@@ -21,6 +21,29 @@
             <h5 class="card-subtitle mb-2 text-muted">
                 {{ welcome_message }} <!-- This comes from the view context -->
             </h5>
+
+            {% if current_academic_year %}
+            <div class="my-3 p-3 bg-light rounded border">
+                <h6 class="border-bottom pb-2 mb-2">{% translate "Current Academic Context" %}</h6>
+                <p class="mb-1">
+                    <strong>{% translate "Academic Year" %}:</strong> {{ current_academic_year.name }}
+                </p>
+                {% if academic_periods_for_current_year %}
+                <p class="mb-0">
+                    <strong>{% translate "Academic Periods" %}:</strong>
+                    {% for period in academic_periods_for_current_year %}
+                        <span class="badge
+                            {% if period.report_cards_released %}bg-success{% else %}bg-info text-dark{% endif %}
+                            me-1" title="{% if period.report_cards_released %}{% translate "Grades Released" %}{% else %}{% translate "Grades Pending / In Progress" %}{% endif %}">
+                            {{ period.name }}
+                            {% if period.name|lower == "asp" %}({% translate "Special Period" %}){% endif %}
+                        </span>
+                    {% endfor %}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <p class="card-text">
                 <strong>{% trans "Email:" %}</strong> {{ teacher.email }} <br>
                 <strong>{% trans "Rol:" %}</strong> {{ teacher.get_role_display }}
