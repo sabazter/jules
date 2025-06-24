@@ -1,5 +1,5 @@
 # Initial dependencies
-Django>=4.2,<4.3
+Django==4.2.13
 django-jazzmin>=2.6.0
 sqlalchemy
 click
