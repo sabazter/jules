@@ -10,18 +10,23 @@
         <p class="fs-4">{% trans "Your one-stop solution for managing academic activities." %}</p>
 
         {% if user.is_authenticated %}
-            <p class="mt-4">{% blocktrans with username=user.username %}You are logged in as <strong>{{ username }}</strong>.{% endblocktrans %}</p>
+            <p class="mt-4">{% blocktrans with username=user.username %}You are logged in as <strong>{{ username }}</strong> (Role: {{ user.get_role_display }}).{% endblocktrans %}</p>
             {% if user.role == 'STUDENT' %}
-                <a href="{% url 'students:dashboard' %}" class="btn btn-primary btn-lg mt-3">{% trans "Go to Your Dashboard" %}</a>
+                <a href="{% url 'students:dashboard' %}" class="btn btn-primary btn-lg mt-3">{% trans "Go to Student Dashboard" %}</a>
+            {% elif user.role == 'TEACHER' %}
+                {# Assuming a teacher dashboard might exist at 'teachers:dashboard' #}
+                <a href="{% url 'teachers:dashboard' %}" class="btn btn-info btn-lg mt-3">{% trans "Go to Teacher Dashboard" %}</a>
             {% elif user.role == 'ADMIN' or user.role == 'DIRECTOR' %}
                 <a href="{% url 'admin:index' %}" class="btn btn-secondary btn-lg mt-3">{% trans "Go to Admin Panel" %}</a>
             {% else %}
-                {# Add links for other roles if dashboards exist #}
+                 <p class="mt-2">{% trans "Your role does not have a specific dashboard link from here." %}</p>
             {% endif %}
+             <a href="{% url 'logout' %}" class="btn btn-danger btn-lg mt-3 ms-2">{% trans "Logout" %}</a>
         {% else %}
+            <p class="fs-4">{% trans "Please login to access your dashboard or use the links below." %}</p>
             <a href="{% url 'login' %}" class="btn btn-success btn-lg mt-3 me-2">{% trans "Login" %}</a>
-            <a href="{% url 'core:pre_enrollment_new' %}" class="btn btn-warning btn-lg mt-3 me-2">{% trans "Preinscripción" %}</a>
-            <a href="{% url 'students:register' %}" class="btn btn-info btn-lg mt-3">{% trans "Register as Student" %}</a>
+            <a href="{% url 'core:pre_enrollment_new' %}" class="btn btn-warning btn-lg mt-3">{% trans "Pre-enrollment Form" %}</a>
+            {# Removed student registration from main landing, assuming it's part of another flow or post-login #}
         {% endif %}
     </div>
 </div>
