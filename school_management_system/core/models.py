@@ -14,6 +14,13 @@ class User(AbstractUser):
         ('DIRECTOR', _('Director')),
     )
     role = models.CharField(verbose_name=_("Rol"), max_length=10, choices=ROLE_CHOICES, default='STUDENT')
+    profile_picture = models.ImageField(
+        verbose_name=_("Foto de Perfil"),
+        upload_to='profile_pics/',
+        null=True,
+        blank=True,
+        help_text=_("Foto de perfil del usuario.")
+    )
 
     class Meta:
         verbose_name = _("Usuario")

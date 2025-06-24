@@ -15,12 +15,12 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 
 class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_role_display')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_profile_picture_thumbnail', 'is_staff', 'get_role_display')
     fieldsets = BaseUserAdmin.fieldsets + (
-        (_('Información Adicional'), {'fields': ('role',)}),
+        (_('Información Adicional'), {'fields': ('role', 'profile_picture')}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        (_('Información Adicional'), {'fields': ('role',)}),
+        (_('Información Adicional'), {'fields': ('role', 'profile_picture')}),
     )
     list_filter = BaseUserAdmin.list_filter + ('role', 'is_staff', 'is_superuser', 'is_active')
     search_fields = ('username', 'first_name', 'last_name', 'email')
@@ -30,6 +30,12 @@ class UserAdmin(BaseUserAdmin):
     @admin.display(description=_('Rol'), ordering='role')
     def get_role_display(self, obj):
         return obj.get_role_display()
+
+    @admin.display(description=_('Foto de Perfil'))
+    def get_profile_picture_thumbnail(self, obj):
+        if obj.profile_picture:
+            return format_html('<img src="{}" width="40" height="40" style="object-fit: cover; border-radius: 50%;" />', obj.profile_picture.url)
+        return _("No Foto")
 
 admin.site.register(User, UserAdmin)
 

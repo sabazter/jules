@@ -14,7 +14,12 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">{% trans "School MS" %}</a>
+            <a class="navbar-brand" href="{% url 'home' %}">
+                {% if school_config and school_config.logo_url %}
+                    <img src="{{ school_config.logo_url }}" alt="{% trans 'School Logo' %}" style="height: 30px; width: auto; margin-right: 10px; border-radius: 3px;">
+                {% endif %}
+                {{ school_config.name|default:_("School MS") }}
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -41,6 +46,9 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.profile_picture and user.profile_picture.url %}
+                                    <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" style="height: 30px; width: 30px; object-fit: cover; border-radius: 50%; margin-right: 5px;">
+                                {% endif %}
                                 {% blocktrans with username=user.username role_display=user.get_role_display %}Hello, {{ username }} ({{ role_display }}){% endblocktrans %}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
