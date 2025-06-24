@@ -239,14 +239,46 @@ JAZZMIN_SETTINGS = {
 
     # Hide these models when generating side menu (e.g auth.user)
     "hide_models": [
+        # Student related (moved to "Students" custom_links)
         "core.StudentEnrollment",
         "core.StudentGrade",
         "core.ReportCard",
-        "core.ReportCardEntry", # Hiding this as it's usually accessed via ReportCard
+        "core.ReportCardEntry",
+
+        # Other core models not part of "Año Escolar" (Core app's new verbose_name)
+        # User is handled by auth group.
+        "core.User", # Usually not shown directly if auth.User is preferred or if it's just for auth app.
+                     # However, AUTH_USER_MODEL is 'core.User', so it might be displayed by default under "Año Escolar" (core)
+                     # if not hidden here. Let's hide it from "Año Escolar" if we want that group to be purely academic setup.
+        "core.PreEnrollmentProfile",
+        "core.TeacherSubjectSectionAssignment", # Should be under Teachers or a specific assignments app
+        "core.GuideTeacherAssignment",          # Should be under Teachers
+        "core.CoordinatorAssignment",         # Staff/Teachers
+        "core.PlaceholderEducacionMediaGeneral",
+        "core.PlaceholderEducacionPrimaria",
+        "core.PlaceholderEducacionBasica",
+        "core.ChatRoom",
+        "core.ChatMessage",
     ],
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
-    "order_with_respect_to": ["auth", "students", "core", "teachers"], # students app first
+    # "Core" will be displayed as "Año Escolar" due to CoreConfig.verbose_name change
+    "order_with_respect_to": [
+        "auth",
+        "students", # Students app (with its models and custom links from core)
+        "core",     # This is "Año Escolar"
+        "core.AcademicYear",
+        "core.AcademicPeriod",
+        "core.Level",
+        "core.GradeLevel",
+        "core.Section",
+        "core.Subject",
+        "core.SubjectAssignment",
+        "core.GradingScale",
+        "core.GradeValue",
+        "teachers", # Teachers app
+        # Any other apps or specific core models not hidden and not explicitly ordered will come after.
+    ],
 
     # Custom links to append to app groups, keyed on app name
     "custom_links": {
