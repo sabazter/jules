@@ -13,3 +13,8 @@
     font-size: 0.9rem; /* Slightly smaller header for the module */
     padding: 6px 10px;
 }
+
+/* Hide the sidebar toggle (hamburger) icon */
+a.nav-link[data-widget="pushmenu"] {
+    display: none !important;
+}
