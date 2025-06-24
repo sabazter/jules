@@ -314,7 +314,7 @@ class PreEnrollmentProfileAdmin(admin.ModelAdmin):
         (_('Auditoría'), {'fields': ('fecha_preinscripcion', 'fecha_actualizacion'), 'classes': ('collapse',)}),
         (_('Datos del Alumno'), {'fields': (('nombres_alumno', 'apellidos_alumno'), ('cedula_alumno', 'edad_alumno'), 'correo_electronico_alumno', ('pais_nacimiento_alumno', 'estado_nacimiento_alumno', 'municipio_nacimiento_alumno'), 'lugar_residencia_actual_alumno', ('grado_aspirado', 'grado_aspirado_nombre_temporal'))}),
         (_('Datos de la Madre'), {'fields': ('madre_fallecida', ('nombres_madre', 'apellidos_madre'), ('cedula_madre', 'edad_madre'), 'correo_electronico_madre', ('pais_nacimiento_madre', 'estado_nacimiento_madre', 'municipio_nacimiento_madre'), 'lugar_residencia_actual_madre', ('rif_madre', 'profesion_madre', 'lugar_trabajo_madre'), ('telefono_habitacion_madre', 'telefono_movil_madre')), 'classes': ('collapse',)}),
-        (_('Datos del Padre'), {'fields': ('padre_fallecido', ('nombres_padre', 'apellidos_padre'), ('cedula_padre', 'edad_padre'), 'correo_electronico_padre', ('pais_nacimiento_padre', 'estado_nacimiento_padre', 'municipio_nacimiento_padre'), 'lugar_residencia_actual_padre', ('rif_padre', 'profesion_padre', 'lugar_trabajo_padre'), ('telefono_habitacion_padre', 'telefono_movil_padre')), 'classes': ('collapse',)}),
+        (_('Datos del Padre'), {'fields': ('padre_fallecido', ('nombres_padre', 'apellidos_padre'), ('cedula_padre', 'edad_padre'), 'correo_electronico_padre', ('pais_nacimiento_padre', 'estado_nacimiento_padre', 'municipio_nacimiento_padre'), 'lugar_residencia_actual_padre', ('rif_madre', 'profesion_padre', 'lugar_trabajo_padre'), ('telefono_habitacion_padre', 'telefono_movil_padre')), 'classes': ('collapse',)}),
         (_('Datos Médicos del Alumno'), {'fields': (('peso_alumno_kg', 'altura_alumno_cm'), ('talla_pantalon_alumno', 'talla_camisa_alumno', 'talla_zapatos_alumno'), 'vacunas_recibidas_json', 'otras_vacunas_especificar', 'condiciones_medicas_relevantes', 'alergias_conocidas', 'medicamentos_regulares', 'seguro_medico'), 'classes': ('collapse',)}),
         (_('Datos de Vehículos'), {'fields': ('vehiculos_json',), 'classes': ('collapse',)}),
         (_('Representante Legal'), {'fields': ('quien_es_representante_legal_opcion', ('nombres_rl_otro', 'apellidos_rl_otro'), ('cedula_rl_otro', 'parentesco_rl_otro'), 'pais_nacimiento_rl_otro', 'estado_nacimiento_rl_otro', 'municipio_nacimiento_rl_otro', 'lugar_residencia_actual_rl_otro', ('edad_rl_otro', 'correo_electronico_rl_otro', 'telefono_rl_otro')), 'classes': ('collapse',)}),
@@ -634,6 +634,46 @@ class ChatMessageAdmin(admin.ModelAdmin):
         link = reverse("admin:core_user_change", args=[obj.sender.id]) # Assuming sender is a User model
         return format_html('<a href="{}">{}</a>', link, obj.sender.username)
 
+
+@admin.register(SchoolConfiguration)
+class SchoolConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'logo_thumbnail')
+    fields = ('name', 'logo', 'logo_preview')
+    readonly_fields = ('logo_preview',)
+
+    def logo_thumbnail(self, obj):
+        if obj.logo and hasattr(obj.logo, 'url'):
+            return format_html('<img src="{}" style="max-height: 50px; max-width: 100px;" />', obj.logo.url)
+        return _("No logo")
+    logo_thumbnail.short_description = _("Logo Thumbnail")
+
+    def logo_preview(self, obj):
+        if obj.logo and hasattr(obj.logo, 'url'):
+            return format_html('<img src="{}" style="max-height: 200px; max-width: 400px;" />', obj.logo.url)
+        return _("No logo uploaded")
+    logo_preview.short_description = _("Current Logo Preview")
+
+    # def get_object(self, request, object_id, from_field=None):
+    #     # Ensures that when admin tries to get an object by ID, it always gets the singleton.
+    #     return SchoolConfiguration.load()
+
+    # def changelist_view(self, request, extra_context=None):
+    #     # Redirect to the change view of the single instance
+    #     obj = SchoolConfiguration.load()
+    #     url = reverse(
+    #         f'admin:{self.opts.app_label}_{self.opts.model_name}_change',
+    #         args=(obj.pk,)
+    #     )
+    #     return HttpResponseRedirect(url)
+
+    def has_add_permission(self, request):
+        return not SchoolConfiguration.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 # Set custom admin index view
 from .views import custom_admin_dashboard_view # Restored
 admin.site.index = custom_admin_dashboard_view # Restored
+
+[end of school_management_system/core/admin.py]
