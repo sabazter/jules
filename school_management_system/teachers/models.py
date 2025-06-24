@@ -3,6 +3,7 @@ from django.conf import settings
 from core.models import Subject, Section, User, AcademicPeriod # Added AcademicPeriod
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 
 class TeacherAssignment(models.Model):
     teacher = models.ForeignKey(
