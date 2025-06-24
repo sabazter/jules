@@ -6,26 +6,36 @@ from decimal import Decimal
 
 class User(AbstractUser):
     ROLE_CHOICES = (
-        ('ADMIN', _('Admin')),
-        ('TEACHER', _('Teacher')),
-        ('STUDENT', _('Student')),
-        ('PARENT', _('Parent')),
+        ('ADMIN', _('Administrador')),
+        ('TEACHER', _('Profesor')),
+        ('STUDENT', _('Estudiante')),
+        ('PARENT', _('Representante')),
         ('DIRECTOR', _('Director')),
     )
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STUDENT')
+    role = models.CharField(verbose_name=_("Rol"), max_length=10, choices=ROLE_CHOICES, default='STUDENT')
+
+    class Meta:
+        verbose_name = _("Usuario")
+        verbose_name_plural = _("Usuarios")
 
     def __str__(self):
         return self.username
 
 class Level(models.Model):
     LEVEL_CHOICES = [
-        ('inicial', _('Educación inicial')),
-        ('primaria', _('Educación primaria')),
-        ('media_general', _('Educación media general')),
-        ('asp', _('ASP')),
-        ('extracurricular', _('Extracurriculares')),
+        ('inicial', _('Educación Inicial')),
+        ('primaria', _('Educación Primaria')),
+        ('media_general', _('Educación Media General')),
+        ('asp', _('ASP (Actividades Socio-Productivas)')), # Nombre más descriptivo
+        ('extracurricular', _('Actividades Extracurriculares')),
     ]
-    name = models.CharField(max_length=50, choices=LEVEL_CHOICES, unique=True, verbose_name=_("Nombre"))
+    name = models.CharField(max_length=50, choices=LEVEL_CHOICES, unique=True, verbose_name=_("Nombre del Nivel"))
+
+    class Meta:
+        verbose_name = _("Nivel Educativo")
+        verbose_name_plural = _("Niveles Educativos")
+        ordering = ['name']
+
 
     def __str__(self):
         return self.get_name_display()
@@ -106,35 +116,40 @@ class Section(models.Model):
         )
 
 class Subject(models.Model):
-    name = models.CharField(max_length=255, verbose_name=_("Name"))
-    description = models.TextField(blank=True, verbose_name=_("Description"))
+    name = models.CharField(max_length=255, verbose_name=_("Nombre de la Asignatura"))
+    description = models.TextField(blank=True, verbose_name=_("Descripción"))
+
+    class Meta:
+        verbose_name = _("Asignatura")
+        verbose_name_plural = _("Asignaturas")
+        ordering = ['name']
 
     def __str__(self):
         return self.name
 
 class GradingScale(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name=_("Scale Name"))
-    description = models.TextField(blank=True, null=True, verbose_name=_("Description"))
+    name = models.CharField(max_length=100, unique=True, verbose_name=_("Nombre de la Escala"))
+    description = models.TextField(blank=True, null=True, verbose_name=_("Descripción"))
 
     class Meta:
-        verbose_name = _("Grading Scale")
-        verbose_name_plural = _("Grading Scales")
+        verbose_name = _("Escala de Calificación")
+        verbose_name_plural = _("Escalas de Calificación")
         ordering = ['name']
 
     def __str__(self):
         return self.name
 
 class GradeValue(models.Model):
-    scale = models.ForeignKey(GradingScale, on_delete=models.CASCADE, related_name='values', verbose_name=_("Scale"))
-    display_value = models.CharField(max_length=20, verbose_name=_("Display Value (e.g., A, B, 20, Pass)"))
-    numeric_equivalent = models.DecimalField(max_digits=5, decimal_places=2, verbose_name=_("Numeric Equivalent"))
-    order = models.IntegerField(default=0, help_text=_("Order for display in dropdowns/lists"), verbose_name=_("Order"))
+    scale = models.ForeignKey(GradingScale, on_delete=models.CASCADE, related_name='values', verbose_name=_("Escala Asociada"))
+    display_value = models.CharField(max_length=20, verbose_name=_("Valor Visible (ej: A, B, 20, Aprobado)"))
+    numeric_equivalent = models.DecimalField(max_digits=5, decimal_places=2, verbose_name=_("Equivalente Numérico"))
+    order = models.IntegerField(default=0, help_text=_("Orden para mostrar en listas/desplegables"), verbose_name=_("Orden de Visualización"))
 
     class Meta:
-        verbose_name = _("Grade Value")
-        verbose_name_plural = _("Grade Values")
+        verbose_name = _("Valor de Calificación")
+        verbose_name_plural = _("Valores de Calificación")
         unique_together = ('scale', 'display_value')
-        ordering = ['scale', 'order', 'numeric_equivalent']
+        ordering = ['scale__name', 'order', 'numeric_equivalent']
 
     def __str__(self):
         return _("{scale_name}: {display_value} ({numeric_equivalent})").format(
@@ -440,8 +455,8 @@ class PreEnrollmentProfile(models.Model):
     notas_administrativas = models.TextField(verbose_name=_("Notas Administrativas Internas"), blank=True)
 
     class Meta:
-        verbose_name = _("Planilla de Preinscripción")
-        verbose_name_plural = _("Planillas de Preinscripción")
+        verbose_name = _("Perfil de Preinscripción")
+        verbose_name_plural = _("Perfiles de Preinscripción")
         ordering = ['-fecha_preinscripcion', 'apellidos_alumno', 'nombres_alumno']
 
     def __str__(self):
@@ -457,25 +472,25 @@ class TeacherSubjectSectionAssignment(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         limit_choices_to={'role': 'TEACHER'},
-        related_name='teacher_subject_assignments', # Changed related_name for clarity
+        related_name='subject_section_assignments', # Clarified: this links a teacher to a subject in a section
         verbose_name=_("Profesor(a)")
     )
     subject_assignment = models.ForeignKey(
-        SubjectAssignment,
+        SubjectAssignment, # This links Subject to GradeLevel
         on_delete=models.CASCADE,
-        related_name='teacher_allocations',
-        verbose_name=_("Asignatura y Grado Asignado")
+        related_name='teacher_section_assignments', # Clarified: this links SubjectAssignment to specific teacher section assignments
+        verbose_name=_("Asignatura y Grado/Año") # e.g. Matematica - 1er Año
     )
     section = models.ForeignKey(
-        Section,
+        Section, # The specific section instance (e.g., 1er Año - Sección A - 2023-2024)
         on_delete=models.CASCADE,
-        related_name='teacher_allocations',
+        related_name='assigned_teachers_subjects', # Clarified: from section's perspective, who teaches what
         verbose_name=_("Sección Específica")
     )
 
     class Meta:
-        verbose_name = _("Asignación de Materia a Profesor por Sección")
-        verbose_name_plural = _("Asignaciones de Materias a Profesores por Sección")
+        verbose_name = _("Asignación Profesor-Asignatura-Sección")
+        verbose_name_plural = _("Asignaciones Profesor-Asignatura-Sección")
         unique_together = ('teacher', 'subject_assignment', 'section')
         ordering = ['teacher__last_name', 'teacher__first_name', 'subject_assignment__subject__name', 'section__name']
 
@@ -624,27 +639,27 @@ class PlaceholderEducacionMediaGeneral(models.Model):
     pass
 
     class Meta:
-        verbose_name = _("Evaluación: Educación Media General")
-        verbose_name_plural = _("Evaluación: Educación Media General")
+        verbose_name = _("Marcador de Posición: Evaluación Media General")
+        verbose_name_plural = _("Marcadores de Posición: Evaluación Media General")
 
 class PlaceholderEducacionPrimaria(models.Model):
     pass
 
     class Meta:
-        verbose_name = _("Evaluación: Educación Primaria")
-        verbose_name_plural = _("Evaluación: Educación Primaria")
+        verbose_name = _("Marcador de Posición: Evaluación Primaria")
+        verbose_name_plural = _("Marcadores de Posición: Evaluación Primaria")
 
 class PlaceholderEducacionBasica(models.Model): # Assuming "básica" refers to a specific stage like "Inicial" or a sub-set of Primaria.
     pass
 
     class Meta:
-        verbose_name = _("Evaluación: Educación Básica") # For example, could be "Educación Inicial" or a more specific "Basic Cycle"
-        verbose_name_plural = _("Evaluación: Educación Básica")
+        verbose_name = _("Marcador de Posición: Evaluación Básica") # For example, could be "Educación Inicial" or a more specific "Basic Cycle"
+        verbose_name_plural = _("Marcadores de Posición: Evaluación Básica")
 
 class ChatRoom(models.Model):
-    name = models.CharField(max_length=255, verbose_name=_("Nombre de la Sala de Chat"), unique=True)
+    name = models.CharField(max_length=255, verbose_name=_("Nombre de la Sala"), unique=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_rooms', verbose_name=_("Miembros"))
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de Creación"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Creada el"))
 
     class Meta:
         verbose_name = _("Sala de Chat")
@@ -655,10 +670,10 @@ class ChatRoom(models.Model):
         return self.name
 
 class ChatMessage(models.Model):
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages', verbose_name=_("Sala de Chat"))
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages', verbose_name=_("Sala"))
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages', verbose_name=_("Remitente"))
-    content = models.TextField(verbose_name=_("Contenido del Mensaje"))
-    timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("Marca de Tiempo"))
+    content = models.TextField(verbose_name=_("Contenido"))
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("Enviado el"))
 
     class Meta:
         verbose_name = _("Mensaje de Chat")
@@ -693,14 +708,14 @@ class ReportCard(models.Model):
     # Consider a status if report cards go through an approval process
     # STATUS_CHOICES = [('DRAFT', _('Borrador')), ('PUBLISHED', _('Publicada')), ('ARCHIVED', _('Archivada'))]
     # status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT', verbose_name=_("Estado"))
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Fecha de Creación"))
-    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Última Actualización"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Creada el"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Actualizada el"))
 
     class Meta:
-        verbose_name = _("Boleta de Calificaciones")
-        verbose_name_plural = _("Boletas de Calificaciones")
+        verbose_name = _("Boletín de Calificaciones")
+        verbose_name_plural = _("Boletines de Calificaciones")
         unique_together = ('student_enrollment', 'academic_period')
-        ordering = ['student_enrollment', 'academic_period__start_date']
+        ordering = ['student_enrollment__student__last_name', 'academic_period__start_date']
 
     def __str__(self):
         return _("Boleta de {student} para {period} ({year})").format(
@@ -749,13 +764,13 @@ class ReportCardEntry(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Entrada de Boleta")
-        verbose_name_plural = _("Entradas de Boleta")
+        verbose_name = _("Detalle de Boletín (por Asignatura)")
+        verbose_name_plural = _("Detalles de Boletines (por Asignatura)")
         unique_together = ('report_card', 'subject_assignment') # One entry per subject per report card
-        ordering = ['subject_assignment__subject__name'] # Order by subject name alphabetically
+        ordering = ['report_card', 'subject_assignment__subject__name'] # Order by subject name alphabetically
 
     def __str__(self):
-        return _("Entrada: {subject} para {report_card}").format(
+        return _("Detalle: {subject} para {report_card}").format(
             subject=self.subject_assignment.subject.name,
             report_card=str(self.report_card)
         )

@@ -36,13 +36,13 @@ class StudentSubmission(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Entrega de Estudiante")
-        verbose_name_plural = _("Entregas de Estudiantes")
+        verbose_name = _("Entrega de Actividad por Estudiante")
+        verbose_name_plural = _("Entregas de Actividades por Estudiantes")
         unique_together = ('student', 'activity') # Student can submit only one file per activity
-        ordering = ['-submission_date']
+        ordering = ['-submission_date', 'student__last_name']
 
     def __str__(self):
-        return _("Entrega de {student} para {activity_title}").format(
+        return _("Entrega de {student} para '{activity_title}'").format(
             student=self.student.get_full_name() or self.student.username,
             activity_title=self.activity.title
         )

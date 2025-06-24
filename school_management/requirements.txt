@@ -1,5 +1,6 @@
 # Initial dependencies
 Django>=4.2,<4.3
+django-jazzmin>=2.6.0
 sqlalchemy
 click
 Pillow
