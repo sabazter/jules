@@ -1,0 +1,88 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jazzmin %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+    {# If Jazzmin has specific login CSS, it might be included via its own base or here #}
+    <style>
+        .login #header {
+            background: #f8f9fa; /* Light background for branding area */
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .login #header img {
+            max-width: 100px; /* Adjust as needed */
+            max-height: 100px; /* Adjust as needed */
+            margin-bottom: 10px;
+        }
+        .login #header h1 {
+            color: #343a40; /* Darker text for better contrast on light background */
+            font-size: 1.5rem; /* Adjust as needed */
+        }
+    </style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block branding %}
+    {# This block will replace the default branding in admin/base_site.html #}
+    {# The school_config comes from our custom context processor #}
+    {% if school_config and school_config.logo_url %}
+        <img src="{{ school_config.logo_url }}" alt="{{ school_config.name|default:_('Logo') }}">
+    {% endif %}
+    <h1 id="site-name">
+        {% if school_config and school_config.name %}
+            {{ school_config.name }}
+        {% else %}
+            {% get_jazzmin_settings as jazzmin_settings %}
+            {{ jazzmin_settings.site_header|default:_('Django administration') }}
+        {% endif %}
+    </h1>
+{% endblock %}
+
+{% block content %}
+    {% if form.errors and not form.non_field_errors %}
+        <p class="errornote">
+        {% if form.errors.items|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+        </p>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p class="errornote">
+                {{ error }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    <div id="content-main">
+        <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+            <div class="form-row">
+                {{ form.username.errors }}
+                <label for="{{ form.username.id_for_label }}" class="required">{% translate 'Username:' %}</label>
+                {{ form.username }}
+            </div>
+            <div class="form-row">
+                {{ form.password.errors }}
+                <label for="{{ form.password.id_for_label }}" class="required">{% translate 'Password:' %}</label>
+                {{ form.password }}
+                <input type="hidden" name="next" value="{{ next }}">
+            </div>
+            {% url 'admin_password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+                <div class="password-reset-link">
+                    <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>
+                </div>
+            {% endif %}
+            <div class="submit-row">
+                <input type="submit" value="{% translate 'Log in' %}">
+            </div>
+        </form>
+    </div>
+{% endblock %}

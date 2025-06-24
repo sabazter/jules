@@ -1,0 +1,16 @@
+{% load static jazzmin i18n %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+{% get_jazzmin_settings as jazzmin_settings %}
+
+{# Ensure school_config is loaded from our context processor #}
+{# The context processor 'core.context_processors.school_settings_processor' provides 'school_config' #}
+
+<a href="{% url 'admin:index' %}" class="brand-link {{ jazzmin_ui.brand_colour }} {{ jazzmin_ui.brand_small_text|yesno:',text-sm' }}">
+    {% if school_config and school_config.logo_url %}
+        <img src="{{ school_config.logo_url }}" alt="{{ school_config.name|default:_('School Logo') }}" class="brand-image {{ jazzmin_settings.site_logo_classes }}" style="opacity: .8; max-height: 33px; width: auto;">
+    {% elif jazzmin_settings.site_logo %}
+        {# Fallback to Jazzmin's static site_logo if dynamic one isn't set but static one is #}
+        <img src="{% static jazzmin_settings.site_logo %}" alt="{{ jazzmin_settings.site_header|default:request.current_app }}" class="brand-image {{ jazzmin_settings.site_logo_classes }}" style="opacity: .8">
+    {% endif %}
+    <span class="brand-text font-weight-light">{{ school_config.name|default:jazzmin_settings.site_brand|default:request.current_app }}</span>
+</a>
