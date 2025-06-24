@@ -319,7 +319,7 @@ class PreEnrollmentProfileAdmin(admin.ModelAdmin):
         (_('Responsable del Pago'), {'fields': ('quien_es_responsable_pago_opcion', ('nombres_rp_otro', 'apellidos_rp_otro'), ('cedula_rp_otro', 'rif_rp_otro', 'parentesco_rp_otro'), 'pais_nacimiento_rp_otro', 'estado_nacimiento_rp_otro', 'municipio_nacimiento_rp_otro', 'lugar_residencia_actual_rp_otro', ('edad_rp_otro', 'correo_electronico_rp_otro', 'telefono_rp_otro')), 'classes': ('collapse',)}),
     )
 
-    @admin.display(description=_("Foto"), allow_tags=True)
+    @admin.display(description=_("Foto"))
     def photo_thumbnail(self, obj):
         if obj.foto_alumno:
             return format_html('<img src="{}" width="50" height="50" style="object-fit: cover; border-radius: 5px;" />', obj.foto_alumno.url)
