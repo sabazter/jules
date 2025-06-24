@@ -238,20 +238,40 @@ JAZZMIN_SETTINGS = {
     "hide_apps": [],
 
     # Hide these models when generating side menu (e.g auth.user)
-    "hide_models": [],
+    "hide_models": [
+        "core.StudentEnrollment",
+        "core.StudentGrade",
+        "core.ReportCard",
+        "core.ReportCardEntry", # Hiding this as it's usually accessed via ReportCard
+    ],
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
-    "order_with_respect_to": ["auth", "core", "students", "teachers"],
+    "order_with_respect_to": ["auth", "students", "core", "teachers"], # students app first
 
     # Custom links to append to app groups, keyed on app name
-    # "custom_links": {
-    #     "books": [{
-    #         "name": "Make Messages",
-    #         "url": "make_messages",
-    #         "icon": "fas fa-comments",
-    #         "permissions": ["books.view_book"]
-    #     }]
-    # },
+    "custom_links": {
+        "students": [
+            {
+                "name": _("Inscripciones"),
+                "url": "admin:core_studentenrollment_changelist",
+                "icon": "fas fa-user-graduate",
+                "permissions": ["core.view_studentenrollment"] # Optional: restrict visibility
+            },
+            {
+                "name": _("Calificaciones Globales"), # Placeholder for final/term grades if this model represents that
+                "url": "admin:core_studentgrade_changelist",
+                "icon": "fas fa-award",
+                "permissions": ["core.view_studentgrade"]
+            },
+            {
+                "name": _("Boletines"),
+                "url": "admin:core_reportcard_changelist",
+                "icon": "fas fa-file-invoice",
+                "permissions": ["core.view_reportcard"]
+            },
+            # StudentSubmission will appear automatically as it's in the 'students' app
+        ]
+    },
 
     # Custom icons for side menu apps/models See https://fontawesome.com/icons?d=gallery&m=free&v=5
     # for a list of icon classes
@@ -260,7 +280,7 @@ JAZZMIN_SETTINGS = {
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
         "core": "fas fa-school",
-        "core.StudentEnrollment": "fas fa-user-graduate",
+        "core.StudentEnrollment": "fas fa-user-graduate", # Still useful if shown elsewhere or for breadcrumbs
         "core.Level": "fas fa-layer-group",
         "core.AcademicYear": "fas fa-calendar-alt",
         "core.Section": "fas fa-chalkboard-teacher",
@@ -271,13 +291,15 @@ JAZZMIN_SETTINGS = {
         "core.GradeValue": "fas fa-star-half-alt",
         "core.GradeLevel": "fas fa-graduation-cap",
         "core.PreEnrollmentProfile": "fas fa-id-card",
-        "core.StudentGrade": "fas fa-award",
+        "core.StudentGrade": "fas fa-award", # Still useful
+        "core.ReportCard": "fas fa-file-invoice", # Added icon
+        "core.ReportCardEntry": "fas fa-list-ol", # Added icon (though model hidden)
         "core.GuideTeacherAssignment": "fas fa-user-tie",
         "core.CoordinatorAssignment": "fas fa-sitemap",
         "core.ChatRoom": "fas fa-comments",
         "core.ChatMessage": "fas fa-comment-dots",
-        "students": "fas fa-user-friends",
-        "students.StudentSubmission": "fas fa-file-upload",
+        "students": "fas fa-user-friends", # App icon
+        "students.StudentSubmission": "fas fa-file-upload", # Model in students app
         "teachers": "fas fa-chalkboard-teacher", # Using a more generic icon for the app
         "teachers.TeacherAssignment": "fas fa-address-book",
         "teachers.Activity": "fas fa-pencil-ruler",
