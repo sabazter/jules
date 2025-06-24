@@ -109,5 +109,29 @@
     {# For example, to show standard app list if not using Jazzmin's sidebar fully for that #}
     {# {% include "admin/app_list.html" with app_list=app_list %} #}
 
+    <div class="module" style="margin-top: 30px;">
+        <h2>{% trans "Quick Links" %}</h2>
+        <ul class="list-group">
+            {% if perms.core.view_user or perms.auth.view_user %}
+            <li class="list-group-item"><a href="{% url 'admin:core_user_changelist' %}">{% trans "Manage Users" %}</a></li>
+            {% endif %}
+            {% if perms.core.view_studentenrollment %}
+            <li class="list-group-item"><a href="{% url 'admin:core_studentenrollment_changelist' %}">{% trans "Manage Student Enrollments" %}</a></li>
+            {% endif %}
+            {% if perms.core.view_academicyear %}
+            <li class="list-group-item"><a href="{% url 'admin:core_academicyear_changelist' %}">{% trans "Manage Academic Years" %}</a></li>
+            {% endif %}
+            {% if perms.core.view_subject %}
+            <li class="list-group-item"><a href="{% url 'admin:core_subject_changelist' %}">{% trans "Manage Subjects" %}</a></li>
+            {% endif %}
+            {% if perms.core.view_section %}
+            <li class="list-group-item"><a href="{% url 'admin:core_section_changelist' %}">{% trans "Manage Sections" %}</a></li>
+            {% endif %}
+            {% if perms.core.view_schoolconfiguration %}
+            <li class="list-group-item"><a href="{% url 'admin:core_schoolconfiguration_changelist' %}">{% trans "School Configuration" %}</a></li>
+            {% endif %}
+            {# Add more links as needed #}
+        </ul>
+    </div>
 </div>
 {% endblock %}

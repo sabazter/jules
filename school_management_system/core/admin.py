@@ -635,5 +635,5 @@ class ChatMessageAdmin(admin.ModelAdmin):
         return format_html('<a href="{}">{}</a>', link, obj.sender.username)
 
 # Set custom admin index view
-# from .views import custom_admin_dashboard_view # Temporarily commented out
-# admin.site.index = custom_admin_dashboard_view # Temporarily commented out
+from .views import custom_admin_dashboard_view # Restored
+admin.site.index = custom_admin_dashboard_view # Restored
