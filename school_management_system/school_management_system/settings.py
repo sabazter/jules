@@ -236,13 +236,55 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": False,
 
     # Hide these apps when generating side menu e.g (auth)
-    "hide_apps": [],
+    "hide_apps": [], # We are not hiding full apps, but ordering models from them
 
     # Hide these models when generating side menu (e.g auth.user)
-    "hide_models": [], # Reverted to empty or original state
+    "hide_models": [
+        "core.ReportCardEntry",
+        "core.PlaceholderEducacionMediaGeneral",
+        "core.PlaceholderEducacionPrimaria",
+        "core.PlaceholderEducacionBasica"
+    ],
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
-    "order_with_respect_to": ["auth", "core", "students", "teachers"], # Reverted to a standard order
+    "order_with_respect_to": [
+        # Autenticación y Autorización
+        "auth.User",
+        "auth.Group",
+
+        # Configuración Académica General
+        "core.SchoolConfiguration", # Moved higher as it's site-wide
+        "core.AcademicYear",
+        "core.Level",
+        "core.GradeLevel",
+        "core.Section", # Sections depend on AcademicYear and GradeLevel
+        "core.Subject",
+        "core.GradingScale", # Scales might be general before specific assignments
+        "core.GradeValue",  # Values depend on Scales
+        "core.SubjectAssignment", # Assigns subjects to grade levels, uses grading scales
+
+        # Períodos Académicos
+        "core.AcademicPeriod", # Depends on AcademicYear
+
+        # Gestión de Estudiantes y Preinscripción
+        "core.PreEnrollmentProfile",
+        "core.StudentEnrollment", # Depends on Student (User) and Section
+        "core.StudentGrade",    # Depends on StudentEnrollment, SubjectAssignment, AcademicPeriod
+        "core.ReportCard",      # Depends on StudentEnrollment, AcademicPeriod
+
+        # Gestión de Personal y Asignaciones
+        "core.TeacherSubjectSectionAssignment", # Assigns Teachers (User) to Subjects in Sections
+        "core.GuideTeacherAssignment", # Assigns Teachers (User) as guides to Sections
+        "core.CoordinatorAssignment", # Assigns Teachers (User) as coordinators to Levels for AcademicYears
+
+        # Comunicación
+        "core.ChatRoom",
+        "core.ChatMessage",
+
+        # Other apps - if they have models registered in admin and are not part of 'core'
+        # "students", # Example: if students app has its own distinct models for admin
+        # "teachers", # Example: if teachers app has its own distinct models for admin
+    ],
 
     # Custom links to append to app groups, keyed on app name
     "custom_links": {

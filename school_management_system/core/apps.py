@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 class CoreConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "core"
-    # verbose_name = _("Año Escolar") # Reverted - this line is removed or commented out
+    verbose_name = _("Administración General")
 
     def ready(self):
         # This method is called when Django starts and applications are loaded.
