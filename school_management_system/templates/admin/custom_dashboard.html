@@ -127,8 +127,11 @@
             {% if perms.core.view_section %}
             <li class="list-group-item"><a href="{% url 'admin:core_section_changelist' %}">{% trans "Manage Sections" %}</a></li>
             {% endif %}
-            {% if perms.core.view_schoolconfiguration %}
-            <li class="list-group-item"><a href="{% url 'admin:core_schoolconfiguration_changelist' %}">{% trans "School Configuration" %}</a></li>
+            {% if perms.core.view_schoolconfiguration and school_config and school_config.pk %}
+            <li class="list-group-item"><a href="{% url 'admin:core_schoolconfiguration_change' school_config.pk %}">{% trans "School Configuration" %}</a></li>
+            {% elif perms.core.view_schoolconfiguration %}
+            {# Fallback if school_config isn't loaded yet, though admin redirect should handle it #}
+            <li class="list-group-item"><a href="{% url 'admin:core_schoolconfiguration_changelist' %}">{% trans "School Configuration (Setup)" %}</a></li>
             {% endif %}
             {# Add more links as needed #}
         </ul>
