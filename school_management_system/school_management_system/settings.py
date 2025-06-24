@@ -248,42 +248,40 @@ JAZZMIN_SETTINGS = {
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
     "order_with_respect_to": [
-        # Autenticación y Autorización
+        # Configuración General y Académica (Site & Academic Setup)
+        "core.SchoolConfiguration",
+        "core.AcademicYear",
+        "core.AcademicPeriod", # Grouped with AcademicYear
+        "core.Level",
+        "core.GradeLevel",    # Grouped with Level
+        "core.Section",       # Grouped with GradeLevel
+        "core.Subject",
+        "core.GradingScale",
+        "core.GradeValue",    # Grouped with GradingScale
+        "core.SubjectAssignment", # Connects Subject and GradeLevel
+
+        # Usuarios y Roles (Users & Roles)
         "auth.User",
         "auth.Group",
+        "core.PreEnrollmentProfile", # Potential users
 
-        # Configuración Académica General
-        "core.SchoolConfiguration", # Moved higher as it's site-wide
-        "core.AcademicYear",
-        "core.Level",
-        "core.GradeLevel",
-        "core.Section", # Sections depend on AcademicYear and GradeLevel
-        "core.Subject",
-        "core.GradingScale", # Scales might be general before specific assignments
-        "core.GradeValue",  # Values depend on Scales
-        "core.SubjectAssignment", # Assigns subjects to grade levels, uses grading scales
+        # Gestión de Estudiantes (Student Management)
+        "core.StudentEnrollment",
+        "core.StudentGrade",
+        "core.ReportCard",
 
-        # Períodos Académicos
-        "core.AcademicPeriod", # Depends on AcademicYear
+        # Gestión de Personal (Staff Management)
+        "core.TeacherSubjectSectionAssignment",
+        "core.GuideTeacherAssignment",
+        "core.CoordinatorAssignment",
 
-        # Gestión de Estudiantes y Preinscripción
-        "core.PreEnrollmentProfile",
-        "core.StudentEnrollment", # Depends on Student (User) and Section
-        "core.StudentGrade",    # Depends on StudentEnrollment, SubjectAssignment, AcademicPeriod
-        "core.ReportCard",      # Depends on StudentEnrollment, AcademicPeriod
-
-        # Gestión de Personal y Asignaciones
-        "core.TeacherSubjectSectionAssignment", # Assigns Teachers (User) to Subjects in Sections
-        "core.GuideTeacherAssignment", # Assigns Teachers (User) as guides to Sections
-        "core.CoordinatorAssignment", # Assigns Teachers (User) as coordinators to Levels for AcademicYears
-
-        # Comunicación
+        # Comunicación (Communication)
         "core.ChatRoom",
         "core.ChatMessage",
 
-        # Other apps - if they have models registered in admin and are not part of 'core'
-        # "students", # Example: if students app has its own distinct models for admin
-        # "teachers", # Example: if teachers app has its own distinct models for admin
+        # Other apps can be added here if they have admin models
+        # "students",
+        # "teachers",
     ],
 
     # Custom links to append to app groups, keyed on app name
