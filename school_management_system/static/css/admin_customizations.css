@@ -1,0 +1,15 @@
+/* Customizations for School Management System Admin */
+
+/* Make Recent Actions smaller */
+#recent-actions-module .module-content li,
+#recent-actions-module .module-content .action-counter {
+    font-size: 0.8rem; /* Smaller font size */
+    line-height: 1.4;  /* Adjust line height for compactness */
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+#recent-actions-module h2 {
+    font-size: 0.9rem; /* Slightly smaller header for the module */
+    padding: 6px 10px;
+}
