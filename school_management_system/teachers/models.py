@@ -217,9 +217,11 @@ class EvaluationActivity(models.Model): # This model seems redundant if Activity
     )
     academic_period = models.ForeignKey(
         AcademicPeriod,
-        on_delete=models.CASCADE,
+        on_delete=models.CASCADE, # Or models.SET_NULL if appropriate when a period is deleted
         related_name='evaluation_plan_activities', # Link to AcademicPeriod
-        verbose_name=_("Lapso Académico")
+        verbose_name=_("Lapso Académico"),
+        null=True, # Allow null in DB
+        blank=True # Allow blank in forms
     )
 
 

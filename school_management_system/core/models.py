@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from decimal import Decimal
+from django.core.exceptions import ValidationError
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -774,3 +775,33 @@ class ReportCardEntry(models.Model):
             subject=self.subject_assignment.subject.name,
             report_card=str(self.report_card)
         )
+
+# Singleton model for global school settings
+class SchoolConfiguration(models.Model):
+    name = models.CharField(_("Nombre del Colegio"), max_length=255, default="Mi Colegio")
+    logo = models.ImageField(_("Logo del Colegio"), upload_to='school_logos/', blank=True, null=True)
+    # Add other global settings here if needed
+
+    class Meta:
+        verbose_name = _("Configuración General del Colegio")
+        verbose_name_plural = _("Configuración General del Colegio")
+
+    def __str__(self):
+        return self.name or _("Configuración del Colegio")
+
+    def save(self, *args, **kwargs):
+        # Ensure there is only one instance of SchoolConfiguration
+        if not self.pk and SchoolConfiguration.objects.exists():
+            # If trying to create a new one and one already exists,
+            # raise an error or simply update the existing one.
+            # For simplicity, we'll prevent creation of new ones if one exists.
+            # A better approach for admin might be to always edit the existing one.
+            # This basic model save override just prevents multiple instances.
+            raise ValidationError(_("Solo puede existir una instancia de Configuración del Colegio. Edite la existente."))
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        # Get the single instance of SchoolConfiguration, creating if it doesn't exist
+        obj, created = cls.objects.get_or_create(pk=1, defaults={'name': 'Mi Colegio Predeterminado'})
+        return obj

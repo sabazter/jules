@@ -8,9 +8,11 @@ from .models import (
     PlaceholderEducacionMediaGeneral, PlaceholderEducacionPrimaria, PlaceholderEducacionBasica,
     TeacherSubjectSectionAssignment, # Uncommented
     StudentGrade, GuideTeacherAssignment, CoordinatorAssignment,
-    ChatRoom, ChatMessage
+    ChatRoom, ChatMessage, SchoolConfiguration # Added SchoolConfiguration
 )
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 
 class UserAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_role_display')
@@ -129,7 +131,7 @@ class SubjectAssignmentAdmin(admin.ModelAdmin):
     @admin.display(description=_('Escala de Calificación'), ordering='grading_scale__name')
     def get_grading_scale_name_with_link(self, obj):
         if obj.grading_scale:
-            from django.urls import reverse
+            # from django.urls import reverse # Already imported at top
             link = reverse("admin:core_gradingscale_change", args=[obj.grading_scale.id])
             return format_html('<a href="{}">{}</a>', link, obj.grading_scale.name)
         return _("No especificada")
@@ -631,3 +633,7 @@ class ChatMessageAdmin(admin.ModelAdmin):
     def get_sender_link(self, obj):
         link = reverse("admin:core_user_change", args=[obj.sender.id]) # Assuming sender is a User model
         return format_html('<a href="{}">{}</a>', link, obj.sender.username)
+
+# Set custom admin index view
+from .views import custom_admin_dashboard_view
+admin.site.index = custom_admin_dashboard_view

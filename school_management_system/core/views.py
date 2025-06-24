@@ -376,3 +376,45 @@ def create_chat_with_user_view(request, user_id):
         messages.success(request, _("Nueva sala de chat creada con {other_user_name}.").format(other_user_name=other_user_display_name))
 
     return redirect('core:chat_room_detail', room_id=chat_room.id)
+
+
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import AcademicYear, AcademicPeriod, StudentEnrollment, Section # Already have User from .models
+from django.utils import timezone
+
+@staff_member_required
+def custom_admin_dashboard_view(request):
+    current_academic_year = AcademicYear.objects.order_by('-start_date').first()
+    current_academic_period = None
+    enrolled_students_count = 0
+    sections_count = 0
+
+    if current_academic_year:
+        today = timezone.now().date()
+        current_academic_period = AcademicPeriod.objects.filter(
+            academic_year=current_academic_year,
+            start_date__lte=today,
+            end_date__gte=today
+        ).first()
+
+        if not current_academic_period:
+            current_academic_period = AcademicPeriod.objects.filter(
+                academic_year=current_academic_year
+            ).order_by('-start_date').first()
+
+        enrolled_students_count = StudentEnrollment.objects.filter(
+            section__academic_year=current_academic_year
+        ).count()
+
+        sections_count = Section.objects.filter(
+            academic_year=current_academic_year
+        ).count()
+
+    context = {
+        'title': _('School Dashboard'),
+        'current_academic_year': current_academic_year,
+        'current_academic_period': current_academic_period,
+        'enrolled_students_count': enrolled_students_count,
+        'sections_count': sections_count,
+    }
+    return render(request, 'admin/custom_dashboard.html', context)
