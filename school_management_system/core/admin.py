@@ -6,7 +6,7 @@ from .models import (
     User, Level, AcademicYear, Section, Subject, SubjectAssignment, AcademicPeriod, StudentEnrollment,
     GradingScale, GradeValue, GradeLevel, PreEnrollmentProfile,
     PlaceholderEducacionMediaGeneral, PlaceholderEducacionPrimaria, PlaceholderEducacionBasica,
-    # TeacherSubjectSectionAssignment, # Commented out
+    TeacherSubjectSectionAssignment, # Uncommented
     StudentGrade, GuideTeacherAssignment, CoordinatorAssignment,
     ChatRoom, ChatMessage
 )
