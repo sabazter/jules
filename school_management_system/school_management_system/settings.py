@@ -263,12 +263,15 @@ JAZZMIN_SETTINGS = {
         # Usuarios y Roles (Users & Roles)
         "auth.User",
         "auth.Group",
-        "core.PreEnrollmentProfile", # Potential users
+        # "core.PreEnrollmentProfile" MOVED to Estudiantes below
 
-        # Gestión de Estudiantes (Student Management)
-        "core.StudentEnrollment",
-        "core.StudentGrade",
-        "core.ReportCard",
+        # App "students" (will be displayed as "Estudiantes")
+        "students",
+        "core.PreEnrollmentProfile",    # Moved here
+        "core.StudentEnrollment",       # Belongs here
+        "core.StudentGrade",            # Belongs here
+        "core.ReportCard",              # Belongs here
+        "students.StudentSubmission",   # From students app
 
         # Gestión de Personal (Staff Management)
         "core.TeacherSubjectSectionAssignment",
@@ -315,7 +318,8 @@ JAZZMIN_SETTINGS = {
         "core.CoordinatorAssignment": "fas fa-sitemap",
         "core.ChatRoom": "fas fa-comments",
         "core.ChatMessage": "fas fa-comment-dots",
-        "students": "fas fa-user-friends", # App icon
+        "core.SchoolConfiguration": "fas fa-cogs", # Icon for School Configuration
+        "students": "fas fa-user-friends", # App icon for "Estudiantes"
         "students.StudentSubmission": "fas fa-file-upload", # Model in students app
         "teachers": "fas fa-chalkboard-teacher", # Using a more generic icon for the app
         "teachers.TeacherAssignment": "fas fa-address-book",

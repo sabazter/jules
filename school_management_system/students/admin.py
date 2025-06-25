@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from .models import StudentSubmission
 from django.utils.html import format_html # For custom HTML in admin
 from django.urls import reverse # For generating admin URLs
+from core.models import ReportCard, ReportCardEntry # Import from core
 
 @admin.register(StudentSubmission)
 class StudentSubmissionAdmin(admin.ModelAdmin):

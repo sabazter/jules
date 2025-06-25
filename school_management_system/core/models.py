@@ -251,7 +251,7 @@ class AcademicPeriod(models.Model):
     def __str__(self):
         return _("{academic_year_name} - {period_name}").format(
             academic_year_name=self.academic_year.name,
-            period_name=self.name
+            period_name=self.get_name_display()
         )
 
 class StudentEnrollment(models.Model):
