@@ -212,9 +212,17 @@ class AcademicPeriod(models.Model):
         related_name='periods',
         verbose_name=_("Año Académico (YYYY-YYYY)")
     )
+
+    PERIOD_CHOICES = [
+        ('1ER_LAPSO', _('1er Lapso')),
+        ('2DO_LAPSO', _('2do Lapso')),
+        ('3ER_LAPSO', _('3er Lapso')),
+        ('VACACIONES', _('Vacaciones')),
+    ]
     name = models.CharField(
-        max_length=100,
-        verbose_name=_("Nombre del Lapso (ej: 1er Lapso, ASP)")
+        max_length=20, # Adjusted max_length to fit choices like 'VACACIONES'
+        choices=PERIOD_CHOICES,
+        verbose_name=_("Nombre del Lapso")
     )
     start_date = models.DateField(verbose_name=_("Fecha de Inicio del Lapso"))
     end_date = models.DateField(verbose_name=_("Fecha de Fin del Lapso"))
