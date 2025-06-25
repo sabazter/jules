@@ -40,7 +40,7 @@
         {% if school_config and school_config.name %}
             {{ school_config.name }}
         {% else %}
-            {% get_jazzmin_settings as jazzmin_settings %}
+            {% get_jazzmin_settings request as jazzmin_settings %}
             {{ jazzmin_settings.site_header|default:_('Django administration') }}
         {% endif %}
     </h1>
