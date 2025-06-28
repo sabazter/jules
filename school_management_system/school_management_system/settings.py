@@ -248,69 +248,99 @@ JAZZMIN_SETTINGS = {
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
     "order_with_respect_to": [
-        # Configuración General (Site Setup) - Remaining items
+        # Configuración General
         "core.SchoolConfiguration",
-        "core.Subject", # Materias es general y puede quedar aquí
+        "core.Subject",
 
-        # ADMINISTRACIÓN DE EVALUACIÓN (Nuevo grupo)
-        {"app": "core", "label": "ADMINISTRACIÓN DE EVALUACIÓN", "models": [
-            "core.AcademicYear",
-            "core.AcademicPeriod",
-            "core.Level",
-            "core.GradeLevel",
-            "core.Section",
-            "core.SubjectAssignment", # Asignaciones de materias a grados
-        ]},
+        # Autenticación y Autorización
+        "auth", # Esto mostrará la app 'auth' con sus modelos (User, Group)
 
-        # EVALUACIÓN DE BACHILLERATO (Nuevo grupo)
-        {"app": "core", "label": "EVALUACIÓN DE BACHILLERATO", "models": [
-            "core.GradingScale",
-            "core.GradeValue",
-            "core.GuideTeacherAssignment",
-            "core.TeacherSubjectSectionAssignment", # Asignaciones de profesor por asignatura
-            "core.StudentGrade", # Calificaciones de estudiantes
-            "core.ReportCard", # Boletines, relacionados con calificaciones
-        ]},
+        # ADMINISTRACIÓN DE EVALUACIÓN
+        # Estos son modelos de la app 'core'. Jazzmin los agrupará bajo 'Core' (o su verbose_name).
+        # La etiqueta personalizada "ADMINISTRACIÓN DE EVALUACIÓN" se logrará con `custom_links`.
+        "core.AcademicYear",
+        "core.AcademicPeriod",
+        "core.Level",
+        "core.GradeLevel",
+        "core.Section",
+        "core.SubjectAssignment",
 
-        # Usuarios y Roles (Users & Roles)
-        "auth.User", # Directamente el modelo
-        "auth.Group", # Directamente el modelo
+        # EVALUACIÓN DE BACHILLERATO
+        # Estos también son modelos de la app 'core'.
+        "core.GradingScale",
+        "core.GradeValue",
+        "core.GuideTeacherAssignment",
+        "core.TeacherSubjectSectionAssignment",
+        "core.StudentGrade",
+        "core.ReportCard",
 
-        # App "students" (will be displayed as "Estudiantes")
-        # Si "students" es una app y queremos mostrar sus modelos agrupados bajo el nombre de la app:
-        # "students", # Esto agrupará modelos de la app students.
-        # O si queremos ser más explícitos o mezclar con modelos de core:
-        {"app": "students", "label": "Gestión de Estudiantes", "models": [
-            "core.PreEnrollmentProfile",    # Modelo de core
-            "core.StudentEnrollment",       # Modelo de core
-            "students.StudentSubmission",   # Modelo de la app students
-        ]},
+        # Gestión de Estudiantes (Modelos de 'core' y 'students')
+        # Para modelos de 'core' que van aquí:
+        "core.PreEnrollmentProfile",
+        "core.StudentEnrollment",
+        # Para modelos de la app 'students':
+        "students.StudentSubmission", # Asumiendo que es el único modelo visible de la app 'students'
+        # Si hay más modelos en la app 'students' y se quieren todos juntos, se puede usar "students" como string.
 
+        # Gestión de Personal
+        "core.CoordinatorAssignment",
 
-        # Gestión de Personal (Staff Management) - Remaining items or re-evaluate
-        # "core.TeacherSubjectSectionAssignment", # Movido
-        # "core.GuideTeacherAssignment", # Movido
-        {"app": "core", "label": "Gestión de Personal", "models": [
-            "core.CoordinatorAssignment",
-            # Aquí podrían ir otros modelos relacionados con personal si existieran
-        ]},
+        # Comunicación
+        "core.ChatRoom",
+        "core.ChatMessage",
 
-
-        # Comunicación (Communication)
-        {"app": "core", "label": "Comunicación", "models": [
-            "core.ChatRoom",
-            "core.ChatMessage",
-        ]},
-
-
-        # App "teachers" (si existe y tiene modelos propios que mostrar)
-        # "teachers", # Si queremos que se muestren todos los modelos de la app 'teachers'
+        # Si la app 'teachers' tiene modelos que mostrar, se añadiría "teachers" aquí.
     ],
 
-    # Custom links to append to app groups, keyed on app name
-    # "custom_links": {
-    # "core": [{ "name": "Un Link Útil", "url": "admin:core_model_changelist", "permissions": ["core.view_model"] }]
-    # },
+    "custom_links": {
+        "core": [
+            {
+                "name": _("ADMINISTRACIÓN DE EVALUACIÓN"), # Usar gettext_lazy para traducción
+                "url": "javascript:void(0);", # URL no funcional, solo para agrupar
+                "icon": "fas fa-cogs", # Icono para el grupo
+                "children": [
+                    {"model": "core.academicyear", "icon": "fas fa-calendar-alt"},
+                    {"model": "core.academicperiod", "icon": "fas fa-clock"},
+                    {"model": "core.level", "icon": "fas fa-layer-group"},
+                    {"model": "core.gradelevel", "icon": "fas fa-graduation-cap"},
+                    {"model": "core.section", "icon": "fas fa-chalkboard-teacher"},
+                    {"model": "core.subjectassignment", "icon": "fas fa-tasks"},
+                ],
+                # Permiso para ver el grupo, podría ser el de ver el primer modelo del grupo
+                "permissions": ["core.view_academicyear"],
+            },
+            {
+                "name": _("EVALUACIÓN DE BACHILLERATO"),
+                "url": "javascript:void(0);",
+                "icon": "fas fa-award", # Icono para el grupo
+                "children": [
+                    {"model": "core.gradingscale", "icon": "fas fa-balance-scale"},
+                    {"model": "core.gradevalue", "icon": "fas fa-star-half-alt"},
+                    {"model": "core.guideteacherassignment", "icon": "fas fa-user-tie"},
+                    {"model": "core.teachersubjectsectionassignment", "icon": "fas fa-chalkboard-user"},
+                    {"model": "core.studentgrade", "icon": "fas fa-award"}, # Reutilizado, o fas fa-clipboard-check
+                    {"model": "core.reportcard", "icon": "fas fa-file-invoice"},
+                ],
+                "permissions": ["core.view_gradingscale"],
+            },
+            # Si hay otros modelos de 'core' que no están en estos grupos y quieres que aparezcan
+            # bajo un encabezado 'Core' genérico, Jazzmin podría hacerlo por defecto si la app 'core'
+            # no está en 'hide_apps' y los modelos no están cubiertos por `custom_links` que los "mueven".
+            # Para evitar que los modelos aparezcan dos veces (en custom_links y bajo la app 'core' por defecto),
+            # a veces es necesario ocultar la app original con `hide_apps = ['core']`
+            # y luego construir todo el menú de 'core' con `custom_links`.
+            # O, asegurarse que `order_with_respect_to` liste los modelos que NO están en custom_links.
+            # La interacción puede ser compleja.
+            # La documentación de Jazzmin dice: "Custom links are added to the app group, if the app is not hidden".
+            # "Models included in custom_links will be removed from the app list where they would normally appear."
+            # Esto es bueno, significa que no deberíamos tener duplicados.
+        ],
+        # Si queremos renombrar el grupo de la app "students" o añadirle cosas:
+        # "students": [
+        # { "name": _("Gestión Integral de Estudiantes"), ...}
+        # ]
+    },
+    # Asegurarse que los modelos en `custom_links` usan minúsculas para `model: "app.modelname"`
 
     # Custom icons for side menu apps/models See https://fontawesome.com/icons?d=gallery&m=free&v=5
     # for a list of icon classes
