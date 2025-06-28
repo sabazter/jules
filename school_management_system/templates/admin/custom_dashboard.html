@@ -65,8 +65,8 @@
 <div id="content-main">
     <div class="dashboard-grid">
         <div class="dashboard-card">
-            <h3>{% trans "Enrolled Students" %}</h3>
-            <p class="count">{{ enrolled_students_count|default:"N/A" }}</p>
+            <h3>{% trans "Active Sections" %}</h3>
+            <p class="count">{{ sections_count|default:"N/A" }}</p>
             {% if current_academic_year %}
                 <p class="details">({% blocktrans with year_name=current_academic_year.name %}For academic year: {{ year_name }}{% endblocktrans %})</p>
             {% else %}
@@ -87,8 +87,8 @@
         </div>
 
         <div class="dashboard-card">
-            <h3>{% trans "Active Sections" %}</h3>
-            <p class="count">{{ sections_count|default:"N/A" }}</p>
+            <h3>{% trans "Enrolled Students" %}</h3>
+            <p class="count">{{ enrolled_students_count|default:"N/A" }}</p>
             {% if current_academic_year %}
                 <p class="details">({% blocktrans with year_name=current_academic_year.name %}For academic year: {{ year_name }}{% endblocktrans %})</p>
             {% else %}
@@ -112,20 +112,20 @@
     <div class="module" style="margin-top: 30px;">
         <h2>{% trans "Quick Links" %}</h2>
         <ul class="list-group">
-            {% if perms.core.view_user or perms.auth.view_user %}
-            <li class="list-group-item"><a href="{% url 'admin:core_user_changelist' %}">{% trans "Manage Users" %}</a></li>
-            {% endif %}
-            {% if perms.core.view_studentenrollment %}
-            <li class="list-group-item"><a href="{% url 'admin:core_studentenrollment_changelist' %}">{% trans "Manage Student Enrollments" %}</a></li>
-            {% endif %}
             {% if perms.core.view_academicyear %}
             <li class="list-group-item"><a href="{% url 'admin:core_academicyear_changelist' %}">{% trans "Manage Academic Years" %}</a></li>
             {% endif %}
             {% if perms.core.view_subject %}
             <li class="list-group-item"><a href="{% url 'admin:core_subject_changelist' %}">{% trans "Manage Subjects" %}</a></li>
             {% endif %}
+            {% if perms.core.view_studentenrollment %}
+            <li class="list-group-item"><a href="{% url 'admin:core_studentenrollment_changelist' %}">{% trans "Manage Student Enrollments" %}</a></li>
+            {% endif %}
             {% if perms.core.view_section %}
             <li class="list-group-item"><a href="{% url 'admin:core_section_changelist' %}">{% trans "Manage Sections" %}</a></li>
+            {% endif %}
+            {% if perms.core.view_user or perms.auth.view_user %}
+            <li class="list-group-item"><a href="{% url 'admin:core_user_changelist' %}">{% trans "Manage Users" %}</a></li>
             {% endif %}
             {% if perms.core.view_schoolconfiguration and school_config and school_config.pk %}
             <li class="list-group-item"><a href="{% url 'admin:core_schoolconfiguration_change' school_config.pk %}">{% trans "School Configuration" %}</a></li>
