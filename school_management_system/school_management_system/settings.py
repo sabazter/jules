@@ -248,50 +248,69 @@ JAZZMIN_SETTINGS = {
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
     "order_with_respect_to": [
-        # Configuración General y Académica (Site & Academic Setup)
+        # Configuración General (Site Setup) - Remaining items
         "core.SchoolConfiguration",
-        "core.AcademicYear",
-        "core.AcademicPeriod", # Grouped with AcademicYear
-        "core.Level",
-        "core.GradeLevel",    # Grouped with Level
-        "core.Section",       # Grouped with GradeLevel
-        "core.Subject",
-        "core.GradingScale",
-        "core.GradeValue",    # Grouped with GradingScale
-        "core.SubjectAssignment", # Connects Subject and GradeLevel
+        "core.Subject", # Materias es general y puede quedar aquí
+
+        # ADMINISTRACIÓN DE EVALUACIÓN (Nuevo grupo)
+        {"app": "core", "label": "ADMINISTRACIÓN DE EVALUACIÓN", "models": [
+            "core.AcademicYear",
+            "core.AcademicPeriod",
+            "core.Level",
+            "core.GradeLevel",
+            "core.Section",
+            "core.SubjectAssignment", # Asignaciones de materias a grados
+        ]},
+
+        # EVALUACIÓN DE BACHILLERATO (Nuevo grupo)
+        {"app": "core", "label": "EVALUACIÓN DE BACHILLERATO", "models": [
+            "core.GradingScale",
+            "core.GradeValue",
+            "core.GuideTeacherAssignment",
+            "core.TeacherSubjectSectionAssignment", # Asignaciones de profesor por asignatura
+            "core.StudentGrade", # Calificaciones de estudiantes
+            "core.ReportCard", # Boletines, relacionados con calificaciones
+        ]},
 
         # Usuarios y Roles (Users & Roles)
-        "auth.User",
-        "auth.Group",
-        # "core.PreEnrollmentProfile" MOVED to Estudiantes below
+        "auth.User", # Directamente el modelo
+        "auth.Group", # Directamente el modelo
 
         # App "students" (will be displayed as "Estudiantes")
-        "students",
-        "core.PreEnrollmentProfile",    # Moved here
-        "core.StudentEnrollment",       # Belongs here
-        "core.StudentGrade",            # Belongs here
-        "core.ReportCard",              # Belongs here
-        "students.StudentSubmission",   # From students app
+        # Si "students" es una app y queremos mostrar sus modelos agrupados bajo el nombre de la app:
+        # "students", # Esto agrupará modelos de la app students.
+        # O si queremos ser más explícitos o mezclar con modelos de core:
+        {"app": "students", "label": "Gestión de Estudiantes", "models": [
+            "core.PreEnrollmentProfile",    # Modelo de core
+            "core.StudentEnrollment",       # Modelo de core
+            "students.StudentSubmission",   # Modelo de la app students
+        ]},
 
-        # Gestión de Personal (Staff Management)
-        "core.TeacherSubjectSectionAssignment",
-        "core.GuideTeacherAssignment",
-        "core.CoordinatorAssignment",
+
+        # Gestión de Personal (Staff Management) - Remaining items or re-evaluate
+        # "core.TeacherSubjectSectionAssignment", # Movido
+        # "core.GuideTeacherAssignment", # Movido
+        {"app": "core", "label": "Gestión de Personal", "models": [
+            "core.CoordinatorAssignment",
+            # Aquí podrían ir otros modelos relacionados con personal si existieran
+        ]},
+
 
         # Comunicación (Communication)
-        "core.ChatRoom",
-        "core.ChatMessage",
+        {"app": "core", "label": "Comunicación", "models": [
+            "core.ChatRoom",
+            "core.ChatMessage",
+        ]},
 
-        # Other apps can be added here if they have admin models
-        # "students",
-        # "teachers",
+
+        # App "teachers" (si existe y tiene modelos propios que mostrar)
+        # "teachers", # Si queremos que se muestren todos los modelos de la app 'teachers'
     ],
 
     # Custom links to append to app groups, keyed on app name
-    "custom_links": {
-        # "students": [ # Reverted: Removed custom links for students app
-        # ]
-    },
+    # "custom_links": {
+    # "core": [{ "name": "Un Link Útil", "url": "admin:core_model_changelist", "permissions": ["core.view_model"] }]
+    # },
 
     # Custom icons for side menu apps/models See https://fontawesome.com/icons?d=gallery&m=free&v=5
     # for a list of icon classes
@@ -299,32 +318,50 @@ JAZZMIN_SETTINGS = {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
-        "core": "fas fa-school",
-        "core.StudentEnrollment": "fas fa-user-graduate", # Still useful if shown elsewhere or for breadcrumbs
-        "core.Level": "fas fa-layer-group",
-        "core.AcademicYear": "fas fa-calendar-alt",
-        "core.Section": "fas fa-chalkboard-teacher",
+        "core": "fas fa-school", # Icono genérico para la app 'core' si se muestra como grupo
+
+        # Iconos para modelos en Configuración General
+        "core.SchoolConfiguration": "fas fa-cogs",
         "core.Subject": "fas fa-book",
-        "core.SubjectAssignment": "fas fa-tasks",
+
+        # Iconos para modelos en ADMINISTRACIÓN DE EVALUACIÓN
+        "core.AcademicYear": "fas fa-calendar-alt",
         "core.AcademicPeriod": "fas fa-clock",
+        "core.Level": "fas fa-layer-group",
+        "core.GradeLevel": "fas fa-graduation-cap",
+        "core.Section": "fas fa-chalkboard-teacher", # Reutilizado, podría ser más específico si es necesario
+        "core.SubjectAssignment": "fas fa-tasks",
+
+        # Iconos para modelos en EVALUACIÓN DE BACHILLERATO
         "core.GradingScale": "fas fa-balance-scale",
         "core.GradeValue": "fas fa-star-half-alt",
-        "core.GradeLevel": "fas fa-graduation-cap",
-        "core.PreEnrollmentProfile": "fas fa-id-card",
-        "core.StudentGrade": "fas fa-award", # Still useful
-        "core.ReportCard": "fas fa-file-invoice", # Added icon
-        "core.ReportCardEntry": "fas fa-list-ol", # Added icon (though model hidden)
         "core.GuideTeacherAssignment": "fas fa-user-tie",
+        "core.TeacherSubjectSectionAssignment": "fas fa-chalkboard-user", # Icono más específico para esta asignación
+        "core.StudentGrade": "fas fa-award",
+        "core.ReportCard": "fas fa-file-invoice",
+
+
+        # Iconos para modelos en Estudiantes (los que quedan o son de la app students)
+        "students": "fas fa-user-friends", # App icon for "Estudiantes"
+        "core.PreEnrollmentProfile": "fas fa-id-card",
+        "core.StudentEnrollment": "fas fa-user-graduate",
+        "students.StudentSubmission": "fas fa-file-upload", # Model in students app
+
+        # Iconos para modelos en Gestión de Personal
         "core.CoordinatorAssignment": "fas fa-sitemap",
+
+        # Iconos para Comunicación
         "core.ChatRoom": "fas fa-comments",
         "core.ChatMessage": "fas fa-comment-dots",
-        "core.SchoolConfiguration": "fas fa-cogs", # Icon for School Configuration
-        "students": "fas fa-user-friends", # App icon for "Estudiantes"
-        "students.StudentSubmission": "fas fa-file-upload", # Model in students app
-        "teachers": "fas fa-chalkboard-teacher", # Using a more generic icon for the app
-        "teachers.TeacherAssignment": "fas fa-address-book",
-        "teachers.Activity": "fas fa-pencil-ruler",
-        "teachers.Grade": "fas fa-marker", # Different from StudentGrade icon
+
+        # Iconos para la app teachers si se usa
+        "teachers": "fas fa-chalkboard-teacher", # Icono genérico para la app 'teachers'
+        # "teachers.TeacherAssignment": "fas fa-address-book", # Ejemplo si existiera este modelo en la app teachers
+        # "teachers.Activity": "fas fa-pencil-ruler",
+        # "teachers.Grade": "fas fa-marker",
+
+        # Modelos ocultos (aunque se muevan, si estaban ocultos y deben seguir así, mantenerlos)
+        "core.ReportCardEntry": "fas fa-list-ol", # Icono por si se muestra en otro lado
     },
     # Icons that are used when one is not manually specified
     "default_icon_parents": "fas fa-chevron-circle-right",
