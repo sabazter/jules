@@ -274,13 +274,13 @@ JAZZMIN_SETTINGS = {
         "core.StudentGrade",
         "core.ReportCard",
 
-        # Gestión de Estudiantes (Modelos de 'core' y 'students')
-        # Para modelos de 'core' que van aquí:
-        "core.PreEnrollmentProfile",
-        "core.StudentEnrollment",
-        # Para modelos de la app 'students':
-        "students.StudentSubmission", # Asumiendo que es el único modelo visible de la app 'students'
-        # Si hay más modelos en la app 'students' y se quieren todos juntos, se puede usar "students" como string.
+        # INSCRIPCIONES (Modelos de 'core')
+        # "core.PreEnrollmentProfile", # Movido al grupo INSCRIPCIONES via custom_links
+        # "core.StudentEnrollment",    # Movido al grupo INSCRIPCIONES via custom_links
+
+        # Gestión de Estudiantes (Modelos restantes de 'students' y quizás 'core')
+        "students.StudentSubmission", # Modelo de la app 'students'
+        # Otros modelos de 'core' o 'students' que pertenezcan aquí y no a Inscripciones.
 
         # Gestión de Personal
         "core.CoordinatorAssignment",
@@ -323,6 +323,16 @@ JAZZMIN_SETTINGS = {
                 ],
                 "permissions": ["core.view_gradingscale"],
             },
+            {
+                "name": _("INSCRIPCIONES"),
+                "url": "javascript:void(0);",
+                "icon": "fas fa-user-plus", # Icono para el grupo de inscripciones
+                "children": [
+                    {"model": "core.preenrollmentprofile", "icon": "fas fa-id-card-alt"}, # Ícono específico
+                    {"model": "core.studentenrollment", "icon": "fas fa-user-check"},  # Ícono específico
+                ],
+                "permissions": ["core.view_preenrollmentprofile"], # Permiso para ver el grupo
+            },
             # Si hay otros modelos de 'core' que no están en estos grupos y quieres que aparezcan
             # bajo un encabezado 'Core' genérico, Jazzmin podría hacerlo por defecto si la app 'core'
             # no está en 'hide_apps' y los modelos no están cubiertos por `custom_links` que los "mueven".
@@ -336,9 +346,12 @@ JAZZMIN_SETTINGS = {
             # Esto es bueno, significa que no deberíamos tener duplicados.
         ],
         # Si queremos renombrar el grupo de la app "students" o añadirle cosas:
-        # "students": [
-        # { "name": _("Gestión Integral de Estudiantes"), ...}
-        # ]
+        "students": [ # Asumiendo que StudentSubmission es de la app 'students'
+             # Podríamos crear un grupo "Gestión de Estudiantes" si es necesario,
+             # o dejar que StudentSubmission aparezca bajo "Students" (nombre de la app).
+             # Por ejemplo, para mantenerlo simple:
+            {"model": "students.studentsubmission", "icon": "fas fa-file-upload", "label": _("Entregas de Estudiantes")}
+        ]
     },
     # Asegurarse que los modelos en `custom_links` usan minúsculas para `model: "app.modelname"`
 
