@@ -248,43 +248,47 @@ JAZZMIN_SETTINGS = {
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
     "order_with_respect_to": [
-        # Configuración General y Académica (Site & Academic Setup)
-        "core.SchoolConfiguration",
-        "core.AcademicYear",
-        "core.AcademicPeriod", # Grouped with AcademicYear
-        "core.Level",
-        "core.GradeLevel",    # Grouped with Level
-        "core.Section",       # Grouped with GradeLevel
-        "core.Subject",
-        "core.GradingScale",
-        "core.GradeValue",    # Grouped with GradingScale
-        "core.SubjectAssignment", # Connects Subject and GradeLevel
+        # Gestión Académica Principal (Main Academic Management)
+        # Ordered alphabetically by typical setup flow / importance, then alphabetically
+        "core.SchoolConfiguration", # Configuración Escolar
+        "core.AcademicYear",        # Año Académico
+        "core.AcademicPeriod",      # Período/Lapso Académico (related to AcademicYear)
+        "core.Level",               # Nivel Educativo (e.g., Primaria, Secundaria)
+        "core.GradeLevel",          # Grado/Año (e.g., 1er Grado, 7mo Grado - related to Level)
+        "core.Section",             # Sección (e.g., A, B - related to GradeLevel)
+        "core.Subject",             # Asignatura/Materia
+        "core.GradingScale",        # Escala de Calificación
+        "core.GradeValue",          # Valor de Calificación (related to GradingScale)
+        "core.SubjectAssignment",   # Asignación de Materia a Grado
 
-        # Usuarios y Roles (Users & Roles)
-        "auth.User",
-        "auth.Group",
-        # "core.PreEnrollmentProfile" MOVED to Estudiantes below
+        # Usuarios y Roles (Users & Roles) - Alphabetical
+        "auth.Group",               # Grupos de Permisos
+        "auth.User",                # Usuarios
 
-        # App "students" (will be displayed as "Estudiantes")
-        "students",
-        "core.PreEnrollmentProfile",    # Moved here
-        "core.StudentEnrollment",       # Belongs here
-        "core.StudentGrade",            # Belongs here
-        "core.ReportCard",              # Belongs here
-        "students.StudentSubmission",   # From students app
+        # Estudiantes (Students App & Related Core Models)
+        # App 'students' will use its verbose_name "Estudiantes"
+        # Models ordered alphabetically by their perceived importance/frequency of use, then true alphabet
+        "core.PreEnrollmentProfile",    # Planillas de Preinscripción
+        "core.StudentEnrollment",       # Inscripciones de Estudiantes
+        "core.ReportCard",              # Boletas de Calificaciones
+        "core.StudentGrade",            # Calificaciones Finales de Estudiantes por Lapso
+        "students.StudentSubmission",   # Entregas de Estudiantes (from students app)
 
-        # Gestión de Personal (Staff Management)
-        "core.TeacherSubjectSectionAssignment",
-        "core.GuideTeacherAssignment",
-        "core.CoordinatorAssignment",
+        # Profesores y Personal (Teachers & Staff App & Related Core Models)
+        # App 'teachers' will use its verbose_name "Profesores y Personal"
+        # Models ordered alphabetically
+        "core.CoordinatorAssignment",           # Asignación de Coordinador
+        "core.GuideTeacherAssignment",          # Asignación de Profesor Guía
+        "core.TeacherSubjectSectionAssignment", # Asignación de Profesor a Materia/Sección
+        "teachers.Activity",                    # Actividades Evaluativas (teachers app)
+        "teachers.EvaluationActivity",          # Actividades del Plan de Evaluación (teachers app)
+        "teachers.EvaluationPlanDocument",      # Documentos de Plan de Evaluación (teachers app)
+        "teachers.Grade",                       # Calificaciones de Actividades (teachers app)
+        # "teachers.TeacherAssignment" # Old model, likely superseded by TeacherSubjectSectionAssignment - keeping out for now
 
-        # Comunicación (Communication)
-        "core.ChatRoom",
-        "core.ChatMessage",
-
-        # Other apps can be added here if they have admin models
-        # "students",
-        # "teachers",
+        # Comunicación (Communication) - Alphabetical
+        "core.ChatMessage",         # Mensajes de Chat
+        "core.ChatRoom",            # Salas de Chat
     ],
 
     # Custom links to append to app groups, keyed on app name
