@@ -679,7 +679,7 @@ class SchoolConfigurationAdmin(admin.ModelAdmin):
         return False
 
 # Set custom admin index view
-from .views import custom_admin_dashboard_view # Restored
-admin.site.index = custom_admin_dashboard_view # Restored
+# from .views import custom_admin_dashboard_view # Restored
+# admin.site.index = custom_admin_dashboard_view # Restored
 
 # [end of school_management_system/core/admin.py]
