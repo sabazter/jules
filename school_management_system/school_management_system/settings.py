@@ -248,109 +248,114 @@ JAZZMIN_SETTINGS = {
 
     # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
     "order_with_respect_to": [
-        # Configuración General
-        "core.SchoolConfiguration",
-        "core.Subject",
+        # 1. Configuración General
+        "core.SchoolConfiguration", # Configuración General del Colegio
+        "core.Subject",             # Asignatura
 
-        # Autenticación y Autorización
-        "auth", # Esto mostrará la app 'auth' con sus modelos (User, Group)
+        # 2. Autenticación y Usuarios
+        "auth", # App 'auth' (Usuarios, Grupos)
 
-        # ADMINISTRACIÓN DE EVALUACIÓN
-        # Estos son modelos de la app 'core'. Jazzmin los agrupará bajo 'Core' (o su verbose_name).
-        # La etiqueta personalizada "ADMINISTRACIÓN DE EVALUACIÓN" se logrará con `custom_links`.
+        # 3. Administración de Evaluación (Modelos de 'core', agrupados por custom_links)
+        # Estos modelos se listan aquí para que Jazzmin los conozca;
+        # `custom_links` controlará su agrupación y etiquetado.
         "core.AcademicYear",
-        "core.AcademicPeriod",
-        "core.Level",
+        "core.SubjectAssignment", # Asignación de Materia a Grado
         "core.GradeLevel",
+        "core.AcademicPeriod",    # Lapso Académico
+        "core.Level",
         "core.Section",
-        "core.SubjectAssignment",
 
-        # EVALUACIÓN DE BACHILLERATO
-        # Estos también son modelos de la app 'core'.
-        "core.GradingScale",
-        "core.GradeValue",
-        "core.GuideTeacherAssignment",
-        "core.TeacherSubjectSectionAssignment",
-        "core.StudentGrade",
-        "core.ReportCard",
+        # 4. Inscripciones (Modelos de 'core', agrupados por custom_links)
+        "core.StudentEnrollment",    # Inscripción de Estudiante
+        "core.PreEnrollmentProfile", # Perfil de Preinscripción
 
-        # INSCRIPCIONES (Modelos de 'core')
-        # "core.PreEnrollmentProfile", # Movido al grupo INSCRIPCIONES via custom_links
-        # "core.StudentEnrollment",    # Movido al grupo INSCRIPCIONES via custom_links
+        # 5. Evaluación de Bachillerato (Modelos de 'core', agrupados por custom_links)
+        "core.GuideTeacherAssignment", # Asignación de Profesor Guía
+        "core.TeacherSubjectSectionAssignment", # Asignación Profesor-Asignatura-Sección
+        "core.ReportCard",          # Boletín de Calificaciones
+        "core.StudentGrade",        # Calificación de Estudiante
+        "core.GradingScale",        # Escala de Calificación
+        "core.GradeValue",          # Valor de Calificación
 
-        # Gestión de Estudiantes (Modelos restantes de 'students' y quizás 'core')
-        "students.StudentSubmission", # Modelo de la app 'students'
-        # Otros modelos de 'core' o 'students' que pertenezcan aquí y no a Inscripciones.
+        # 6. Gestión de Estudiantes
+        "students.StudentSubmission", # Entregas de Estudiantes (de app 'students')
+        # Si hay otros modelos de la app 'students' o 'core' que van aquí, listarlos.
 
-        # Gestión de Personal
-        "core.CoordinatorAssignment",
+        # 7. Gestión de Personal
+        "core.CoordinatorAssignment", # Asignación de Coordinador de Nivel
 
-        # Comunicación
-        "core.ChatRoom",
-        "core.ChatMessage",
-
-        # Si la app 'teachers' tiene modelos que mostrar, se añadiría "teachers" aquí.
+        # 8. Comunicación
+        "core.ChatMessage", # Mensaje de Chat
+        "core.ChatRoom",    # Sala de Chat
     ],
 
     "custom_links": {
         "core": [
             {
-                "name": _("ADMINISTRACIÓN DE EVALUACIÓN"), # Usar gettext_lazy para traducción
-                "url": "javascript:void(0);", # URL no funcional, solo para agrupar
-                "icon": "fas fa-cogs", # Icono para el grupo
+                "name": _("Administración de evaluación"),
+                "url": "javascript:void(0);",
+                "icon": "fas fa-cogs",
                 "children": [
-                    {"model": "core.academicyear", "icon": "fas fa-calendar-alt"},
-                    {"model": "core.academicperiod", "icon": "fas fa-clock"},
-                    {"model": "core.level", "icon": "fas fa-layer-group"},
-                    {"model": "core.gradelevel", "icon": "fas fa-graduation-cap"},
-                    {"model": "core.section", "icon": "fas fa-chalkboard-teacher"},
-                    {"model": "core.subjectassignment", "icon": "fas fa-tasks"},
+                    # Ordenados alfabéticamente por verbose_name
+                    {"model": "core.academicyear", "label": _("Año Académico"), "icon": "fas fa-calendar-alt"},
+                    {"model": "core.subjectassignment", "label": _("Asignación de Materia a Grado"), "icon": "fas fa-tasks"},
+                    {"model": "core.gradelevel", "label": _("Grado/Año de Estudio"), "icon": "fas fa-graduation-cap"},
+                    {"model": "core.academicperiod", "label": _("Lapso Académico"), "icon": "fas fa-clock"},
+                    {"model": "core.level", "label": _("Nivel Educativo"), "icon": "fas fa-layer-group"},
+                    {"model": "core.section", "label": _("Sección"), "icon": "fas fa-chalkboard-teacher"},
                 ],
-                # Permiso para ver el grupo, podría ser el de ver el primer modelo del grupo
                 "permissions": ["core.view_academicyear"],
             },
             {
-                "name": _("EVALUACIÓN DE BACHILLERATO"),
+                "name": _("Evaluación de bachillerato"),
                 "url": "javascript:void(0);",
-                "icon": "fas fa-award", # Icono para el grupo
+                "icon": "fas fa-award",
                 "children": [
-                    {"model": "core.gradingscale", "icon": "fas fa-balance-scale"},
-                    {"model": "core.gradevalue", "icon": "fas fa-star-half-alt"},
-                    {"model": "core.guideteacherassignment", "icon": "fas fa-user-tie"},
-                    {"model": "core.teachersubjectsectionassignment", "icon": "fas fa-chalkboard-user"},
-                    {"model": "core.studentgrade", "icon": "fas fa-award"}, # Reutilizado, o fas fa-clipboard-check
-                    {"model": "core.reportcard", "icon": "fas fa-file-invoice"},
+                    # Ordenados alfabéticamente por verbose_name
+                    {"model": "core.guideteacherassignment", "label": _("Asignación de Profesor Guía"), "icon": "fas fa-user-tie"},
+                    {"model": "core.teachersubjectsectionassignment", "label": _("Asignación Profesor-Asignatura-Sección"), "icon": "fas fa-chalkboard-user"},
+                    {"model": "core.reportcard", "label": _("Boletín de Calificaciones"), "icon": "fas fa-file-invoice"},
+                    {"model": "core.studentgrade", "label": _("Calificación de Estudiante"), "icon": "fas fa-award"},
+                    {"model": "core.gradingscale", "label": _("Escala de Calificación"), "icon": "fas fa-balance-scale"},
+                    {"model": "core.gradevalue", "label": _("Valor de Calificación"), "icon": "fas fa-star-half-alt"},
                 ],
                 "permissions": ["core.view_gradingscale"],
             },
             {
-                "name": _("INSCRIPCIONES"),
+                "name": _("Inscripciones"),
                 "url": "javascript:void(0);",
-                "icon": "fas fa-user-plus", # Icono para el grupo de inscripciones
+                "icon": "fas fa-user-plus",
                 "children": [
-                    {"model": "core.preenrollmentprofile", "icon": "fas fa-id-card-alt"}, # Ícono específico
-                    {"model": "core.studentenrollment", "icon": "fas fa-user-check"},  # Ícono específico
+                    # Ordenados alfabéticamente por verbose_name
+                    {"model": "core.studentenrollment", "label": _("Inscripción de Estudiante"), "icon": "fas fa-user-check"},
+                    {"model": "core.preenrollmentprofile", "label": _("Perfil de Preinscripción"), "icon": "fas fa-id-card-alt"},
                 ],
-                "permissions": ["core.view_preenrollmentprofile"], # Permiso para ver el grupo
+                "permissions": ["core.view_preenrollmentprofile"],
             },
-            # Si hay otros modelos de 'core' que no están en estos grupos y quieres que aparezcan
-            # bajo un encabezado 'Core' genérico, Jazzmin podría hacerlo por defecto si la app 'core'
-            # no está en 'hide_apps' y los modelos no están cubiertos por `custom_links` que los "mueven".
-            # Para evitar que los modelos aparezcan dos veces (en custom_links y bajo la app 'core' por defecto),
-            # a veces es necesario ocultar la app original con `hide_apps = ['core']`
-            # y luego construir todo el menú de 'core' con `custom_links`.
-            # O, asegurarse que `order_with_respect_to` liste los modelos que NO están en custom_links.
-            # La interacción puede ser compleja.
-            # La documentación de Jazzmin dice: "Custom links are added to the app group, if the app is not hidden".
-            # "Models included in custom_links will be removed from the app list where they would normally appear."
-            # Esto es bueno, significa que no deberíamos tener duplicados.
+            # Modelos de 'core' que no están en grupos personalizados y deben aparecer bajo "Core"
+            # (si 'core' no está en hide_apps)
+            # Si todos los modelos de 'core' están en los grupos de arriba, no es necesario más aquí para 'core'.
+            # Los modelos de 'core' que SÍ queremos bajo el encabezado "Core" (o su verbose_name)
+            # y que NO están en los grupos personalizados, deben estar en `order_with_respect_to`.
+            # Jazzmin quita los modelos de `custom_links` de su lugar natural.
+            # Los modelos que quedan en `order_with_respect_to` para 'core' (como SchoolConfiguration, Subject, CoordinatorAssignment, ChatMessage, ChatRoom)
+            # se agruparán bajo la app "Core".
+            # Para ordenar estos alfabéticamente:
+            # SchoolConfiguration: "Configuración General del Colegio"
+            # Subject: "Asignatura"
+            # CoordinatorAssignment: "Asignación de Coordinador de Nivel"
+            # ChatMessage: "Mensaje de Chat"
+            # ChatRoom: "Sala de Chat"
+            # Orden: Asignatura, Asignación de Coordinador de Nivel, Configuración General del Colegio, Mensaje de Chat, Sala de Chat
+            # Este orden se refleja en `order_with_respect_to`.
         ],
-        # Si queremos renombrar el grupo de la app "students" o añadirle cosas:
-        "students": [ # Asumiendo que StudentSubmission es de la app 'students'
-             # Podríamos crear un grupo "Gestión de Estudiantes" si es necesario,
-             # o dejar que StudentSubmission aparezca bajo "Students" (nombre de la app).
-             # Por ejemplo, para mantenerlo simple:
-            {"model": "students.studentsubmission", "icon": "fas fa-file-upload", "label": _("Entregas de Estudiantes")}
+        "students": [
+            # Para "Gestión de Estudiantes" si solo contiene StudentSubmission:
+            {"model": "students.studentsubmission", "label": _("Entregas de Actividades por Estudiantes"), "icon": "fas fa-file-upload"}
+        ],
+        "auth": [ # Para ordenar "auth" alfabéticamente si es necesario
+            {"model": "auth.group", "label": _("Grupos"), "icon": "fas fa-users"},
+            {"model": "auth.user", "label": _("Usuarios"), "icon": "fas fa-user"},
         ]
     },
     # Asegurarse que los modelos en `custom_links` usan minúsculas para `model: "app.modelname"`
