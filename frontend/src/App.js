@@ -11,10 +11,17 @@ import { MdAccessTime, MdGrade, MdOutlinePolicy, MdOutlinePriceChange, MdAssignm
 
 
 function App() {
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  // El estado ahora controla si el *mouse está sobre la sidebar* o no.
+  // Inicialmente, consideramos que no está expandida (mouse no encima).
+  const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 
-  const toggleSidebar = () => {
-    setIsSidebarExpanded(!isSidebarExpanded);
+  // Estas funciones serán llamadas por onMouseEnter y onMouseLeave en Sidebar.js
+  const handleSidebarMouseEnter = () => {
+    setIsSidebarHovered(true);
+  };
+
+  const handleSidebarMouseLeave = () => {
+    setIsSidebarHovered(false);
   };
 
   // Definimos los grupos y elementos de la sidebar con iconos
@@ -74,11 +81,14 @@ function App() {
 
   return (
     <Router>
-      <div className={`app-container ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+      {/* La clase para ajustar el main-content ahora depende de isSidebarHovered */}
+      <div className={`app-container ${isSidebarHovered ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
         <Sidebar
           groups={sidebarGroups}
-          isExpanded={isSidebarExpanded}
-          toggleSidebar={toggleSidebar}
+          isExpanded={isSidebarHovered} // Pasamos isSidebarHovered como isExpanded
+          // No pasamos toggleSidebar, sino las funciones de mouse enter/leave
+          onMouseEnter={handleSidebarMouseEnter}
+          onMouseLeave={handleSidebarMouseLeave}
         />
         <main className="main-content">
           <Routes>

@@ -1,16 +1,18 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom'; // Usar NavLink para activeClassName
+import { NavLink } from 'react-router-dom'; // Usar NavLink para activeClassName
 import './Sidebar.css';
-import { FaBars, FaTimes } from 'react-icons/fa'; // Iconos para el botón de toggle
+// Ya no necesitamos FaBars, FaTimes para el botón
 
-function Sidebar({ groups, isExpanded, toggleSidebar }) {
+function Sidebar({ groups, isExpanded, onMouseEnter, onMouseLeave }) {
   return (
-    <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
+    <aside
+      className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       <div className="sidebar-header">
+        {/* El título solo se muestra si está expandido, no hay botón de toggle */}
         {isExpanded && <h3>Navegación</h3>}
-        <button onClick={toggleSidebar} className="sidebar-toggle-btn">
-          {isExpanded ? <FaTimes /> : <FaBars />}
-        </button>
       </div>
       <nav className="sidebar-nav">
         {groups.map((group, index) => (
