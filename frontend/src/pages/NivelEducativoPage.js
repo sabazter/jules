@@ -52,12 +52,9 @@ function NivelEducativoPage() {
       {niveles.length > 0 ? (
         <ul>
           {niveles.map(nivel => (
-            <li key={nivel.id}>{nivel.name} (ID: {nivel.id})</li>
-            // Asumiendo que el serializador devuelve 'id' y 'name'
-            // El modelo Level tiene 'get_name_display()', pero el serializer por defecto
-            // usará el valor crudo del campo 'name' (ej: 'inicial', 'primaria').
-            // Podríamos necesitar un SerializerMethodField si queremos el display name directamente.
-            // Por ahora, mostraremos el valor crudo.
+            <li key={nivel.id}>
+              {nivel.name_display || nivel.name} (ID: {nivel.id}, Valor crudo: {nivel.name})
+            </li>
           ))}
         </ul>
       ) : (

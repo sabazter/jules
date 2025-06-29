@@ -28,9 +28,12 @@ class AcademicPeriodSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class LevelSerializer(serializers.ModelSerializer):
+    name_display = serializers.CharField(source='get_name_display', read_only=True)
+
     class Meta:
         model = Level
-        fields = '__all__'
+        fields = ['id', 'name', 'name_display'] # Incluir name_display y especificar campos
+
 
 class GradeLevelSerializer(serializers.ModelSerializer):
     class Meta:
