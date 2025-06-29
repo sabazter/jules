@@ -7,7 +7,7 @@ import './App.css';
 
 // Importar algunos iconos de ejemplo (Font Awesome)
 import { FaCog, FaCalendarAlt, FaBook, FaUsers, FaUserGraduate, FaChalkboardTeacher, FaComments, FaLayerGroup, FaUserShield, FaFileAlt, FaListOl, FaUserCheck, FaUserTag, FaFileInvoice, FaClipboardList, FaFileUpload, FaTasks, FaGraduationCap, FaSchool, FaRegListAlt, FaUserTie } from 'react-icons/fa';
-import { MdOutlinePeriod, MdGrade, MdOutlinePolicy, MdOutlinePriceChange, MdAssignmentInd } from "react-icons/md";
+import { MdAccessTime, MdGrade, MdOutlinePolicy, MdOutlinePriceChange, MdAssignmentInd } from "react-icons/md"; // Cambiado MdOutlinePeriod a MdAccessTime
 
 
 function App() {
@@ -24,7 +24,7 @@ function App() {
       items: [
         { name: "Configuración Escolar", path: "/configuracion-escolar", model: "core.SchoolConfiguration", icon: <FaSchool /> },
         { name: "Año Académico", path: "/ano-academico", model: "core.AcademicYear", icon: <FaCalendarAlt /> },
-        { name: "Período/Lapso Académico", path: "/periodo-academico", model: "core.AcademicPeriod", icon: <MdOutlinePeriod /> },
+        { name: "Período/Lapso Académico", path: "/periodo-academico", model: "core.AcademicPeriod", icon: <MdAccessTime /> }, // Corregido
         { name: "Nivel Educativo", path: "/nivel-educativo", model: "core.Level", icon: <FaLayerGroup /> },
         { name: "Grado/Año", path: "/grado-ano", model: "core.GradeLevel", icon: <FaGraduationCap /> },
         { name: "Sección", path: "/seccion", model: "core.Section", icon: <FaTasks /> },
