@@ -263,7 +263,7 @@ JAZZMIN_SETTINGS = {
 
         # Usuarios y Roles (Users & Roles) - Alphabetical
         "auth.Group",               # Grupos de Permisos
-        "auth.User",                # Usuarios
+        "core.User",                # Usuarios (Corrected from auth.User as core.User is AUTH_USER_MODEL)
 
         # Estudiantes (Students App & Related Core Models)
         # App 'students' will use its verbose_name "Estudiantes"
