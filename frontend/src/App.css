@@ -18,7 +18,15 @@ body {
   flex-grow: 1;
   padding: 20px;
   background-color: #fff;
-  margin-left: 260px; /* Same as sidebar width + some margin */
+  transition: margin-left 0.3s ease-in-out; /* Transición suave */
+}
+
+.app-container.sidebar-expanded .main-content {
+  margin-left: 260px; /* Ancho de sidebar expandida + margen */
+}
+
+.app-container.sidebar-collapsed .main-content {
+  margin-left: 80px; /* Ancho de sidebar colapsada + margen */
 }
 
 .placeholder-page {

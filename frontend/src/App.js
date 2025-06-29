@@ -1,71 +1,85 @@
-import React from 'react';
+import React, { useState } from 'react'; // Import useState
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import PlaceholderPage from './pages/PlaceholderPage';
-import NivelEducativoPage from './pages/NivelEducativoPage'; // Importar la nueva página
+import NivelEducativoPage from './pages/NivelEducativoPage';
 import './App.css';
 
+// Importar algunos iconos de ejemplo (Font Awesome)
+import { FaCog, FaCalendarAlt, FaBook, FaUsers, FaUserGraduate, FaChalkboardTeacher, FaComments, FaLayerGroup, FaUserShield, FaFileAlt, FaListOl, FaUserCheck, FaUserTag, FaFileInvoice, FaClipboardList, FaFileUpload, FaTasks, FaGraduationCap, FaSchool, FaRegListAlt, FaUserTie } from 'react-icons/fa';
+import { MdOutlinePeriod, MdGrade, MdOutlinePolicy, MdOutlinePriceChange, MdAssignmentInd } from "react-icons/md";
+
+
 function App() {
-  // Definimos los grupos y elementos de la sidebar para pasarlos como props
-  // Esta estructura la obtuvimos de tu solicitud inicial
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarExpanded(!isSidebarExpanded);
+  };
+
+  // Definimos los grupos y elementos de la sidebar con iconos
   const sidebarGroups = [
     {
       name: "Gestión Académica Principal",
       items: [
-        { name: "Configuración Escolar", path: "/configuracion-escolar", model: "core.SchoolConfiguration" },
-        { name: "Año Académico", path: "/ano-academico", model: "core.AcademicYear" },
-        { name: "Período/Lapso Académico", path: "/periodo-academico", model: "core.AcademicPeriod" },
-        { name: "Nivel Educativo", path: "/nivel-educativo", model: "core.Level" },
-        { name: "Grado/Año", path: "/grado-ano", model: "core.GradeLevel" },
-        { name: "Sección", path: "/seccion", model: "core.Section" },
-        { name: "Asignatura/Materia", path: "/asignatura", model: "core.Subject" },
-        { name: "Escala de Calificación", path: "/escala-calificacion", model: "core.GradingScale" },
-        { name: "Valor de Calificación", path: "/valor-calificacion", model: "core.GradeValue" },
-        { name: "Asignación de Materia a Grado", path: "/asignacion-materia-grado", model: "core.SubjectAssignment" },
+        { name: "Configuración Escolar", path: "/configuracion-escolar", model: "core.SchoolConfiguration", icon: <FaSchool /> },
+        { name: "Año Académico", path: "/ano-academico", model: "core.AcademicYear", icon: <FaCalendarAlt /> },
+        { name: "Período/Lapso Académico", path: "/periodo-academico", model: "core.AcademicPeriod", icon: <MdOutlinePeriod /> },
+        { name: "Nivel Educativo", path: "/nivel-educativo", model: "core.Level", icon: <FaLayerGroup /> },
+        { name: "Grado/Año", path: "/grado-ano", model: "core.GradeLevel", icon: <FaGraduationCap /> },
+        { name: "Sección", path: "/seccion", model: "core.Section", icon: <FaTasks /> },
+        { name: "Asignatura/Materia", path: "/asignatura", model: "core.Subject", icon: <FaBook /> },
+        { name: "Escala de Calificación", path: "/escala-calificacion", model: "core.GradingScale", icon: <MdGrade /> },
+        { name: "Valor de Calificación", path: "/valor-calificacion", model: "core.GradeValue", icon: <MdOutlinePriceChange /> },
+        { name: "Asignación de Materia a Grado", path: "/asignacion-materia-grado", model: "core.SubjectAssignment", icon: <MdAssignmentInd /> },
       ]
     },
     {
       name: "Usuarios y Roles",
       items: [
-        { name: "Usuarios", path: "/usuarios", model: "core.User" },
-        { name: "Grupos de Permisos", path: "/grupos-permisos", model: "auth.Group" },
+        { name: "Usuarios", path: "/usuarios", model: "core.User", icon: <FaUsers /> },
+        { name: "Grupos de Permisos", path: "/grupos-permisos", model: "auth.Group", icon: <FaUserShield /> },
       ]
     },
     {
       name: "Estudiantes",
       items: [
-        { name: "Planillas de Preinscripción", path: "/planillas-preinscripcion", model: "core.PreEnrollmentProfile" },
-        { name: "Inscripciones de Estudiantes", path: "/inscripciones-estudiantes", model: "core.StudentEnrollment" },
-        { name: "Boletas de Calificaciones", path: "/boletas-calificaciones", model: "core.ReportCard" },
-        { name: "Calificaciones Finales (Lapso)", path: "/calificaciones-finales-lapso", model: "core.StudentGrade" },
-        { name: "Entregas de Estudiantes", path: "/entregas-estudiantes", model: "students.StudentSubmission" },
+        { name: "Planillas de Preinscripción", path: "/planillas-preinscripcion", model: "core.PreEnrollmentProfile", icon: <FaFileAlt /> },
+        { name: "Inscripciones de Estudiantes", path: "/inscripciones-estudiantes", model: "core.StudentEnrollment", icon: <FaUserCheck /> },
+        { name: "Boletas de Calificaciones", path: "/boletas-calificaciones", model: "core.ReportCard", icon: <FaFileInvoice /> },
+        { name: "Calificaciones Finales (Lapso)", path: "/calificaciones-finales-lapso", model: "core.StudentGrade", icon: <FaListOl /> },
+        { name: "Entregas de Estudiantes", path: "/entregas-estudiantes", model: "students.StudentSubmission", icon: <FaFileUpload /> },
       ]
     },
     {
       name: "Profesores y Personal",
       items: [
-        { name: "Asignación de Coordinador", path: "/asignacion-coordinador", model: "core.CoordinatorAssignment" },
-        { name: "Asignación de Profesor Guía", path: "/asignacion-profesor-guia", model: "core.GuideTeacherAssignment" },
-        { name: "Asignación de Profesor a Materia/Sección", path: "/asignacion-profesor-materia", model: "core.TeacherSubjectSectionAssignment" },
-        { name: "Actividades Evaluativas", path: "/actividades-evaluativas", model: "teachers.Activity" },
-        { name: "Actividades del Plan de Evaluación", path: "/actividades-plan-evaluacion", model: "teachers.EvaluationActivity" },
-        { name: "Documentos de Plan de Evaluación", path: "/documentos-plan-evaluacion", model: "teachers.EvaluationPlanDocument" },
-        { name: "Calificaciones de Actividades", path: "/calificaciones-actividades", model: "teachers.Grade" },
+        { name: "Asignación de Coordinador", path: "/asignacion-coordinador", model: "core.CoordinatorAssignment", icon: <FaUserTie /> },
+        { name: "Asignación de Profesor Guía", path: "/asignacion-profesor-guia", model: "core.GuideTeacherAssignment", icon: <FaUserTag /> },
+        { name: "Asignación de Profesor a Materia/Sección", path: "/asignacion-profesor-materia", model: "core.TeacherSubjectSectionAssignment", icon: <FaChalkboardTeacher /> },
+        { name: "Actividades Evaluativas", path: "/actividades-evaluativas", model: "teachers.Activity", icon: <FaRegListAlt /> },
+        { name: "Actividades del Plan de Evaluación", path: "/actividades-plan-evaluacion", model: "teachers.EvaluationActivity", icon: <FaClipboardList /> },
+        { name: "Documentos de Plan de Evaluación", path: "/documentos-plan-evaluacion", model: "teachers.EvaluationPlanDocument", icon: <FaFileAlt /> },
+        { name: "Calificaciones de Actividades", path: "/calificaciones-actividades", model: "teachers.Grade", icon: <MdGrade /> },
       ]
     },
     {
       name: "Comunicación",
       items: [
-        { name: "Mensajes de Chat", path: "/mensajes-chat", model: "core.ChatMessage" },
-        { name: "Salas de Chat", path: "/salas-chat", model: "core.ChatRoom" },
+        { name: "Mensajes de Chat", path: "/mensajes-chat", model: "core.ChatMessage", icon: <FaComments /> },
+        { name: "Salas de Chat", path: "/salas-chat", model: "core.ChatRoom", icon: <FaComments /> },
       ]
     }
   ];
 
   return (
     <Router>
-      <div className="app-container">
-        <Sidebar groups={sidebarGroups} />
+      <div className={`app-container ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+        <Sidebar
+          groups={sidebarGroups}
+          isExpanded={isSidebarExpanded}
+          toggleSidebar={toggleSidebar}
+        />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<PlaceholderPage title="Página de Inicio" />} />

@@ -1,41 +1,93 @@
 .sidebar {
-  width: 240px;
   background-color: #2c3e50; /* Un color oscuro para la sidebar */
   color: #ecf0f1; /* Texto claro */
-  padding: 15px;
   height: 100vh; /* Altura completa */
   position: fixed; /* Fijo en la pantalla */
   top: 0;
   left: 0;
   overflow-y: auto; /* Scroll si el contenido es largo */
   border-right: 1px solid #34495e;
+  transition: width 0.3s ease-in-out; /* Transición suave para el ancho */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.expanded {
+  width: 240px;
+  padding: 15px;
+}
+
+.sidebar.collapsed {
+  width: 60px; /* Ancho cuando está colapsada */
+  padding: 15px 0; /* Menos padding horizontal */
+  align-items: center; /* Centra los iconos */
 }
 
 .sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding-bottom: 10px;
   margin-bottom: 15px;
   border-bottom: 1px solid #34495e;
+  width: 100%; /* Asegura que ocupe todo el ancho disponible dentro de .sidebar */
 }
+
+.sidebar.expanded .sidebar-header {
+  padding-left: 15px; /* Añadir padding que se quitó de .sidebar.collapsed */
+  padding-right: 15px;
+}
+
 
 .sidebar-header h3 {
   margin: 0;
   color: #fff;
-  text-align: center;
   font-size: 1.4em;
+  white-space: nowrap; /* Evita que el título se rompa en varias líneas */
 }
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  color: #ecf0f1;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-toggle-btn {
+   margin: 0 auto; /* Centra el botón en modo colapsado si el h3 no está */
+}
+
 
 .sidebar-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
-.sidebar-group h4 {
+.sidebar.expanded .sidebar-group h4 {
   color: #95a5a6; /* Un color más suave para los títulos de grupo */
   font-size: 0.9em;
   margin-top: 0;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  padding-left: 15px; /* Para alinear con los items */
 }
+
+.sidebar.collapsed .sidebar-group h4 {
+  display: none; /* Oculta títulos de grupo cuando está colapsado */
+}
+
+.sidebar-group-separator {
+  border: 0;
+  height: 1px;
+  background-color: #34495e;
+  margin: 10px 5px; /* Margen más pequeño para el separador */
+}
+
 
 .sidebar-nav ul {
   list-style-type: none;
@@ -44,25 +96,57 @@
 }
 
 .sidebar-nav li {
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
-.sidebar-nav a {
+.sidebar-link {
   text-decoration: none;
   color: #ecf0f1;
-  display: block;
-  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
   border-radius: 4px;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  white-space: nowrap; /* Evita que el texto del enlace se rompa */
 }
 
-.sidebar-nav a:hover {
+.sidebar.collapsed .sidebar-link {
+  justify-content: center; /* Centra el icono en el enlace */
+  padding: 10px;
+}
+
+
+.sidebar-link:hover {
   background-color: #34495e;
   color: #fff;
 }
 
-.sidebar-nav a.active { /* Estilo para el enlace activo si usamos NavLink más adelante */
+.sidebar-link.active {
   background-color: #1abc9c; /* Un color de acento */
   color: #fff;
   font-weight: bold;
+}
+
+.sidebar-icon {
+  margin-right: 10px;
+  font-size: 1.2em; /* Tamaño del icono */
+  min-width: 20px; /* Espacio mínimo para el icono */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-icon {
+  margin-right: 0; /* Sin margen cuando está colapsado y solo se ve el icono */
+  font-size: 1.5em; /* Iconos un poco más grandes cuando están solos */
+}
+
+.sidebar-link-text {
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.sidebar.collapsed .sidebar-link-text {
+  display: none; /* Oculta el texto cuando está colapsado */
+  opacity: 0;
 }
