@@ -25,6 +25,7 @@ from django.conf.urls.static import static # For serving media files during deve
 urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')), # For language switching
     path('', include('core.urls')), # For pre-enrollment and other core app URLs
+    path('api/core/', include('core.api_urls')), # Added for core API URLs
     path('', home_page_view, name='home'),  # New homepage URL
     path("admin/", admin.site.urls),
     path('student/', include('students.urls', namespace='students')),

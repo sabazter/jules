@@ -379,8 +379,60 @@ def create_chat_with_user_view(request, user_id):
 
 
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import AcademicYear, AcademicPeriod, StudentEnrollment, Section # Already have User from .models
+from .models import (
+    AcademicYear, AcademicPeriod, StudentEnrollment, Section, # Already have User from .models
+    SchoolConfiguration, Level, GradeLevel, Subject, GradingScale, GradeValue, SubjectAssignment
+)
+from .serializers import (
+    SchoolConfigurationSerializer, AcademicYearSerializer, AcademicPeriodSerializer,
+    LevelSerializer, GradeLevelSerializer, SectionSerializer, SubjectSerializer,
+    GradingScaleSerializer, GradeValueSerializer, SubjectAssignmentSerializer
+)
+from rest_framework import viewsets
 from django.utils import timezone
+
+# API ViewSets
+class SchoolConfigurationViewSet(viewsets.ModelViewSet):
+    queryset = SchoolConfiguration.objects.all()
+    serializer_class = SchoolConfigurationSerializer
+    # permission_classes = [permissions.IsAdminUser] # Example permission
+
+class AcademicYearViewSet(viewsets.ModelViewSet):
+    queryset = AcademicYear.objects.all()
+    serializer_class = AcademicYearSerializer
+
+class AcademicPeriodViewSet(viewsets.ModelViewSet):
+    queryset = AcademicPeriod.objects.all()
+    serializer_class = AcademicPeriodSerializer
+
+class LevelViewSet(viewsets.ModelViewSet):
+    queryset = Level.objects.all()
+    serializer_class = LevelSerializer
+
+class GradeLevelViewSet(viewsets.ModelViewSet):
+    queryset = GradeLevel.objects.all()
+    serializer_class = GradeLevelSerializer
+
+class SectionViewSet(viewsets.ModelViewSet):
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer
+
+class SubjectViewSet(viewsets.ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+
+class GradingScaleViewSet(viewsets.ModelViewSet):
+    queryset = GradingScale.objects.all()
+    serializer_class = GradingScaleSerializer
+
+class GradeValueViewSet(viewsets.ModelViewSet):
+    queryset = GradeValue.objects.all()
+    serializer_class = GradeValueSerializer
+
+class SubjectAssignmentViewSet(viewsets.ModelViewSet):
+    queryset = SubjectAssignment.objects.all()
+    serializer_class = SubjectAssignmentSerializer
+
 
 @staff_member_required
 def custom_admin_dashboard_view(request):
