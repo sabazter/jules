@@ -161,5 +161,9 @@ if errorlevel 1 (
 echo El servidor de desarrollo de React deberia estar ejecutandose en una nueva ventana.
 echo Si no se abrio automaticamente en tu navegador, visita http://localhost:3000 (o el puerto indicado).
 
+echo.
+echo Script finalizado. Presiona cualquier tecla para salir.
+pause >nul
+
 :eof
 endlocal
