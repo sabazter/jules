@@ -6,14 +6,23 @@ echo Despues de setlocal. Presiona una tecla.
 pause
 
 REM --- Configuración ---
+echo Configurando variables...
 set "PROJECT_DIR=%CD%"
+echo PROJECT_DIR set to %PROJECT_DIR%
 set "NEW_PROJECT_NAME=mi-app-react"
+echo NEW_PROJECT_NAME set to %NEW_PROJECT_NAME%
 set "NODE_INSTALLER_URL=https://nodejs.org/dist/v18.18.0/node-v18.18.0-x64.msi"
+echo NODE_INSTALLER_URL set
 set "NODE_INSTALLER_NAME=node-installer.msi"
+echo NODE_INSTALLER_NAME set
+echo Fin de configuracion de variables. Presiona una tecla.
+pause
 
 REM --- Funciones Auxiliares (simuladas en Batch) ---
 
 :check_command
+echo Definiendo :check_command. Presiona una tecla.
+pause
     where %1 >nul 2>nul
     if %errorlevel% == 0 (
         echo %1 encontrado.
