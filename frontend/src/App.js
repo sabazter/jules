@@ -2,6 +2,7 @@ import React, { useState } from 'react'; // Import useState
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import PlaceholderPage from './pages/PlaceholderPage';
+import MainLayout from './components/MainLayout'; // Importar MainLayout
 import NivelEducativoPage from './pages/NivelEducativoPage';
 import './App.css';
 
@@ -90,10 +91,12 @@ function App() {
           onMouseEnter={handleSidebarMouseEnter}
           onMouseLeave={handleSidebarMouseLeave}
         />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<PlaceholderPage title="Página de Inicio" />} />
-            {/* Mapeo dinámico de rutas para PlaceholderPage, excepto para las que tienen componente específico */}
+        {/* Envolver el contenido principal con MainLayout */}
+        <MainLayout className="main-content-wrapper-for-sidebar-effect"> {/* Añadir clase aquí */}
+          <main className="main-content"> {/* main-content ahora está DENTRO de MainLayout */}
+            <Routes>
+              <Route path="/" element={<PlaceholderPage title="Página de Inicio" />} />
+              {/* Mapeo dinámico de rutas para PlaceholderPage, excepto para las que tienen componente específico */}
             {sidebarGroups.flatMap(group =>
               group.items
                 .filter(item => item.path !== "/nivel-educativo") // Excluir la ruta que ahora tiene componente
@@ -112,6 +115,7 @@ function App() {
             <Route path="*" element={<PlaceholderPage title="Página no encontrada" />} />
           </Routes>
         </main>
+      </MainLayout>
       </div>
     </Router>
   );

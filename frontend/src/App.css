@@ -14,20 +14,34 @@ body {
   min-height: 100vh;
 }
 
-.main-content {
+/* Esta clase se aplica al componente MainLayout externamente desde App.js */
+.main-content-wrapper-for-sidebar-effect {
   flex-grow: 1;
-  padding: 20px;
-  background-color: #fff;
+  /* background-color: #fff; MainLayout podría tener su propio fondo o ser transparente */
   transition: margin-left 0.3s ease-in-out; /* Transición suave */
+  display: flex; /* Para que MainLayout (que es un div) se comporte como flex container */
+  /* padding: 0; MainLayout gestionará su padding interno a través de .main-content-area */
 }
 
-.app-container.sidebar-expanded .main-content {
-  margin-left: 260px; /* Ancho de sidebar expandida + margen */
+.app-container.sidebar-expanded .main-content-wrapper-for-sidebar-effect {
+  margin-left: 250px; /* Ancho de la sidebar expandida (actualizado para coincidir con el JS) */
 }
 
-.app-container.sidebar-collapsed .main-content {
-  margin-left: 80px; /* Ancho de sidebar colapsada + margen */
+.app-container.sidebar-collapsed .main-content-wrapper-for-sidebar-effect {
+  margin-left: 80px; /* Ancho de la sidebar colapsada */
 }
+
+/* Los estilos para .main-content (el tag <main> dentro de MainLayout)
+   ahora se gestionan principalmente por .main-content-area en MainLayout.css.
+   Si se necesitan estilos adicionales para el tag <main> específico aquí, se pueden añadir,
+   pero el padding y el background general del área de contenido ya están en MainLayout.css.
+   Por ejemplo, si solo queremos asegurar que el tag <main> dentro de MainLayout ocupe el espacio:
+*/
+.main-content-wrapper-for-sidebar-effect > .main-content {
+    width: 100%; /* Asegura que el <main> interno ocupa el ancho del .main-content-area */
+    /* Otros estilos específicos para el <main> tag si son necesarios */
+}
+
 
 .placeholder-page {
   padding: 20px;

@@ -1,0 +1,93 @@
+/* frontend/src/components/MainLayout.css */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Asegura que el layout ocupa al menos toda la altura de la ventana */
+  /* width: 100%; será controlado por app-container y su margin-left */
+}
+
+.main-header {
+  background-color: #f8f9fa; /* Un color claro para el header */
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  width: 100%; /* Asegurar que el header ocupa todo el ancho del main-layout */
+  box-sizing: border-box;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.school-logo-placeholder {
+  width: 50px;
+  height: 50px;
+  background-color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-weight: bold;
+  border-radius: 4px; /* Opcional: bordes redondeados */
+}
+
+.school-logo { /* Estilo para la imagen real del logo cuando se implemente */
+  height: 50px;
+  width: auto; /* Mantener proporción */
+  max-width: 150px; /* Evitar que logos muy anchos rompan el layout */
+  margin-right: 15px;
+}
+
+.logo-container h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.banner-container {
+  background-color: #007bff; /* Color de ejemplo para el banner */
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  border-radius: 4px;
+  margin-top: 0.5rem; /* Espacio entre logo-container y banner */
+}
+
+.banner-container p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.main-content-area {
+  flex-grow: 1; /* Permite que esta área crezca y empuje el footer hacia abajo */
+  padding: 1rem; /* Espacio alrededor del contenido específico de la página */
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fff; /* Fondo para el área de contenido */
+}
+
+.main-footer {
+  background-color: #343a40; /* Un color oscuro para el footer */
+  color: white;
+  padding: 1.5rem 1rem; /* Más padding vertical */
+  text-align: center;
+  border-top: 1px solid #495057;
+  width: 100%; /* Asegurar que el footer ocupa todo el ancho del main-layout */
+  box-sizing: border-box;
+}
+
+.main-footer p {
+  margin-bottom: 0.5rem;
+}
+
+.social-media-links a {
+  color: #adb5bd;
+  margin: 0 10px;
+  text-decoration: none;
+  font-size: 1.2rem; /* Iconos/enlaces un poco más grandes */
+}
+
+.social-media-links a:hover {
+  color: white;
+}
