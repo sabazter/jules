@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import PlaceholderPage from './pages/PlaceholderPage';
 import MainLayout from './components/MainLayout'; // Importar MainLayout
 import NivelEducativoPage from './pages/NivelEducativoPage';
+import SchoolConfigurationPage from './pages/SchoolConfigurationPage'; // Importar SchoolConfigurationPage
 import './App.css';
 
 // Importar algunos iconos de ejemplo (Font Awesome)
@@ -99,7 +100,7 @@ function App() {
               {/* Mapeo dinámico de rutas para PlaceholderPage, excepto para las que tienen componente específico */}
             {sidebarGroups.flatMap(group =>
               group.items
-                .filter(item => item.path !== "/nivel-educativo") // Excluir la ruta que ahora tiene componente
+                .filter(item => item.path !== "/nivel-educativo" && item.path !== "/configuracion-escolar") // Excluir también /configuracion-escolar
                 .map(item => (
                   <Route
                     key={item.path}
@@ -108,8 +109,9 @@ function App() {
                   />
                 ))
             )}
-            {/* Ruta específica para Nivel Educativo */}
+            {/* Rutas específicas */}
             <Route path="/nivel-educativo" element={<NivelEducativoPage />} />
+            <Route path="/configuracion-escolar" element={<SchoolConfigurationPage />} />
 
             {/* Ruta por defecto si ninguna coincide */}
             <Route path="*" element={<PlaceholderPage title="Página no encontrada" />} />
