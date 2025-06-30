@@ -21,18 +21,25 @@ pause
 REM --- Funciones Auxiliares (simuladas en Batch) ---
 
 :check_command
-echo Definiendo :check_command. Presiona una tecla.
+echo Dentro de la etiqueta :check_command (antes de cualquier logica). Presiona una tecla.
 pause
-    where %1 >nul 2>nul
-    if %errorlevel% == 0 (
-        echo %1 encontrado.
-        exit /b 0
-    ) else (
-        echo %1 no encontrado.
-        exit /b 1
-    )
+    REM Temporalmente comentado para depurar
+    REM where %1 >nul 2>nul
+    REM if %errorlevel% == 0 (
+    REM     echo %1 encontrado.
+    REM     exit /b 0
+    REM ) else (
+    REM     echo %1 no encontrado.
+    REM     exit /b 1
+    REM )
+echo Fin de la etiqueta :check_command (logica comentada). Presiona una tecla.
+pause
+exit /b 0
+
 
 :install_node_npm
+echo Definiendo :install_node_npm. Presiona una tecla.
+pause
     echo Intentando instalar Node.js y npm...
     echo Descargando instalador de Node.js...
     REM Usar PowerShell para descargar el archivo, ya que Batch no tiene un comando nativo simple.
@@ -60,8 +67,14 @@ pause
 REM --- Flujo Principal ---
 
 REM Comprobar Node.js
+echo ANTES de llamar a :check_command node. Presiona una tecla.
+pause
 call :check_command node
+echo DESPUES de llamar a :check_command node. Presiona una tecla.
+pause
 if errorlevel 1 (
+    echo ANTES de llamar a :install_node_npm (rama errorlevel 1). Presiona una tecla.
+    pause
     call :install_node_npm
     if errorlevel 1 (
         echo Instalacion de Node.js fallida. Saliendo.
