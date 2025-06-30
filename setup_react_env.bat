@@ -34,10 +34,9 @@ pause
     REM )
 echo Fin de la etiqueta :check_command (logica comentada). Presiona una tecla.
 pause
-exit /b 0
-
-
-REM :install_node_npm
+REM TODO EL CONTENIDO DESDE AQUÍ HA SIDO ELIMINADO PARA LA PRUEBA.
+REM SI EL SCRIPT PERMANECE ABIERTO DESPUÉS DEL PAUSE ANTERIOR,
+REM EL PROBLEMA ESTABA EN LA PRIMERA LÍNEA QUE SE ELIMINÓ.
 REM echo Definiendo :install_node_npm. Presiona una tecla.
 REM pause
     REM echo Intentando instalar Node.js y npm...
