@@ -84,7 +84,23 @@ echo DESPUES de llamar a :check_command node. (Errorlevel es %errorlevel%). Pres
 pause
 
 REM El resto del script (comprobación de npm, etc.) sigue comentado por ahora.
-REM ANTERIORMENTE COMENTADO:
+echo.
+echo Script finalizado (solo se probo la primera llamada a check_command). Presiona cualquier tecla para salir.
+
+echo DEBUG: ANTES DE PAUSE >NUL. Presiona una tecla.
+pause
+pause >nul
+
+echo DEBUG: ANTES DE :EOF. Presiona una tecla.
+pause
+:eof
+
+echo DEBUG: ANTES DE ENDLOCAL. Presiona una tecla.
+pause
+endlocal
+
+echo DEBUG: DESPUES DE ENDLOCAL (No deberias ver esto si la ventana se cierra). Presiona una tecla.
+pause
 REM Comprobar npm
 REM echo ANTES de llamar a :check_command npm. Presiona una tecla.
 REM pause
