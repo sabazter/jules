@@ -1,5 +1,9 @@
 @echo off
+echo Script iniciado... Presiona una tecla para continuar.
+pause
 setlocal
+echo Despues de setlocal. Presiona una tecla.
+pause
 
 REM --- Configuración ---
 set "PROJECT_DIR=%CD%"
