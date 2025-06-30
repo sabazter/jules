@@ -391,11 +391,15 @@ from .serializers import (
 from rest_framework import viewsets
 from django.utils import timezone
 
+from rest_framework.permissions import AllowAny # Import AllowAny
+from rest_framework.renderers import JSONRenderer # Import JSONRenderer
+
 # API ViewSets
 class SchoolConfigurationViewSet(viewsets.ModelViewSet):
     queryset = SchoolConfiguration.objects.all()
     serializer_class = SchoolConfigurationSerializer
-    # permission_classes = [permissions.IsAdminUser] # Example permission
+    permission_classes = [AllowAny] # Explicitly set AllowAny
+    renderer_classes = [JSONRenderer] # Explicitly set JSONRenderer for testing
 
 class AcademicYearViewSet(viewsets.ModelViewSet):
     queryset = AcademicYear.objects.all()
